@@ -358,3 +358,4 @@ Makefile
 obj/
 
 # End of https://www.toptal.com/developers/gitignore/api/premake-gmake
+premake5
