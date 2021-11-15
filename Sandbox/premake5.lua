@@ -36,7 +36,7 @@ project "Sandbox"
 		symbols "Off"
 
 		defines {
-			"LI_DISTRBUTION"
+			"LI_DISTRIBUTION"
 		}
 
 	filter "configurations:DebugDLL"
@@ -67,7 +67,7 @@ project "Sandbox"
 
 		defines {
 			"LI_DLL",
-			"LI_DISTRBUTION"
+			"LI_DISTRIBUTION"
 		}
 
 	filter "system:windows"

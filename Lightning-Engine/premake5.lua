@@ -36,7 +36,7 @@ project "Lightning Engine"
 		symbols "Off"
 
 		defines {
-			"LI_DISTRBUTION"
+			"LI_DISTRIBUTION"
 		}
 
 	filter "configurations:DebugDLL"
@@ -67,7 +67,7 @@ project "Lightning Engine"
 
 		defines {
 			"LI_DLL",
-			"LI_DISTRBUTION"
+			"LI_DISTRIBUTION"
 		}
 
 	filter "system:windows"
