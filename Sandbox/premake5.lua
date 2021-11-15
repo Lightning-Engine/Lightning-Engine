@@ -1,5 +1,6 @@
 project "Sandbox"
 	toolset ("clang")
+	language "C"
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "%{prj.name}")
 	objdir ("%{wks.location}/bin/" .. outputdir .. "%{prj.name}/int")
@@ -12,7 +13,7 @@ project "Sandbox"
 	}
 
 	filter "configurations:Debug"
-		kind "StaticLib"
+		kind "WindowedApp"
 		optimize "Debug"
 		symbols "Full"
 
