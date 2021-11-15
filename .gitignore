@@ -348,3 +348,13 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# Created by https://www.toptal.com/developers/gitignore/api/premake-gmake
+# Edit at https://www.toptal.com/developers/gitignore?templates=premake-gmake
+
+### premake-gmake ###
+Makefile
+*.make
+obj/
+
+# End of https://www.toptal.com/developers/gitignore/api/premake-gmake
