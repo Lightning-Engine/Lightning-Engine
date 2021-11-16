@@ -2,7 +2,7 @@ project "Sandbox"
 	toolset ("clang")
 	language "C"
 
-	targetdir ("%{wks.location}/bin/" .. outputdir .. "%{prj.name}")
+	targetdir ("%{wks.location}/bin/" .. outputdir .. "%{prj.name}/")
 	objdir ("%{wks.location}/bin/" .. outputdir .. "%{prj.name}/int")
 
 	files {

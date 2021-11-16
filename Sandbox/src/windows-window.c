@@ -27,6 +27,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE prev_instance, PWSTR args, int
 			DispatchMessageW(&msg);
 		}
 	}
+	DestroyWindow(hwnd);
 }
 
 LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
