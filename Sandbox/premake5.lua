@@ -11,6 +11,10 @@ project "Sandbox"
 		"src/**.cc"
 	}
 
+	includedirs {
+		"include"
+	}
+
 	filter "configurations:Debug"
 		kind "StaticLib"
 		optimize "Debug"

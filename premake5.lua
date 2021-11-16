@@ -1,3 +1,5 @@
+require("Vendor/compile-commands-generator/compile-commands-generator")
+
 workspace "Lightning-Engine"
 	architecture "x86_64"
 
