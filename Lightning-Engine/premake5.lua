@@ -1,4 +1,4 @@
-project "Lightning Engine"
+project "Lightning-Engine"
 	toolset ("clang")
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "%{prj.name}/")
