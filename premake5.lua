@@ -12,7 +12,7 @@ workspace "Lightning-Engine"
 		"DistributionDLL"
 	}
 
-outputdir = "%{cfg.buildcfg}/%{cfg.system}/%{cfg.architecture}"
+outputdir = "%{cfg.buildcfg}/%{cfg.system}/%{cfg.architecture}/"
 
 include "Lightning-Engine"
 include "Sandbox"
