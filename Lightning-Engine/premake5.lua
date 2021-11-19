@@ -11,6 +11,28 @@ project "Lightning Engine"
 		"src/**.cc"
 	}
 
+	includedirs {
+		"include"
+	}
+
+	filter "files:**.c"
+		language "C"
+		cdialect "C11"
+	
+
+	filter "files:**.h"
+		language "C"
+		cdialect "C11"
+	
+
+	filter "files:**.cc"
+		language "C"
+		cppdialect "C++11"
+
+	filter "files:**.hh"
+		language "C++"
+		cppdialect "C++11"
+
 	filter "configurations:Debug"
 		kind "StaticLib"
 		optimize "Debug"
