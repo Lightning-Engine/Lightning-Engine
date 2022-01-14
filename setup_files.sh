@@ -1,5 +1,7 @@
 PREMAKE="./Vendor/premake/bin/release/premake5"
 PREMAKE_DIR="./Vendor/premake"
+
+git submodule update --init --recursive
 if [[ -f "$PREMAKE" ]]
 then
 	echo "Premake already exists"
