@@ -23,7 +23,11 @@ void li_win_exit(void) {
 }
 
 void li_win_poll(void) {
-
+	MSG msg;
+	while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
+		TranslateMessage(&msg);
+		DispatchMessageW(&msg);
+	}
 }
 
 int li_win_create(li_win_t *win, int width, int height) {
