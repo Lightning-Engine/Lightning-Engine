@@ -1,7 +1,7 @@
-project "Lightning Engine"
+project "Lightning-Engine"
 	toolset ("clang")
 
-	targetdir ("%{wks.location}/bin/" .. outputdir .. "%{prj.name}")
+	targetdir ("%{wks.location}/bin/" .. outputdir .. "%{prj.name}/")
 	objdir ("%{wks.location}/bin/" .. outputdir .. "%{prj.name}/int")
 
 	files {
@@ -10,6 +10,28 @@ project "Lightning Engine"
 		"src/**.hh",
 		"src/**.cc"
 	}
+
+	includedirs {
+		"include"
+	}
+
+	filter "files:**.c"
+		language "C"
+		cdialect "C11"
+	
+
+	filter "files:**.h"
+		language "C"
+		cdialect "C11"
+	
+
+	filter "files:**.cc"
+		language "C"
+		cppdialect "C++11"
+
+	filter "files:**.hh"
+		language "C++"
+		cppdialect "C++11"
 
 	filter "configurations:Debug"
 		kind "StaticLib"

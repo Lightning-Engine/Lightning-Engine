@@ -31,4 +31,5 @@ if [ "$1" == "osx" ]
 	if [ "$1" == "win" ]
 	then
 		"$PREMAKE" vs2022
+		"$PREMAKE" compile_commands
 	fi

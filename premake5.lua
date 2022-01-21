@@ -1,3 +1,5 @@
+require("Vendor/compile-commands-generator/compile-commands-generator")
+
 workspace "Lightning-Engine"
 	architecture "x86_64"
 
@@ -10,7 +12,7 @@ workspace "Lightning-Engine"
 		"DistributionDLL"
 	}
 
-outputdir = "%{cfg.buildcfg}/%{cfg.system}/%{cfg.architecture}"
+outputdir = "%{cfg.buildcfg}/%{cfg.system}/%{cfg.architecture}/"
 
 include "Lightning-Engine"
 include "Sandbox"
