@@ -6,7 +6,7 @@ static Window root;
 static Atom wm_delete_window;
 
 static void handle_event(XEvent ev) {
-		li_event_t event;
+	li_event_t event;
 	switch (ev.type) {
 		case ClientMessage:
 			if (ev.xclient.data.l[0] == wm_delete_window) {
@@ -15,39 +15,39 @@ static void handle_event(XEvent ev) {
 				li_win_cb(event);
 			}
 			break;
-		case ButtonPress:
-			event.type = li_event_button_press;
-			event.window.lu = ev.xbutton.window;
-			event.data.mouse.x = ev.xbutton.x;
-			event.data.mouse.y = ev.xbutton.y;
-			event.data.mouse.button = ev.xbutton.button;
-			li_win_cb(event);
-			break;
-		case ButtonRelease:
-			event.type = li_event_button_release;
-			event.window.lu = ev.xbutton.window;
-			event.data.mouse.x = ev.xbutton.x;
-			event.data.mouse.y = ev.xbutton.y;
-			event.data.mouse.button = ev.xbutton.button;
-			li_win_cb(event);
-			break;
-		case MotionNotify:
-			event.type = li_event_motion;
-			event.window.lu = ev.xmotion.window;
-			event.data.mouse.x = ev.xmotion.x;
-			event.data.mouse.y = ev.xmotion.y;
-			li_win_cb(event);
-			break;
 		case KeyPress:
 			event.type = li_event_key_press;
 			event.window.lu = ev.xkey.window;
-			event.data.keyboard.key = ev.xkey.keycode;
+			event.data.key.key = ev.xkey.keycode;
 			li_win_cb(event);
 			break;
 		case KeyRelease:
 			event.type = li_event_key_release;
 			event.window.lu = ev.xkey.window;
-			event.data.keyboard.key = ev.xkey.keycode;
+			event.data.key.key = ev.xkey.keycode;
+			li_win_cb(event);
+			break;
+		case ButtonPress:
+			event.type = li_event_button_press;
+			event.window.lu = ev.xbutton.window;
+			event.data.button.x = ev.xbutton.x;
+			event.data.button.y = ev.xbutton.y;
+			event.data.button.button = ev.xbutton.button;
+			li_win_cb(event);
+			break;
+		case ButtonRelease:
+			event.type = li_event_button_release;
+			event.window.lu = ev.xbutton.window;
+			event.data.button.x = ev.xbutton.x;
+			event.data.button.y = ev.xbutton.y;
+			event.data.button.button = ev.xbutton.button;
+			li_win_cb(event);
+			break;
+		case MotionNotify:
+			event.type = li_event_motion_notify;
+			event.window.lu = ev.xmotion.window;
+			event.data.motion.x = ev.xmotion.x;
+			event.data.motion.y = ev.xmotion.y;
 			li_win_cb(event);
 			break;
 	}

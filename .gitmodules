@@ -1,3 +1,0 @@
-[submodule "Vendor/premake"]
-	path = Vendor/premake
-	url = https://github.com/premake/premake-core.git

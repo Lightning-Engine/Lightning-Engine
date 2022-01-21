@@ -8,26 +8,32 @@ typedef union li_win {
 
 typedef enum li_event_type {
 	li_event_close,
-	li_event_button_press,
-	li_event_button_release,
-	li_event_motion,
 	li_event_key_press,
 	li_event_key_release,
+	li_event_button_press,
+	li_event_button_release,
+	li_event_motion_notify,
 } li_event_type_t;
 
-typedef struct li_event_mouse {
+typedef struct li_event_key {
+	int key;
+} li_event_key_t;
+
+typedef struct li_event_button {
 	int x;
 	int y;
 	int button;
-} li_event_mouse_t;
+} li_event_button_t;
 
-typedef struct li_event_keyboard {
-	int key;
-} li_event_keyboard_t;
+typedef struct li_event_motion {
+	int x;
+	int y;
+} li_event_motion_t;
 
 typedef union li_event_data {
-	li_event_mouse_t mouse;
-	li_event_keyboard_t keyboard;
+	li_event_key_t key;
+	li_event_button_t button;
+	li_event_motion_t motion;
 } li_event_data_t;
 
 typedef struct li_event {
