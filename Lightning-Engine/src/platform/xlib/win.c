@@ -5,8 +5,59 @@ static Display *dp;
 static Window root;
 static Atom wm_delete_window;
 
+static void handle_event(XEvent ev) {
+		li_event_t event;
+	switch (ev.type) {
+		case ClientMessage:
+			if (ev.xclient.data.l[0] == wm_delete_window) {
+				event.type = li_event_close;
+				event.window.lu = ev.xany.window;
+				li_win_cb(event);
+			}
+			break;
+		case ButtonPress:
+			event.type = li_event_button_press;
+			event.window.lu = ev.xbutton.window;
+			event.data.mouse.x = ev.xbutton.x;
+			event.data.mouse.y = ev.xbutton.y;
+			event.data.mouse.button = ev.xbutton.button;
+			li_win_cb(event);
+			break;
+		case ButtonRelease:
+			event.type = li_event_button_release;
+			event.window.lu = ev.xbutton.window;
+			event.data.mouse.x = ev.xbutton.x;
+			event.data.mouse.y = ev.xbutton.y;
+			event.data.mouse.button = ev.xbutton.button;
+			li_win_cb(event);
+			break;
+		case MotionNotify:
+			event.type = li_event_motion;
+			event.window.lu = ev.xmotion.window;
+			event.data.mouse.x = ev.xmotion.x;
+			event.data.mouse.y = ev.xmotion.y;
+			li_win_cb(event);
+			break;
+		case KeyPress:
+			event.type = li_event_key_press;
+			event.window.lu = ev.xkey.window;
+			event.data.keyboard.key = ev.xkey.keycode;
+			li_win_cb(event);
+			break;
+		case KeyRelease:
+			event.type = li_event_key_release;
+			event.window.lu = ev.xkey.window;
+			event.data.keyboard.key = ev.xkey.keycode;
+			li_win_cb(event);
+			break;
+	}
+}
+
 int li_win_init(void) {
 	dp = XOpenDisplay(NULL);
+	if (dp == NULL)
+		return -1;
+	
 	root = XDefaultRootWindow(dp);
 	wm_delete_window = XInternAtom(dp, "WM_DELETE_WINDOW", False);
 	return 0;
@@ -18,24 +69,15 @@ void li_win_exit(void) {
 
 void li_win_poll(void) {
 	XEvent ev;
-	li_win_event_t event;
 	while (XPending(dp)) {
 		XNextEvent(dp, &ev);
-		switch (ev.type) {
-			case ClientMessage:
-				if (ev.xclient.data.l[0] == wm_delete_window) {
-					li_win_event_t event;
-					event.type = li_win_event_close;
-					event.window.lu = ev.xany.window;
-					li_win_cb(event);
-				}
-				break;
-		}
+		handle_event(ev);
 	}
 }
 
 int li_win_create(li_win_t *win, int width, int height) {
 	win->lu = XCreateSimpleWindow(dp, root, 0, 0, width, height, 0, 0, 0);
+	XSelectInput(dp, win->lu, ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask);
 	XSetWMProtocols(dp, win->lu, &wm_delete_window, 1);
 	return 0;
 }
