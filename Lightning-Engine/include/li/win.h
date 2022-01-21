@@ -10,6 +10,7 @@ typedef enum li_event_type {
 	li_event_close,
 	li_event_key_press,
 	li_event_key_release,
+	li_event_key_repeat,
 	li_event_button_press,
 	li_event_button_release,
 	li_event_motion_notify,
@@ -46,9 +47,8 @@ int li_win_init(void);
 void li_win_exit(void);
 void li_win_poll(void);
 int li_win_create(li_win_t *win, int width, int height);
-void li_win_destroy(li_win_t *win);
-void li_win_map(li_win_t *win);
-
+void li_win_destroy(li_win_t win);
+void li_win_map(li_win_t win);
 void li_win_cb(li_event_t *event);
 
 #endif

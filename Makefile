@@ -11,7 +11,7 @@ ifeq ($(platform), linux)
 	CC				:= clang
 	OFLAGS			:= -lX11
 	CXX				:= clang++
-	LIENGINE_SRC	:= platform/posix/dl.c platform/posix/entry.c platform/xlib/win.c
+	LIENGINE_SRC	:= platform/posix/dl.c platform/posix/entry.c platform/xlib/win.c platform/xlib/keymap.c
 	LIENGINE		:= bin/liengine.a
 	SANDBOX_SRC		:= main.c
 	SANDBOX			:= bin/sandbox
