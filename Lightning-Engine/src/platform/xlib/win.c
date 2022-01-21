@@ -5,50 +5,41 @@ static Display *dp;
 static Window root;
 static Atom wm_delete_window;
 
-static void handle_event(XEvent ev) {
+static void event_handle(XEvent *ev) {
 	li_event_t event;
-	switch (ev.type) {
+	event.window.lu = ev->xany.window;
+	switch (ev->type) {
 		case ClientMessage:
-			if (ev.xclient.data.l[0] == wm_delete_window) {
+			if (ev->xclient.data.l[0] == wm_delete_window) {
 				event.type = li_event_close;
-				event.window.lu = ev.xany.window;
-				li_win_cb(event);
+				li_win_cb(&event);
 			}
 			break;
 		case KeyPress:
-			event.type = li_event_key_press;
-			event.window.lu = ev.xkey.window;
-			event.data.key.key = ev.xkey.keycode;
-			li_win_cb(event);
-			break;
 		case KeyRelease:
-			event.type = li_event_key_release;
-			event.window.lu = ev.xkey.window;
-			event.data.key.key = ev.xkey.keycode;
-			li_win_cb(event);
+			if (ev->type == KeyPress)
+				event.type = li_event_key_press;
+			else
+				event.type = li_event_key_release;
+			event.data.key.key = ev->xkey.keycode;
+			li_win_cb(&event);
 			break;
 		case ButtonPress:
-			event.type = li_event_button_press;
-			event.window.lu = ev.xbutton.window;
-			event.data.button.x = ev.xbutton.x;
-			event.data.button.y = ev.xbutton.y;
-			event.data.button.button = ev.xbutton.button;
-			li_win_cb(event);
-			break;
 		case ButtonRelease:
-			event.type = li_event_button_release;
-			event.window.lu = ev.xbutton.window;
-			event.data.button.x = ev.xbutton.x;
-			event.data.button.y = ev.xbutton.y;
-			event.data.button.button = ev.xbutton.button;
-			li_win_cb(event);
+			if (ev->type == ButtonPress)
+				event.type = li_event_button_press;
+			else
+				event.type = li_event_button_release;
+			event.data.button.x = ev->xbutton.x;
+			event.data.button.y = ev->xbutton.y;
+			event.data.button.button = ev->xbutton.button;
+			li_win_cb(&event);
 			break;
 		case MotionNotify:
 			event.type = li_event_motion_notify;
-			event.window.lu = ev.xmotion.window;
-			event.data.motion.x = ev.xmotion.x;
-			event.data.motion.y = ev.xmotion.y;
-			li_win_cb(event);
+			event.data.motion.x = ev->xmotion.x;
+			event.data.motion.y = ev->xmotion.y;
+			li_win_cb(&event);
 			break;
 	}
 }
@@ -71,7 +62,7 @@ void li_win_poll(void) {
 	XEvent ev;
 	while (XPending(dp)) {
 		XNextEvent(dp, &ev);
-		handle_event(ev);
+		event_handle(&ev);
 	}
 }
 
@@ -82,10 +73,10 @@ int li_win_create(li_win_t *win, int width, int height) {
 	return 0;
 }
 
-void li_win_destroy(li_win_t win) {
-	XDestroyWindow(dp, win.lu);
+void li_win_destroy(li_win_t *win) {
+	XDestroyWindow(dp, win->lu);
 }
 
-void li_win_map(li_win_t win) {
-	XMapWindow(dp, win.lu);
+void li_win_map(li_win_t *win) {
+	XMapWindow(dp, win->lu);
 }

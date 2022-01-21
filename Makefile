@@ -19,7 +19,7 @@ ifeq ($(platform), linux)
 else ifeq ($(platform), linux-mingw)
 	CC				:= x86_64-w64-mingw32-gcc
 	OFLAGS			:= -lmingw32
-	CFLAGS			:= -municode
+	CFLAGS			:= 
 	CXX				:= x86_64-w64-mingw32-g++
 	LIENGINE_SRC	:= platform/windows/dl.c platform/windows/entry.c platform/windows/win.c
 	LIENGINE		:= bin/liengine.lib
@@ -52,9 +52,10 @@ $(SANDBOX_DIR)/obj/%.o: $(SANDBOX_DIR)/src/%.c
 	$(CC) $(CFLAGS) -o $@ $< -c $(SANDBOX_INCLUDE)
 
 clean:
-	rm -f $(LIENGINE_DIR)/obj
-	rm -f $(LIENGINE)
-	rm -f $(SANDBOX_DIR)/obj
+	rm -rf $(LIENGINE_DIR)/obj
+	rm -f bin/liengine.a
+	rm -f bin/liengine.lib
+	rm -rf $(SANDBOX_DIR)/obj
 	rm -f $(SANDBOX)
 
 re: clean all
