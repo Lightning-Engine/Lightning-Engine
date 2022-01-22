@@ -1,6 +1,7 @@
 #include "li/win.h"
 #include "li/keymap.h"
 #include "li/platform/xlib.h"
+#include "li/assert.h"
 
 Display *li_xlib_display;
 static Window li_xlib_root;
@@ -63,15 +64,13 @@ static void event_handle(XEvent *ev) {
 	}
 }
 
-int li_win_init(void (*cb)(li_event_t*)) {
+void li_win_init(void (*cb)(li_event_t*)) {
 	li_xlib_display = XOpenDisplay(NULL);
-	if (li_xlib_display == NULL)
-		return -1;
+	li_assert(li_xlib_display != NULL);
 	
 	li_xlib_root = XDefaultRootWindow(li_xlib_display);
 	li_xlib_wm_delete_window = XInternAtom(li_xlib_display, "WM_DELETE_WINDOW", False);
 	li_xlib_win_cb = cb;
-	return 0;
 }
 
 void li_win_exit(void) {
@@ -86,11 +85,12 @@ void li_win_poll(void) {
 	}
 }
 
-int li_win_create(li_win_t *win, int width, int height) {
-	win->lu = XCreateSimpleWindow(li_xlib_display, li_xlib_root, 0, 0, width, height, 0, 0, 0);
-	XSelectInput(li_xlib_display, win->lu, ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask);
-	XSetWMProtocols(li_xlib_display, win->lu, &li_xlib_wm_delete_window, 1);
-	return 0;
+li_win_t li_win_create(int width, int height) {
+	li_win_t win;
+	win.lu = XCreateSimpleWindow(li_xlib_display, li_xlib_root, 0, 0, width, height, 0, 0, 0);
+	XSelectInput(li_xlib_display, win.lu, ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask);
+	XSetWMProtocols(li_xlib_display, win.lu, &li_xlib_wm_delete_window, 1);
+	return win;
 }
 
 void li_win_destroy(li_win_t win) {

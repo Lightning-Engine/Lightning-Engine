@@ -22,7 +22,7 @@ ifeq ($(platform), linux)
 	SHARED_SUFFIX	:= .so
 	BIN_SUFFIX		:=
 
-	LIENGINE_SRC	:= platform/posix/dl.c platform/posix/entry.c win.c
+	LIENGINE_SRC	:= platform/posix/dl.c platform/posix/entry.c win.c assert.c
 	LIENGINE_WIN_SRC:= platform/xlib/win.c platform/xlib/keymap.c
 	SANDBOX_SRC		:= main.c
 else ifeq ($(platform), linux-mingw)
@@ -39,7 +39,7 @@ else ifeq ($(platform), linux-mingw)
 	SHARED_SUFFIX	:= .dll
 	BIN_SUFFIX		:= .exe
 
-	LIENGINE_SRC	:= platform/windows/dl.c platform/windows/entry.c win.c
+	LIENGINE_SRC	:= platform/windows/dl.c platform/windows/entry.c win.c assert.c
 	LIENGINE_WIN_SRC:= platform/windows/win.c platform/windows/keymap.c
 	SANDBOX_SRC		:= main.c
 else
@@ -56,15 +56,15 @@ LIENGINE_BIN		:= bin/$(STATIC_PREFIX)liengine$(STATIC_SUFFIX)
 LIENGINE_WIN_BIN	:= bin/$(SHARED_PREFIX)liengine_win$(SHARED_SUFFIX)
 SANDBOX_BIN			:= bin/$(BIN_PREFIX)sandbox$(BIN_SUFFIX)
 
-all: $(LIENGINE_BIN) $(LIENGINE_WIN_BIN) $(SANDBOX_BIN)
+all: $(LIENGINE_WIN_BIN) $(SANDBOX_BIN)
 
 $(LIENGINE_BIN): $(LIENGINE_OBJ)
 	mkdir -p $(BIN_DIR)
 	$(LIB_CMD) rcs $(LIENGINE_BIN) $(LIENGINE_OBJ)
 
-$(LIENGINE_WIN_BIN): $(LIENGINE_WIN_OBJ)
+$(LIENGINE_WIN_BIN): $(LIENGINE_BIN) $(LIENGINE_WIN_OBJ)
 	mkdir -p $(BIN_DIR)
-	$(CC) $(LIENGINE_WIN_OBJ) -o $(LIENGINE_WIN_BIN) -shared $(OFLAGS)
+	$(CC) $(LIENGINE_WIN_OBJ) -o $(LIENGINE_WIN_BIN) -shared $(OFLAGS) $(LIENGINE_BIN)
 
 $(SANDBOX_BIN): $(LIENGINE_BIN) $(SANDBOX_OBJ)
 	mkdir -p $(BIN_DIR)

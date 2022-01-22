@@ -1,4 +1,5 @@
 #include "li/win.h"
+#include "li/assert.h"
 #include <windows.h>
 
 static const wchar_t *LI_DEFAULT_CLASS_NAME = L"LIWINDOW";
@@ -7,17 +8,14 @@ static void (*li_win_cb)(li_event_t*);
 
 LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param);
 
-int li_win_init(void (*cb)(li_event_t*)) {
+void li_win_init(void (*cb)(li_event_t*)) {
 	WNDCLASS wndClass = { 0 };
 	LI_WIN_HANDLE = GetModuleHandleA(NULL);
 	wndClass.hInstance = LI_WIN_HANDLE;
 	wndClass.lpszClassName = LI_DEFAULT_CLASS_NAME;
 	wndClass.lpfnWndProc = winProc;
 	li_win_cb = cb;
-
-	if (RegisterClass(&wndClass) == 0)
-		return -1;
-	return 0;
+	li_assert(RegisterClass(&wndClass) != 0);
 }
 
 void li_win_exit(void) {
@@ -32,13 +30,13 @@ void li_win_poll(void) {
 	}
 }
 
-int li_win_create(li_win_t *win, int width, int height) {
-	win->p = CreateWindowExW(0, LI_DEFAULT_CLASS_NAME, L"New Window", 
+li_win_t li_win_create(int width, int height) {
+	li_win_t win;
+	win.p = CreateWindowExW(0, LI_DEFAULT_CLASS_NAME, L"New Window", 
 		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
 		width, height, NULL, NULL, LI_WIN_HANDLE, NULL);
-	if (win->p == 0)
-		return -1;
-	return 0;
+	li_assert(win.p != 0);
+	return win;
 }
 
 
@@ -84,6 +82,7 @@ int _windows_get_key_state(void) {
 	state |= li_key_state_num_lock * (GetKeyState(VK_NUMLOCK) & 0x1);
 	state |= li_key_state_caps_lock * (GetKeyState(VK_CAPITAL) & 0x1);
 	state |= li_key_state_scroll_lock * (GetKeyState(VK_SCROLL) & 0x1);
+	state |= li_key_state_super * !!((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000);
 	state |= li_button_state_left * !!(GetKeyState(VK_LBUTTON) & 0x8000);
 	state |= li_button_state_middle * !!(GetKeyState(VK_MBUTTON) & 0x8000);
 	state |= li_button_state_right * !!(GetKeyState(VK_RBUTTON) & 0x8000);
@@ -105,6 +104,7 @@ int _windows_handle_key_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_para
 	(void)w_param;
 	switch (msg) {
 		case WM_KEYDOWN:
+		case WM_SYSKEYDOWN:
 			if (l_param & (1 << 30))
 				event.any.type = li_event_key_repeat;
 			else
@@ -112,6 +112,7 @@ int _windows_handle_key_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_para
 			li_win_cb(&event);
 			return 0;
 		case WM_KEYUP:
+		case WM_SYSKEYUP:
 			event.any.type = li_event_key_release;
 			li_win_cb(&event);
 			return 0;
@@ -171,7 +172,9 @@ LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
 			PostQuitMessage(0);
 			return 0;
 		case WM_KEYUP:
+		case WM_SYSKEYUP:
 		case WM_KEYDOWN:
+		case WM_SYSKEYDOWN:
 			if (!_windows_handle_key_event(hwnd, msg, w_param, l_param))
 				return 0;
 			break;

@@ -75,7 +75,7 @@ static li_key_t xlat_keysym(KeySym sym) {
 		case XK_Alt_L: return li_key_left_alt;
 		case XK_space: return li_key_space;
 		case XK_Alt_R: return li_key_right_alt;
-		case XK_Menu: return li_key_right_super;
+		case XK_Menu: return li_key_right_menu;
 		case XK_Control_R: return li_key_right_control;
 		case XK_Print: return li_key_print;
 		case XK_Scroll_Lock: return li_key_scroll_lock;

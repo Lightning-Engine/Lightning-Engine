@@ -51,10 +51,10 @@ typedef union li_event {
 	li_event_motion_t motion;
 } li_event_t;
 
-int li_win_init(void (*cb)(li_event_t*));
+void li_win_init(void (*cb)(li_event_t*));
 void li_win_exit(void);
 void li_win_poll(void);
-int li_win_create(li_win_t *win, int width, int height);
+li_win_t li_win_create(int width, int height);
 void li_win_destroy(li_win_t win);
 void li_win_map(li_win_t win);
 

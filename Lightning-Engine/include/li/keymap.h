@@ -3,7 +3,6 @@
 
 typedef enum li_key {
 	li_key_unknown,
-
 	li_key_esc,
 	li_key_f1,
 	li_key_f2,
@@ -17,36 +16,30 @@ typedef enum li_key {
 	li_key_f10,
 	li_key_f11,
 	li_key_f12,
-
 	li_key_tilde,
 	li_key_minus,
 	li_key_equal,
 	li_key_backspace,
-
 	li_key_tab,
 	li_key_left_bracket,
 	li_key_right_bracket,
 	li_key_backslash,
-
 	li_key_caps_lock,
 	li_key_semicolon,
 	li_key_apostrophe,
 	li_key_enter,
-
 	li_key_left_shift,
 	li_key_comma,
 	li_key_period,
 	li_key_slash,
 	li_key_right_shift,
-
 	li_key_left_control,
 	li_key_left_super,
 	li_key_left_alt,
 	li_key_space,
 	li_key_right_alt,
-	li_key_right_super,
+	li_key_right_menu,
 	li_key_right_control,
-
 	li_key_print,
 	li_key_scroll_lock,
 	li_key_pause,
@@ -60,7 +53,6 @@ typedef enum li_key {
 	li_key_down,
 	li_key_left,
 	li_key_right,
-
 	li_key_num_lock,
 	li_key_num_divide,
 	li_key_num_multiply,
@@ -78,7 +70,6 @@ typedef enum li_key {
 	li_key_num_enter,
 	li_key_num_0,
 	li_key_num_period,
-
 	li_key_0 = '0',
 	li_key_1 = '1',
 	li_key_2 = '2',

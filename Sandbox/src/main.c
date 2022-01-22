@@ -35,7 +35,7 @@ int li_main(void) {
 	li_win_t window;
 
 	li_win_init(win_cb);
-	li_win_create(&window, 640, 480);
+	window = li_win_create(640, 480);
 	li_win_map(window);
 	while (running)
 		li_win_poll();

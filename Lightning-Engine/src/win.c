@@ -1,8 +1,10 @@
 #include "li/win.h"
 #include "li/dl.h"
+#include "li/assert.h"
+#include <stdlib.h>
 
 #if 1 // enable symbol loading
-#define LI_LOAD_SYMBOL(name) { void* fn = li_dl_sym(lib, #name); if ((_##name = *(name##_type*) &fn) == 0) return -1; }
+#define LI_LOAD_SYMBOL(name) { void* fn = li_dl_sym(lib, #name); li_assert((_##name = *(name##_type*) &fn) != 0); }
 #else
 #define LI_LOAD_SYMBOL(name) 
 #endif
@@ -19,10 +21,10 @@
 
 static li_dl_t lib;
 static int win_loaded = 0;
-typedef int (*li_win_init_type)(void (*cb)(li_event_t*));
+typedef void (*li_win_init_type)(void (*cb)(li_event_t*));
 typedef void (*li_win_exit_type)(void);
 typedef void (*li_win_poll_type)(void);
-typedef int (*li_win_create_type)(li_win_t*, int, int);
+typedef li_win_t (*li_win_create_type)(int, int);
 typedef void (*li_win_destroy_type)(li_win_t);
 typedef void (*li_win_map_type)(li_win_t);
 
@@ -33,11 +35,10 @@ static li_win_create_type _li_win_create;
 static li_win_destroy_type _li_win_destroy;
 static li_win_map_type _li_win_map;
 
-int li_win_load() {
+void li_win_load() {
 	if (!win_loaded) {
 		lib = li_dl_open_rel(LI_WIN_LIB);
-		if (lib.p == 0)
-			return -1;
+		li_assert(lib.p != NULL);
 
 		LI_LOAD_SYMBOL(li_win_init)
 		LI_LOAD_SYMBOL(li_win_exit)
@@ -47,41 +48,34 @@ int li_win_load() {
 		LI_LOAD_SYMBOL(li_win_map)
 		win_loaded = 1;
 	}
-	return 0;
 }
 
-int li_win_init(void (*cb)(li_event_t*)) {
-	if (li_win_load() < 0)
-		return -1;
-	return _li_win_init(cb);
+void li_win_init(void (*cb)(li_event_t*)) {
+	li_win_load();
+	_li_win_init(cb);
 }
 
 void li_win_exit(void) {
-	if (li_win_load() < 0)
-		return -1;
+	li_win_load();
 	_li_win_exit();
 }
 
 void li_win_poll(void) {
-	if (li_win_load() < 0)
-		return -1;
+	li_win_load();
 	_li_win_poll();
 }
 
-int li_win_create(li_win_t *win, int width, int height) {
-	if (li_win_load() < 0)
-		return -1;
-	return _li_win_create(win, width, height);
+li_win_t li_win_create(int width, int height) {
+	li_win_load();
+	return _li_win_create(width, height);
 }
 
 void li_win_destroy(li_win_t win) {
-	if (li_win_load() < 0)
-		return -1;
+	li_win_load();
 	_li_win_destroy(win);
 }
 
 void li_win_map(li_win_t win) {
-	if (li_win_load() < 0)
-		return -1;
+	li_win_load();
 	_li_win_map(win);
 }
