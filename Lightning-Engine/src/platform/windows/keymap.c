@@ -38,7 +38,7 @@ li_key_t li_win_xlat_key(int keycode) {
 		case 0x038: return li_key_left_alt;
 		case 0x039: return li_key_space;
 		case 0x138: return li_key_right_alt;
-		case 0x15C: return li_key_right_menu;
+		case 0x15C: return li_key_right_super;
 		case 0x11D: return li_key_right_control;
 		case 0x137: return li_key_print;
 		case 0x046: return li_key_scroll_lock;

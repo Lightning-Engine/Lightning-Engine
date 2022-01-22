@@ -38,7 +38,7 @@ typedef enum li_key {
 	li_key_left_alt,
 	li_key_space,
 	li_key_right_alt,
-	li_key_right_menu,
+	li_key_right_super,
 	li_key_right_control,
 	li_key_print,
 	li_key_scroll_lock,
