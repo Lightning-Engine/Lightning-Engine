@@ -27,7 +27,7 @@ ifeq ($(platform), linux)
 else ifeq ($(platform), linux-mingw)
 	CC				:= x86_64-w64-mingw32-gcc
 	OFLAGS			:= -lmingw32
-	CFLAGS			:= -Wall -Wextra -pedantic -std=c11 -DLI_PLATFORM_WINDOWS -fPIC
+	CFLAGS			:= -Wall -Wextra -pedantic -std=c11 -DLI_PLATFORM_WINDOWS -fPIC -municode
 	CXX				:= x86_64-w64-mingw32-g++
 	LIB_CMD			:= x86_64-w64-mingw32-ar
 

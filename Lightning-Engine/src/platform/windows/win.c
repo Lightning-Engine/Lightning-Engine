@@ -1,7 +1,7 @@
 #include "li/win.h"
 #include <windows.h>
 
-static const char *LI_DEFAULT_CLASS_NAME = "LIWINDOW";
+static const wchar_t *LI_DEFAULT_CLASS_NAME = L"LIWINDOW";
 static HINSTANCE LI_WIN_HANDLE;
 static void (*li_win_cb)(li_event_t*);
 
@@ -33,7 +33,7 @@ void li_win_poll(void) {
 }
 
 int li_win_create(li_win_t *win, int width, int height) {
-	win->p = CreateWindowExA(0, LI_DEFAULT_CLASS_NAME, "New Window", 
+	win->p = CreateWindowExW(0, LI_DEFAULT_CLASS_NAME, L"New Window", 
 		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
 		width, height, NULL, NULL, LI_WIN_HANDLE, NULL);
 	if (win->p == 0)
