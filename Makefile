@@ -6,11 +6,12 @@ LIENGINE_DIR		:= Lightning-Engine
 SANDBOX_DIR			:= Sandbox
 LIENGINE_INCLUDE	:= -I$(LIENGINE_DIR)/include
 SANDBOX_INCLUDE		:= -I$(LIENGINE_DIR)/include -I$(SANDBOX_DIR)/include
+BIN_DIR				:= bin
 
 ifeq ($(platform), linux)
 	CC				:= clang
-	OFLAGS			:= -lX11 -ldl -fsanitize=address -g -Og
-	CFLAGS			:= -Wall -Wextra -pedantic -std=c11 -DLI_PLATFORM_POSIX -fPIC -fsanitize=address -g -Og
+	OFLAGS			:= -lX11 -ldl -fsanitize=address -g3 -O0
+	CFLAGS			:= -Wall -Wextra -pedantic -std=c11 -DLI_PLATFORM_POSIX -fPIC -fsanitize=address -g3 -O0
 	CXX				:= clang++
 	LIB_CMD			:= ar
 
@@ -58,12 +59,15 @@ SANDBOX_BIN			:= bin/$(BIN_PREFIX)sandbox$(BIN_SUFFIX)
 all: $(LIENGINE_BIN) $(LIENGINE_WIN_BIN) $(SANDBOX_BIN)
 
 $(LIENGINE_BIN): $(LIENGINE_OBJ)
+	mkdir -p $(BIN_DIR)
 	$(LIB_CMD) rcs $(LIENGINE_BIN) $(LIENGINE_OBJ)
 
 $(LIENGINE_WIN_BIN): $(LIENGINE_WIN_OBJ)
+	mkdir -p $(BIN_DIR)
 	$(CC) $(LIENGINE_WIN_OBJ) -o $(LIENGINE_WIN_BIN) -shared $(OFLAGS)
 
 $(SANDBOX_BIN): $(LIENGINE_BIN) $(SANDBOX_OBJ)
+	mkdir -p $(BIN_DIR)
 	$(CC) $(SANDBOX_OBJ) -o $(SANDBOX_BIN) $(OFLAGS) $(LIENGINE_BIN)
 
 $(LIENGINE_DIR)/obj/%.o: $(LIENGINE_DIR)/src/%.c
@@ -80,7 +84,7 @@ clean:
 	rm -f bin/sandbox.exe
 	rm -f bin/liengine.a
 	rm -f bin/liengine.lib
-	rm -f bin/liengine_win.so
+	rm -f bin/libliengine_win.so
 	rm -f bin/liengine_win.dll
 	rm -rf $(SANDBOX_DIR)/obj
 
