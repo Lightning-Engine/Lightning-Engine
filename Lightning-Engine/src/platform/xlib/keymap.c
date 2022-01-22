@@ -71,14 +71,14 @@ static li_key_t xlat_keysym(KeySym sym) {
 		case XK_slash: return li_key_slash;
 		case XK_Shift_R: return li_key_right_shift;
 		case XK_Control_L: return li_key_left_control;
-		case XK_Super_L: return li_key_windows;
+		case XK_Super_L: return li_key_left_super;
 		case XK_Alt_L: return li_key_left_alt;
 		case XK_space: return li_key_space;
 		case XK_Alt_R: return li_key_right_alt;
-		case XK_Menu: return li_key_select;
+		case XK_Menu: return li_key_right_super;
 		case XK_Control_R: return li_key_right_control;
 		case XK_Print: return li_key_print;
-		case XK_Scroll_Lock: return li_key_scroll;
+		case XK_Scroll_Lock: return li_key_scroll_lock;
 		case XK_Pause: return li_key_pause;
 		case XK_Insert: return li_key_insert;
 		case XK_Home: return li_key_home;
@@ -111,8 +111,7 @@ static li_key_t xlat_keysym(KeySym sym) {
 	}
 }
 
-li_key_t li_win_xlat_key(int keycode)
-{
+li_key_t li_win_xlat_key(int keycode) {
 	int count;
 	li_key_t key = li_key_unknown;
 	KeySym *keysym = XGetKeyboardMapping(li_xlib_display, keycode, 1, &count);
@@ -122,12 +121,36 @@ li_key_t li_win_xlat_key(int keycode)
 	return key;
 }
 
-li_button_t li_win_xlat_button(int button)
-{
+li_button_t li_win_xlat_button(int button) {
 	switch (button) {
-		case 1: return li_button_left;
-		case 2: return li_button_middle;
-		case 3: return li_button_right;
+		case Button1: return li_button_left;
+		case Button2: return li_button_middle;
+		case Button3: return li_button_right;
 		default: return li_button_unknown;
 	}
+}
+
+li_key_state_t li_win_xlat_key_state(int state) {
+	li_key_state_t result = 0;
+	if (state & ShiftMask)
+		result |= li_key_state_shift;
+	if (state & LockMask)
+		result |= li_key_state_caps_lock;
+	if (state & ControlMask)
+		result |= li_key_state_control;
+	if (state & Mod1Mask)
+		result |= li_key_state_alt;
+	if (state & Mod2Mask)
+		result |= li_key_state_num_lock;
+	if (state & Mod3Mask)
+		result |= li_key_state_scroll_lock;
+	if (state & Mod4Mask)
+		result |= li_key_state_super;
+	if (state & Button1Mask)
+		result |= li_button_state_left;
+	if (state & Button2Mask)
+		result |= li_button_state_middle;
+	if (state & Button3Mask)
+		result |= li_button_state_right;
+	return result;
 }

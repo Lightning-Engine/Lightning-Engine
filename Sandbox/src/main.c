@@ -6,27 +6,27 @@
 static int running = 1;
 
 void li_win_cb(li_event_t *event) {
-	switch (event->type) {
+	switch (event->any.type) {
 		case li_event_close:
 			running = 0;
 			break;
 		case li_event_key_press:
-			printf("key press: %d\n", event->data.key.key);
+			printf("key_press { key=%d, state=%d }\n", event->key.key, event->key.state);
 			break;
 		case li_event_key_release:
-			printf("key release: %d\n", event->data.key.key);
+			printf("key_release: { key=%d, state=%d }\n", event->key.key, event->key.state);
 			break;
 		case li_event_key_repeat:
-			printf("key repeat: %d\n", event->data.key.key);
+			printf("key_repeat: { key=%d, state=%d }\n", event->key.key, event->key.state);
 			break;
 		case li_event_button_press:
-			printf("button press: %d %d %d\n", event->data.button.x, event->data.button.y, event->data.button.button);
+			printf("button_press { x=%d, y=%d, button=%d, state=%d }\n", event->button.x, event->button.y, event->button.button, event->button.state);
 			break;
 		case li_event_button_release:
-			printf("button release: %d %d %d\n", event->data.button.x, event->data.button.y, event->data.button.button);
+			printf("button_release { x=%d, y=%d, button=%d, state=%d }\n", event->button.x, event->button.y, event->button.button, event->button.state);
 			break;
 		case li_event_motion_notify:
-			printf("motion: %d %d\n", event->data.motion.x, event->data.motion.y);
+			printf("motion { x=%d, y=%d, state=%d }\n", event->motion.x, event->motion.y, event->motion.state);
 			break;
 	}
 }

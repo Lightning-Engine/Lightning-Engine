@@ -21,7 +21,7 @@ else ifeq ($(platform), linux-mingw)
 	OFLAGS			:= -lmingw32
 	CFLAGS			:= 
 	CXX				:= x86_64-w64-mingw32-g++
-	LIENGINE_SRC	:= platform/windows/dl.c platform/windows/entry.c platform/windows/win.c
+	LIENGINE_SRC	:= platform/windows/dl.c platform/windows/entry.c platform/windows/win.c platform/windows/keymap.c
 	LIENGINE		:= bin/liengine.lib
 	SANDBOX_SRC		:= main.c
 	SANDBOX			:= bin/sandbox.exe

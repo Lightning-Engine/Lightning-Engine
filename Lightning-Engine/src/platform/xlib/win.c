@@ -20,40 +20,43 @@ static int event_is_repeat(XEvent *ev) {
 
 static void event_handle(XEvent *ev) {
 	li_event_t event;
-	event.window.lu = ev->xany.window;
+	event.any.window.lu = ev->xany.window;
 	switch (ev->type) {
 		case ClientMessage:
 			if (ev->xclient.data.l[0] == li_xlib_wm_delete_window) {
-				event.type = li_event_close;
+				event.any.type = li_event_close;
 				li_win_cb(&event);
 			}
 			break;
 		case KeyPress:
 		case KeyRelease:
 			if (ev->type == KeyRelease)
-				event.type = li_event_key_release;
+				event.any.type = li_event_key_release;
 			else if (event_is_repeat(ev))
-				event.type = li_event_key_repeat;
+				event.any.type = li_event_key_repeat;
 			else if (ev->type == KeyPress)
-				event.type = li_event_key_press;
-			event.data.key.key = li_win_xlat_key(ev->xkey.keycode);
+				event.any.type = li_event_key_press;
+			event.key.key = li_win_xlat_key(ev->xkey.keycode);
+			event.key.state = li_win_xlat_key_state(ev->xkey.state);
 			li_win_cb(&event);
 			break;
 		case ButtonPress:
 		case ButtonRelease:
 			if (ev->type == ButtonPress)
-				event.type = li_event_button_press;
+				event.any.type = li_event_button_press;
 			else
-				event.type = li_event_button_release;
-			event.data.button.x = ev->xbutton.x;
-			event.data.button.y = ev->xbutton.y;
-			event.data.button.button = li_win_xlat_button(ev->xbutton.button);
+				event.any.type = li_event_button_release;
+			event.button.x = ev->xbutton.x;
+			event.button.y = ev->xbutton.y;
+			event.button.button = li_win_xlat_button(ev->xbutton.button);
+			event.button.state = li_win_xlat_key_state(ev->xkey.state);
 			li_win_cb(&event);
 			break;
 		case MotionNotify:
-			event.type = li_event_motion_notify;
-			event.data.motion.x = ev->xmotion.x;
-			event.data.motion.y = ev->xmotion.y;
+			event.any.type = li_event_motion_notify;
+			event.motion.x = ev->xmotion.x;
+			event.motion.y = ev->xmotion.y;
+			event.motion.state = li_win_xlat_key_state(ev->xkey.state);
 			li_win_cb(&event);
 			break;
 	}

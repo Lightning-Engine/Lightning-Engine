@@ -1,6 +1,8 @@
 #ifndef LI_WIN_H
 #define LI_WIN_H
 
+#include "li/keymap.h"
+
 typedef union li_win {
 	void *p;
 	unsigned long lu;
@@ -16,31 +18,37 @@ typedef enum li_event_type {
 	li_event_motion_notify,
 } li_event_type_t;
 
+typedef struct li_event_any {
+	li_event_type_t type;
+	li_win_t window;
+} li_event_any_t;
+
 typedef struct li_event_key {
-	int key;
+	li_event_any_t any;
+	li_key_t key;
+	li_key_state_t state;
 } li_event_key_t;
 
 typedef struct li_event_button {
+	li_event_any_t any;
 	int x;
 	int y;
-	int button;
+	li_button_t button;
+	li_key_state_t state;
 } li_event_button_t;
 
 typedef struct li_event_motion {
+	li_event_any_t any;
 	int x;
 	int y;
+	li_key_state_t state;
 } li_event_motion_t;
 
-typedef union li_event_data {
+typedef union li_event {
+	li_event_any_t any;
 	li_event_key_t key;
 	li_event_button_t button;
 	li_event_motion_t motion;
-} li_event_data_t;
-
-typedef struct li_event {
-	li_event_type_t type;
-	li_win_t window;
-	li_event_data_t data;
 } li_event_t;
 
 int li_win_init(void);

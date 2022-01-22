@@ -71,69 +71,112 @@ int _windows_translate_button(UINT button_event, WPARAM w_param) {
 	return 0;
 }
 
+int _windows_get_key_state(void) {
+	int	state;
+
+	state = 0;
+	state |= li_key_state_shift * (GetKeyState(VK_SHIFT) != 0);
+	state |= li_key_state_control * (GetKeyState(VK_CONTROL) != 0);
+	state |= li_key_state_alt * (GetKeyState(VK_MENU) != 0);
+	state |= li_key_state_num_lock * (GetKeyState(VK_NUMLOCK) & 0b1);
+	state |= li_key_state_caps_lock * (GetKeyState(VK_CAPITAL) & 0b1);
+	state |= li_key_state_scroll_lock * (GetKeyState(VK_SCROLL) & 0b1);
+}
+
 int _windows_get_button_state(WPARAM w_param) {
-	return (w_param);	
+	int state;
+
+	state = _windows_get_key_state();
+	state |= li_button_state_left * ((w_param & MK_LBUTTON) != 0);
+	state |= li_button_state_middle * ((w_param & MK_MBUTTON) != 0);
+	state |= li_button_state_right * ((w_param & MK_RBUTTON) != 0);
+	return (state);	
+}
+
+/*Also gets if it's an extended key*/
+short _windows_get_scancode(WPARAM w_param) {
+	return ((short)(w_param & 0x1FF0000) >> 16);
+}
+
+
+int _windows_handle_key_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
+	li_event_t event;
+
+	event.any.window = ((li_win_t) ((void*) hwnd));
+	event.key.key =  li_win_xlat_key(_windows_get_scancode(w_param));
+	event.key.state = li_win_xlat_key_state(_windows_get_key_state());
+	switch (msg) {
+		case WM_KEYDOWN:
+			if (l_param & (1 << 30))
+				event.any.type = li_event_key_repeat;
+			else
+				event.any.type = li_event_key_press;
+			li_win_cb(&event);
+			return 0;
+		case WM_KEYUP:
+			event.any.type = li_event_key_release;
+			li_win_cb(&event);
+			return 0;
+		default:
+			return 1;
+	}
+}
+
+int _windows_handle_mouse_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
+	li_event_t event;
+
+	event.any.window = ((li_win_t) ((void*) hwnd));
+	event.button.button = li_win_xlat_button(_windows_translate_button(msg, w_param));
+	event.button.state = li_win_xlat_key_state(_windows_get_button_state(w_param));
+	event.button.x = LOWORD(l_param);
+	event.button.y = HIWORD(l_param);
+	switch (msg) {
+		case WM_LBUTTONDOWN:
+		case WM_MBUTTONDOWN:
+		case WM_RBUTTONDOWN:
+		case WM_XBUTTONDOWN:
+			event.any.type = li_event_button_press;
+			li_win_cb(&event);
+			return 0;
+		case WM_LBUTTONUP:
+		case WM_MBUTTONUP:
+		case WM_RBUTTONUP:
+		case WM_XBUTTONUP:
+			event.any.type = li_event_button_release;
+			li_win_cb(&event);
+			return 0;
+		case WM_MOUSEMOVE:
+			event.any.type = li_event_motion_notify;
+			li_win_cb(&event);
+			return 0;
+		default:
+			return 1;
+	}
 }
 
 LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
 	li_event_t event;
 
-	memset(&event, 0, sizeof(li_event_t));
-	event.data.button.button = -1;
 	switch (msg) {
 		case WM_DESTROY:
-			event.type = li_event_close;
-			event.window = (li_win_t) hwnd;
+			event.any.type = li_event_close;
+			event.any.window = ((li_win_t) ((void*) hwnd));
 			li_win_cb(&event);
 			PostQuitMessage(0);
 			return 0;
 		case WM_KEYUP:
 		case WM_KEYDOWN:
-			if (l_param & 0xF)
-				event.type = li_event_key_repeat;
-			else if (msg == WM_KEYUP)
-				event.type = li_event_key_release;
-			else
-				event.type = li_event_key_press;
-			event.data.key.key = w_param; /*Temporary, todo change to universal lightning keycode*/
-			li_win_cb(&event);
-			return 0;
+			_windows_handle_key_event(hwnd, msg, w_param, l_param);
 		case WM_LBUTTONDOWN:
-			event.data.button.button = _windows_translate_button(msg, w_param);
 		case WM_MBUTTONDOWN:
-			if (event.data.button.button < 0)
-				event.data.button.button = _windows_translate_button(msg, w_param);
 		case WM_RBUTTONDOWN:
-			if (event.data.button.button < 0)
-				event.data.button.button = _windows_translate_button(msg, w_param);
 		case WM_XBUTTONDOWN:
-			if (event.data.button.button < 0)
-				event.data.button.button = _windows_translate_button(msg, w_param);
-			event.type = li_event_button_press;
-			event.data.button.state = _windows_get_button_state(w_param);
-			li_win_cb(&event);
-			return 0;
 		case WM_LBUTTONUP:
-			event.data.button.button = _windows_translate_button(msg, w_param);
 		case WM_MBUTTONUP:
-			if (event.data.button.button < 0)
-				event.data.button.button = _windows_translate_button(msg, w_param);
 		case WM_RBUTTONUP:
-			if (event.data.button.button < 0)
-				event.data.button.button = _windows_translate_button(msg, w_param);
 		case WM_XBUTTONUP:
-			if (event.data.button.button < 0)
-				event.data.button.button = _windows_translate_button(msg, w_param);
-			event.type = li_event_button_press;
-			event.data.button.state = _windows_get_button_state(w_param);
-			li_win_cb(&event);
-			return 0;
 		case WM_MOUSEMOVE:
-			event.type = li_event_motion_notify;
-			event.data.motion.x = LOWORD(l_param);
-			event.data.motion.y = HIWORD(l_param);
-			li_win_cb(&event);
-			return 0;
+			_windows_handle_mouse_event(hwnd, msg, w_param, l_param);
 
 	}
 	return DefWindowProc(hwnd, msg, w_param, l_param);

@@ -40,15 +40,15 @@ typedef enum li_key {
 	li_key_right_shift,
 
 	li_key_left_control,
-	li_key_windows,
+	li_key_left_super,
 	li_key_left_alt,
 	li_key_space,
 	li_key_right_alt,
-	li_key_select,
+	li_key_right_super,
 	li_key_right_control,
 
 	li_key_print,
-	li_key_scroll,
+	li_key_scroll_lock,
 	li_key_pause,
 	li_key_insert,
 	li_key_home,
@@ -124,7 +124,21 @@ typedef enum li_button {
 	li_button_right,
 } li_button_t;
 
+typedef enum li_key_state {
+	li_key_state_shift = 1,
+	li_key_state_caps_lock = 2,
+	li_key_state_control = 4,
+	li_key_state_alt = 8,
+	li_key_state_num_lock = 16,
+	li_key_state_scroll_lock = 32,
+	li_key_state_super = 64,
+	li_button_state_left = 256,
+	li_button_state_middle = 512,
+	li_button_state_right = 1024,
+} li_key_state_t;
+
 li_key_t li_win_xlat_key(int keycode);
 li_button_t li_win_xlat_button(int button);
+li_key_state_t li_win_xlat_key_state(int state);
 
 #endif
