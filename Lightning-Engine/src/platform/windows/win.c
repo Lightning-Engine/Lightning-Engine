@@ -1,21 +1,23 @@
 #include "li/win.h"
 #include <windows.h>
 
-const static char *LI_DEFAULT_CLASS_NAME = "LIWINDOW";
+static const char *LI_DEFAULT_CLASS_NAME = "LIWINDOW";
 static HINSTANCE LI_WIN_HANDLE;
+static void (*li_win_cb)(li_event_t*);
 
 LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param);
 
-int li_win_init(void) {
-	WNDCLASS wndClass = { };
-
+int li_win_init(void (*cb)(li_event_t*)) {
+	WNDCLASS wndClass = { 0 };
 	LI_WIN_HANDLE = GetModuleHandleA(NULL);
 	wndClass.hInstance = LI_WIN_HANDLE;
 	wndClass.lpszClassName = LI_DEFAULT_CLASS_NAME;
 	wndClass.lpfnWndProc = winProc;
+	li_win_cb = cb;
 
 	if (RegisterClass(&wndClass) == 0)
 		return -1;
+	return 0;
 }
 
 void li_win_exit(void) {
@@ -36,6 +38,7 @@ int li_win_create(li_win_t *win, int width, int height) {
 		width, height, NULL, NULL, LI_WIN_HANDLE, NULL);
 	if (win->p == 0)
 		return -1;
+	return 0;
 }
 
 
@@ -75,36 +78,31 @@ int _windows_get_key_state(void) {
 	int	state;
 
 	state = 0;
-	state |= li_key_state_shift * (GetKeyState(VK_SHIFT) != 0);
-	state |= li_key_state_control * (GetKeyState(VK_CONTROL) != 0);
-	state |= li_key_state_alt * (GetKeyState(VK_MENU) != 0);
-	state |= li_key_state_num_lock * (GetKeyState(VK_NUMLOCK) & 0b1);
-	state |= li_key_state_caps_lock * (GetKeyState(VK_CAPITAL) & 0b1);
-	state |= li_key_state_scroll_lock * (GetKeyState(VK_SCROLL) & 0b1);
-}
-
-int _windows_get_button_state(WPARAM w_param) {
-	int state;
-
-	state = _windows_get_key_state();
-	state |= li_button_state_left * ((w_param & MK_LBUTTON) != 0);
-	state |= li_button_state_middle * ((w_param & MK_MBUTTON) != 0);
-	state |= li_button_state_right * ((w_param & MK_RBUTTON) != 0);
-	return (state);	
+	state |= li_key_state_shift * !!(GetKeyState(VK_SHIFT) & 0x8000);
+	state |= li_key_state_control * !!(GetKeyState(VK_CONTROL) & 0x8000);
+	state |= li_key_state_alt * !!(GetKeyState(VK_MENU) & 0x8000);
+	state |= li_key_state_num_lock * (GetKeyState(VK_NUMLOCK) & 0x1);
+	state |= li_key_state_caps_lock * (GetKeyState(VK_CAPITAL) & 0x1);
+	state |= li_key_state_scroll_lock * (GetKeyState(VK_SCROLL) & 0x1);
+	state |= li_button_state_left * !!(GetKeyState(VK_LBUTTON) & 0x8000);
+	state |= li_button_state_middle * !!(GetKeyState(VK_MBUTTON) & 0x8000);
+	state |= li_button_state_right * !!(GetKeyState(VK_RBUTTON) & 0x8000);
+	return state;
 }
 
 /*Also gets if it's an extended key*/
-short _windows_get_scancode(WPARAM w_param) {
-	return ((short)(w_param & 0x1FF0000) >> 16);
+short _windows_get_scancode(LPARAM l_param) {
+	return ((l_param & 0x1FF0000) >> 16);
 }
 
 
 int _windows_handle_key_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
 	li_event_t event;
 
-	event.any.window = ((li_win_t) ((void*) hwnd));
-	event.key.key =  li_win_xlat_key(_windows_get_scancode(w_param));
+	event.any.window.p = hwnd;
+	event.key.key =  li_win_xlat_key(_windows_get_scancode(l_param));
 	event.key.state = li_win_xlat_key_state(_windows_get_key_state());
+	(void)w_param;
 	switch (msg) {
 		case WM_KEYDOWN:
 			if (l_param & (1 << 30))
@@ -120,21 +118,22 @@ int _windows_handle_key_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_para
 		default:
 			return 1;
 	}
+	return 1;
 }
 
 int _windows_handle_mouse_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
 	li_event_t event;
 
-	event.any.window = ((li_win_t) ((void*) hwnd));
-	event.button.button = li_win_xlat_button(_windows_translate_button(msg, w_param));
-	event.button.state = li_win_xlat_key_state(_windows_get_button_state(w_param));
-	event.button.x = LOWORD(l_param);
-	event.button.y = HIWORD(l_param);
+	event.any.window.p = hwnd;
 	switch (msg) {
 		case WM_LBUTTONDOWN:
 		case WM_MBUTTONDOWN:
 		case WM_RBUTTONDOWN:
 		case WM_XBUTTONDOWN:
+			event.button.button = li_win_xlat_button(_windows_translate_button(msg, w_param));
+			event.button.state = li_win_xlat_key_state(_windows_get_key_state());
+			event.button.x = LOWORD(l_param);
+			event.button.y = HIWORD(l_param);
 			event.any.type = li_event_button_press;
 			li_win_cb(&event);
 			return 0;
@@ -142,10 +141,17 @@ int _windows_handle_mouse_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_pa
 		case WM_MBUTTONUP:
 		case WM_RBUTTONUP:
 		case WM_XBUTTONUP:
+			event.button.button = li_win_xlat_button(_windows_translate_button(msg, w_param));
+			event.button.state = li_win_xlat_key_state(_windows_get_key_state());
+			event.button.x = LOWORD(l_param);
+			event.button.y = HIWORD(l_param);
 			event.any.type = li_event_button_release;
 			li_win_cb(&event);
 			return 0;
 		case WM_MOUSEMOVE:
+			event.motion.state = li_win_xlat_key_state(_windows_get_key_state());
+			event.motion.x = LOWORD(l_param);
+			event.motion.y = HIWORD(l_param);
 			event.any.type = li_event_motion_notify;
 			li_win_cb(&event);
 			return 0;
@@ -160,13 +166,15 @@ LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
 	switch (msg) {
 		case WM_DESTROY:
 			event.any.type = li_event_close;
-			event.any.window = ((li_win_t) ((void*) hwnd));
+			event.any.window.p = hwnd;
 			li_win_cb(&event);
 			PostQuitMessage(0);
 			return 0;
 		case WM_KEYUP:
 		case WM_KEYDOWN:
-			_windows_handle_key_event(hwnd, msg, w_param, l_param);
+			if (!_windows_handle_key_event(hwnd, msg, w_param, l_param))
+				return 0;
+			break;
 		case WM_LBUTTONDOWN:
 		case WM_MBUTTONDOWN:
 		case WM_RBUTTONDOWN:
@@ -176,7 +184,9 @@ LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
 		case WM_RBUTTONUP:
 		case WM_XBUTTONUP:
 		case WM_MOUSEMOVE:
-			_windows_handle_mouse_event(hwnd, msg, w_param, l_param);
+			if (!_windows_handle_mouse_event(hwnd, msg, w_param, l_param))
+				return 0;
+			break;
 
 	}
 	return DefWindowProc(hwnd, msg, w_param, l_param);

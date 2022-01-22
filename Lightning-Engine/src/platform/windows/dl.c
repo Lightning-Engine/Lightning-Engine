@@ -8,7 +8,8 @@ li_dl_t li_dl_open(const char* filename) {
 }
 
 void* li_dl_sym(li_dl_t dl, const char* symbol) {
-	return GetProcAddress(dl.p, symbol);
+	FARPROC proc = GetProcAddress(dl.p, symbol);
+	return *((void**) &proc);
 }
 
 void li_dl_close(li_dl_t dl) {

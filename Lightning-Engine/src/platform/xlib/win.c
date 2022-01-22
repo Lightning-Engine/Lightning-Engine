@@ -5,6 +5,7 @@
 Display *li_xlib_display;
 static Window li_xlib_root;
 static Atom li_xlib_wm_delete_window;
+static void(*li_xlib_win_cb)(li_event_t*);
 
 static int event_is_repeat(XEvent *ev) {
 	XEvent ev2;
@@ -23,9 +24,9 @@ static void event_handle(XEvent *ev) {
 	event.any.window.lu = ev->xany.window;
 	switch (ev->type) {
 		case ClientMessage:
-			if (ev->xclient.data.l[0] == li_xlib_wm_delete_window) {
+			if ((unsigned long) ev->xclient.data.l[0] == li_xlib_wm_delete_window) {
 				event.any.type = li_event_close;
-				li_win_cb(&event);
+				li_xlib_win_cb(&event);
 			}
 			break;
 		case KeyPress:
@@ -38,7 +39,7 @@ static void event_handle(XEvent *ev) {
 				event.any.type = li_event_key_press;
 			event.key.key = li_win_xlat_key(ev->xkey.keycode);
 			event.key.state = li_win_xlat_key_state(ev->xkey.state);
-			li_win_cb(&event);
+			li_xlib_win_cb(&event);
 			break;
 		case ButtonPress:
 		case ButtonRelease:
@@ -50,25 +51,26 @@ static void event_handle(XEvent *ev) {
 			event.button.y = ev->xbutton.y;
 			event.button.button = li_win_xlat_button(ev->xbutton.button);
 			event.button.state = li_win_xlat_key_state(ev->xkey.state);
-			li_win_cb(&event);
+			li_xlib_win_cb(&event);
 			break;
 		case MotionNotify:
 			event.any.type = li_event_motion_notify;
 			event.motion.x = ev->xmotion.x;
 			event.motion.y = ev->xmotion.y;
 			event.motion.state = li_win_xlat_key_state(ev->xkey.state);
-			li_win_cb(&event);
+			li_xlib_win_cb(&event);
 			break;
 	}
 }
 
-int li_win_init(void) {
+int li_win_init(void (*cb)(li_event_t*)) {
 	li_xlib_display = XOpenDisplay(NULL);
 	if (li_xlib_display == NULL)
 		return -1;
 	
 	li_xlib_root = XDefaultRootWindow(li_xlib_display);
 	li_xlib_wm_delete_window = XInternAtom(li_xlib_display, "WM_DELETE_WINDOW", False);
+	li_xlib_win_cb = cb;
 	return 0;
 }
 
