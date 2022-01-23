@@ -1,9 +1,13 @@
 #include "li/win.h"
 #include "li/keymap.h"
-#include "li/platform/xlib.h"
 #include "li/assert.h"
+#include <X11/Xlib.h>
+#include <GL/glx.h>
+#include <GL/glxext.h>
 
+extern Display *li_xlib_display;
 Display *li_xlib_display;
+
 static Window li_xlib_root;
 static int li_xlib_screen;
 static Atom li_xlib_wm_delete_window;
@@ -62,6 +66,12 @@ static void event_handle(XEvent *ev) {
 			event.motion.state = li_win_xlat_key_state(ev->xkey.state);
 			li_xlib_win_cb(&event);
 			break;
+		case ConfigureNotify:
+			event.any.type = li_event_window_resize;
+			event.resize.width = ev->xconfigure.width;
+			event.resize.height = ev->xconfigure.height;
+			li_xlib_win_cb(&event);
+			break;
 	}
 }
 
@@ -91,7 +101,7 @@ li_win_t li_win_create(int width, int height) {
 	li_win_t win;
 	win.lu = XCreateSimpleWindow(li_xlib_display, li_xlib_root, 0, 0, width, height, 0, 0, 0);
 	li_assert(win.lu != 0);
-	XSelectInput(li_xlib_display, win.lu, ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask);
+	XSelectInput(li_xlib_display, win.lu, ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask);
 	XSetWMProtocols(li_xlib_display, win.lu, &li_xlib_wm_delete_window, 1);
 	return win;
 }
@@ -118,6 +128,7 @@ li_ctx_t li_ctx_create(li_win_t win) {
 	static const int context_attribs[] = {
 		GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
 		GLX_CONTEXT_MINOR_VERSION_ARB, 2,
+		GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
 		None,
 	};
 

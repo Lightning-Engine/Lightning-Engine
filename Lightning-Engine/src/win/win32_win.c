@@ -36,6 +36,7 @@ void li_win_init(void (*cb)(li_event_t*)) {
 	wndClass.hInstance = LI_WIN_HANDLE;
 	wndClass.lpszClassName = LI_DEFAULT_CLASS_NAME;
 	wndClass.lpfnWndProc = winProc;
+	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	li_win_cb = cb;
 	li_assert(RegisterClass(&wndClass) != 0);
 }
@@ -184,6 +185,19 @@ int _windows_handle_mouse_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_pa
 	}
 }
 
+int _windows_handle_resize_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
+	li_event_t event;
+
+	(void)w_param;
+	(void)msg;
+	event.resize.any.window.p = hwnd;
+	event.resize.any.type = li_event_window_resize;
+	event.resize.width = LOWORD(l_param);
+	event.resize.height = HIWORD(l_param);
+	li_win_cb(&event);
+	return 0;
+}
+
 LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
 	li_event_t event;
 
@@ -211,6 +225,10 @@ LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
 		case WM_XBUTTONUP:
 		case WM_MOUSEMOVE:
 			if (!_windows_handle_mouse_event(hwnd, msg, w_param, l_param))
+				return 0;
+			break;
+		case WM_SIZE:
+			if (!_windows_handle_resize_event(hwnd, msg, w_param, l_param))
 				return 0;
 			break;
 
@@ -252,7 +270,8 @@ li_ctx_t li_ctx_create(li_win_t win) {
 	int contextAttribs[] = {
 		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
 		WGL_CONTEXT_MINOR_VERSION_ARB, 2,
-		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
+		/*WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,*/
 		0
 	};
 

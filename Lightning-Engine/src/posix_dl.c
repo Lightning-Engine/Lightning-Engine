@@ -1,9 +1,11 @@
+#define _POSIX_C_SOURCE 200809L
 #include "li/dl.h"
-#include "li/entry.h"
+#include "li/assert.h"
 #include <dlfcn.h>
 #include <libgen.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 li_dl_t li_dl_open(const char *filename) {
 	li_dl_t dl;
@@ -12,12 +14,20 @@ li_dl_t li_dl_open(const char *filename) {
 }
 
 li_dl_t li_dl_open_rel(const char *filename) {
-	char *exe = malloc(strlen(li_argv[0]) + strlen(filename) + 1);
-	strcpy(exe, li_argv[0]);
+	char *exe = NULL;
+	size_t linecap;
+	FILE *fp = fopen("/proc/self/cmdline", "rb");
+	size_t size = getdelim(&exe, &linecap, 0, fp);
+	fclose(fp);
+	exe = realloc(exe, size + strlen(filename) + 2);
 	char *file = dirname(exe);
 	strcat(file, "/");
 	strcat(file, filename);
 	li_dl_t dl = li_dl_open(file);
+	if (dl.p == NULL) {
+		printf("%s\n", dlerror());
+		li_assert(0);
+	}
 	free(exe);
 	return dl;
 }

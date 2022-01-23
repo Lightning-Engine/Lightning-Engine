@@ -1,6 +1,8 @@
 #include "li/keymap.h"
-#include "li/platform/xlib.h"
+#include <X11/Xlib.h>
 #include <X11/keysym.h>
+
+extern Display *li_xlib_display;
 
 static li_key_t xlat_keysym(KeySym sym) {
 	switch (sym) {

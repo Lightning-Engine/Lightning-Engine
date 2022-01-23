@@ -20,6 +20,7 @@ typedef enum li_event_type {
 	li_event_button_press,
 	li_event_button_release,
 	li_event_motion_notify,
+	li_event_window_resize,
 } li_event_type_t;
 
 typedef struct li_event_any {
@@ -48,11 +49,18 @@ typedef struct li_event_motion {
 	li_key_state_t state;
 } li_event_motion_t;
 
+typedef struct li_event_resize {
+	li_event_any_t any;
+	int width;
+	int height;
+} li_event_resize_t;
+
 typedef union li_event {
 	li_event_any_t any;
 	li_event_key_t key;
 	li_event_button_t button;
 	li_event_motion_t motion;
+	li_event_resize_t resize;
 } li_event_t;
 
 void li_win_init(void (*cb)(li_event_t*));
