@@ -24,10 +24,6 @@ li_dl_t li_dl_open_rel(const char *filename) {
 	strcat(file, "/");
 	strcat(file, filename);
 	li_dl_t dl = li_dl_open(file);
-	if (dl.p == NULL) {
-		printf("%s\n", dlerror());
-		li_assert(0);
-	}
 	free(exe);
 	return dl;
 }

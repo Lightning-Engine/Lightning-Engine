@@ -9,17 +9,7 @@
 #define LI_LOAD_SYMBOL(name) 
 #endif
 
-#ifdef LI_PLATFORM_POSIX
-#define LI_WIN_LIB "libliengine_win.so"
-#elif LI_PLATFORM_WINDOWS
-#define LI_WIN_LIB "liengine_win.dll"
-#elif LI_PLATFORM_OSX
-#define LI_WIN_LIB "libliengine_win.so"
-#else
-#error unsupported platform
-#endif
-
-static li_dl_t lib;
+static li_dl_t lib = { .p = NULL };
 static int win_loaded = 0;
 typedef void (*li_win_init_type)(void (*)(li_event_t*));
 typedef void (*li_win_exit_type)(void);
@@ -47,7 +37,12 @@ static li_ctx_get_proc_addr_type _li_ctx_get_proc_addr;
 
 void li_win_load() {
 	if (!win_loaded) {
-		lib = li_dl_open_rel(LI_WIN_LIB);
+		if (lib.p == NULL)
+			lib = li_dl_open_rel("libliengine_win_xlib.so");
+		if (lib.p == NULL)
+			lib = li_dl_open_rel("liengine_win_win32.dll");
+		if (lib.p == NULL)
+			lib = li_dl_open_rel("libliengine_win_macos.so");
 		li_assert(lib.p != NULL);
 
 		LI_LOAD_SYMBOL(li_win_init)
