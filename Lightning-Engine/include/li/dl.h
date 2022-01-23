@@ -6,7 +6,6 @@ typedef union li_dl {
 } li_dl_t;
 
 li_dl_t li_dl_open(const char *filename);
-li_dl_t li_dl_open_rel(const char *filename);
 void *li_dl_sym(li_dl_t dl, const char *symbol);
 void li_dl_close(li_dl_t dl);
 

@@ -66,7 +66,7 @@ class GnuConfig(BaseConfig):
 	fmt = PosixFmt
 	cflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Og", "-g"]
 	cxxflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Og", "-g"]
-	ldflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address"]
+	ldflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Wl,-R,$ORIGIN"]
 
 class ClangConfig(BaseConfig):
 	cc = "clang"
@@ -74,7 +74,7 @@ class ClangConfig(BaseConfig):
 	fmt = PosixFmt
 	cflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Og", "-g"]
 	cxxflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Og", "-g"]
-	ldflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address"]
+	ldflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Wl,-R,$ORIGIN"]
 
 class MingwConfig(BaseConfig):
 	cc = "x86_64-w64-mingw32-gcc"
@@ -82,7 +82,7 @@ class MingwConfig(BaseConfig):
 	fmt = Win32Fmt
 	cflags = ["-municode", "-std=c11", "-Wall", "-Wextra", "-pedantic", "-Og", "-g"]
 	cxxflags = ["-municode", "-std=c11", "-Wall", "-Wextra", "-pedantic", "-Og", "-g"]
-	ldflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", ]
+	ldflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic"]
 
 class MacosConfig(BaseConfig):
 	cc = "clang"
@@ -90,7 +90,7 @@ class MacosConfig(BaseConfig):
 	fmt = PosixFmt
 	cflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Og", "-g"]
 	cxxflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Og", "-g"]
-	ldflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address"]
+	ldflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Wl,-R,$ORIGIN"]
 
 	@classmethod
 	async def shared(cls, tgt, objs, libs):
@@ -158,7 +158,7 @@ if arg == "macos":
 
 liengine = Target("shared", "liengine", "Lightning-Engine")
 liengine.libs = []
-liengine.srcs = ["li_assert.c", "li_win.c", "li_entry.c"]
+liengine.srcs = ["li_assert.c", "li_win.c"]
 liengine.deps = []
 liengine.incs = ["Lightning-Engine/include"]
 liengine.defs = []

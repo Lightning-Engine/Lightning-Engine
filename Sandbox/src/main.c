@@ -1,6 +1,4 @@
 #include "li/win.h"
-#define LI_ENTRY_IMPL
-#include "li/entry.h"
 #ifdef __APPLE__
 #include <opengl/gl.h>
 #else
@@ -44,7 +42,7 @@ void win_cb(li_event_t *event) {
 	}
 }
 
-int li_main(void) {
+int main(void) {
 	li_win_t window;
 	li_ctx_t context;
 

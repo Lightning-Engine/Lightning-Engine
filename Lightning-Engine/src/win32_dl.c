@@ -7,10 +7,6 @@ li_dl_t li_dl_open(const char* filename) {
 	return dl;
 }
 
-li_dl_t li_dl_open_rel(const char *filename) {
-	return (li_dl_open(filename));
-}
-
 void* li_dl_sym(li_dl_t dl, const char* symbol) {
 	FARPROC proc = GetProcAddress(dl.p, symbol);
 	return *((void**) &proc);
