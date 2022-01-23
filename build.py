@@ -142,15 +142,19 @@ arg = sys.argv[1]
 if arg == "gnu":
 	config = GnuConfig
 	platforms = ["posix", "xlib"]
+	run_command = "LSAN_OPTIONS=suppressions=lsan.supp bin/sandbox"
 if arg == "clang":
 	config = ClangConfig
 	platforms = ["posix", "xlib"]
+	run_command = "LSAN_OPTIONS=suppressions=lsan.supp bin/sandbox"
 if arg == "mingw":
 	config = MingwConfig
 	platforms = ["win32"]
+	run_command = "LSAN_OPTIONS=suppressions=lsan.supp bin/sandbox.exe"
 if arg == "macos":
 	config = MacosConfig
 	platforms = ["posix", "macos"]
+	run_command = "bin/sandbox"
 
 liengine = Target("shared", "liengine", "Lightning-Engine")
 liengine.libs = []
@@ -210,13 +214,19 @@ if "win32" in platforms:
 	sandbox.libs.extend(["opengl32"])
 
 async def main():
-	shutil.rmtree("bin")
-	shutil.rmtree("obj")
+	if os.path.exists("bin"):
+		shutil.rmtree("bin")
+	if os.path.exists("obj"):
+		shutil.rmtree("obj")
+
 	os.makedirs("bin", exist_ok=True)
 	await liengine.build(config)
 	for lib in liengine_libs:
 		await lib.build(config)
 	await sandbox.build(config)
+
+	proc = await asyncio.create_subprocess_shell(run_command)
+	sys.exit(await proc.wait())
 
 if __name__ == "__main__":
 	asyncio.run(main())
