@@ -164,7 +164,7 @@ liengine.incs = ["Lightning-Engine/include"]
 liengine.defs = []
 
 if "posix" in platforms:
-	liengine.libs.extend(["dl"])
+	liengine.libs.extend(["dl"] if "macos" not in platforms else [])
 	liengine.srcs.extend(["posix_dl.c"])
 	liengine.defs.extend([])
 if "win32" in platforms:
