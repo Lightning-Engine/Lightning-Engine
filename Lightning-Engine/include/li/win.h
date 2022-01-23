@@ -3,6 +3,7 @@
 
 #include "li/keymap.h"
 
+
 typedef union li_win {
 	void *p;
 	unsigned long lu;
@@ -63,7 +64,9 @@ typedef union li_event {
 	li_event_resize_t resize;
 } li_event_t;
 
-void li_win_init(void (*cb)(li_event_t*));
+typedef void (*win_cb_proc_t)(li_event_t*);
+
+void li_win_init(win_cb_proc_t cb);
 void li_win_exit(void);
 void li_win_poll(void);
 li_win_t li_win_create(int width, int height);

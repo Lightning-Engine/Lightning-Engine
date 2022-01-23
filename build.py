@@ -129,7 +129,7 @@ class Target:
 			objs.append(obj)
 			src = src_path(self, src)
 			os.makedirs(os.path.dirname(obj), exist_ok=True)
-			if src.endswith(".c"):
+			if src.endswith(".c") or src.endswith(".m"):
 				await config.comp_c(obj, src, self.incs, self.defs)
 			elif src.endswith(".cc"):
 				await config.comp_cxx(obj, src, self.incs, self.defs)
@@ -141,11 +141,11 @@ class Target:
 arg = sys.argv[1]
 if arg == "gnu":
 	config = GnuConfig
-	platforms = ["posix", "xlib"]
+	platforms = ["linux", "xlib"]
 	run_command = "LSAN_OPTIONS=suppressions=lsan.supp bin/sandbox"
 if arg == "clang":
 	config = ClangConfig
-	platforms = ["posix", "xlib"]
+	platforms = ["linux", "xlib"]
 	run_command = "LSAN_OPTIONS=suppressions=lsan.supp bin/sandbox"
 if arg == "mingw":
 	config = MingwConfig
@@ -153,18 +153,22 @@ if arg == "mingw":
 	run_command = "LSAN_OPTIONS=suppressions=lsan.supp bin/sandbox.exe"
 if arg == "macos":
 	config = MacosConfig
-	platforms = ["posix", "macos"]
+	platforms = ["macos"]
 	run_command = "bin/sandbox"
 
 liengine = Target("shared", "liengine", "Lightning-Engine")
 liengine.libs = []
-liengine.srcs = ["li_assert.c", "li_win.c"]
+liengine.srcs = ["li_assert.c", "li_win.c", "li_entry.c"]
 liengine.deps = []
 liengine.incs = ["Lightning-Engine/include"]
 liengine.defs = []
 
-if "posix" in platforms:
-	liengine.libs.extend(["dl"] if "macos" not in platforms else [])
+if "linux" in platforms:
+	liengine.libs.extend(["dl"])
+	liengine.srcs.extend(["posix_dl.c"])
+	liengine.defs.extend([])
+if "macos" in platforms:
+	liengine.libs.extend([])
 	liengine.srcs.extend(["posix_dl.c"])
 	liengine.defs.extend([])
 if "win32" in platforms:
@@ -188,7 +192,7 @@ liengine_win_win32.defs = []
 
 liengine_win_macos = Target("shared", "liengine_win_macos", "Lightning-Engine")
 liengine_win_macos.libs = ["Cocoa"]
-liengine_win_macos.srcs = ["win/macos_win.c", "win/macos_keymap.c"]
+liengine_win_macos.srcs = ["win/macos_win.m", "win/macos_keymap.c"]
 liengine_win_macos.deps = [liengine]
 liengine_win_macos.incs = ["Lightning-Engine/include"]
 liengine_win_macos.defs = []
@@ -208,10 +212,12 @@ sandbox.deps = [liengine]
 sandbox.incs = ["Lightning-Engine/include"]
 sandbox.defs = []
 
-if "posix" in platforms:
+if "linux" in platforms:
 	sandbox.libs.extend(["GL"])
 if "win32" in platforms:
 	sandbox.libs.extend(["opengl32"])
+if "macos" in platforms:
+	sandbox.libs.extend(["OpenGL"])
 
 async def main():
 	if os.path.exists("bin"):
