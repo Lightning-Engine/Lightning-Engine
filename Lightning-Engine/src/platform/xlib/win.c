@@ -5,6 +5,7 @@
 
 Display *li_xlib_display;
 static Window li_xlib_root;
+static int li_xlib_screen;
 static Atom li_xlib_wm_delete_window;
 static void(*li_xlib_win_cb)(li_event_t*);
 
@@ -69,6 +70,7 @@ void li_win_init(void (*cb)(li_event_t*)) {
 	li_assert(li_xlib_display != NULL);
 	
 	li_xlib_root = XDefaultRootWindow(li_xlib_display);
+	li_xlib_screen = XDefaultScreen(li_xlib_display);
 	li_xlib_wm_delete_window = XInternAtom(li_xlib_display, "WM_DELETE_WINDOW", False);
 	li_xlib_win_cb = cb;
 }
@@ -88,6 +90,7 @@ void li_win_poll(void) {
 li_win_t li_win_create(int width, int height) {
 	li_win_t win;
 	win.lu = XCreateSimpleWindow(li_xlib_display, li_xlib_root, 0, 0, width, height, 0, 0, 0);
+	li_assert(win.lu != 0);
 	XSelectInput(li_xlib_display, win.lu, ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask);
 	XSetWMProtocols(li_xlib_display, win.lu, &li_xlib_wm_delete_window, 1);
 	return win;
@@ -99,4 +102,51 @@ void li_win_destroy(li_win_t win) {
 
 void li_win_map(li_win_t win) {
 	XMapWindow(li_xlib_display, win.lu);
+}
+
+li_ctx_t li_ctx_create(li_win_t win) {
+	static const int visual_attribs[] = {
+		GLX_RENDER_TYPE, GLX_RGBA_BIT,
+		GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+		GLX_DOUBLEBUFFER, True,
+		GLX_RED_SIZE, 1,
+		GLX_GREEN_SIZE, 1,
+		GLX_BLUE_SIZE, 1,
+		None,
+	};
+
+	static const int context_attribs[] = {
+		GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
+		GLX_CONTEXT_MINOR_VERSION_ARB, 2,
+		None,
+	};
+
+	(void) win;
+	int num_fbc;
+	GLXFBConfig *fbc = glXChooseFBConfig(li_xlib_display, li_xlib_screen, visual_attribs, &num_fbc);
+	li_assert(num_fbc > 0);
+	PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = (PFNGLXCREATECONTEXTATTRIBSARBPROC) glXGetProcAddress((const GLubyte *) "glXCreateContextAttribsARB");
+	li_assert(glXCreateContextAttribsARB != NULL);
+	li_ctx_t ctx;
+	ctx.p = glXCreateContextAttribsARB(li_xlib_display, fbc[0], NULL, True, context_attribs);
+	li_assert(ctx.p != NULL);
+	XFree(fbc);
+	return ctx;
+}
+
+void li_ctx_destroy(li_ctx_t ctx) {
+	glXDestroyContext(li_xlib_display, ctx.p);
+}
+
+void li_ctx_make_current(li_win_t win, li_ctx_t ctx) {
+	glXMakeCurrent(li_xlib_display, win.lu, ctx.p);
+}
+
+void li_ctx_swap_buffers(li_win_t win) {
+	glXSwapBuffers(li_xlib_display, win.lu);
+}
+
+void *li_ctx_get_proc_addr(const char *name) {
+	void (*fn)(void) = glXGetProcAddress((const GLubyte *) name);
+	return *(void**) &fn;
 }

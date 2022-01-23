@@ -1,12 +1,34 @@
 #include "li/win.h"
 #include "li/assert.h"
 #include <windows.h>
+#include <GL/gl.h>
+#include "li/vendor/wglext.h"
 
 static const wchar_t *LI_DEFAULT_CLASS_NAME = L"LIWINDOW";
 static HINSTANCE LI_WIN_HANDLE;
 static void (*li_win_cb)(li_event_t*);
 
 LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param);
+
+
+HDC _windows_get_hdc(li_win_t win) {
+	LONG_PTR ptr = GetWindowLongPtrW(win.p, GWLP_USERDATA);
+	if (ptr == 0) {
+		ptr = (LONG_PTR) GetDC(win.p);
+		SetWindowLongPtrW(win.p, GWLP_USERDATA, (LONG_PTR) ptr);
+		
+	}
+	return (HDC) ptr;
+}
+
+void _windows_release_hdcs(li_win_t win) {
+	HDC hdc;
+
+	hdc = _windows_get_hdc(win);
+	li_assert(hdc != 0);
+	ReleaseDC(win.p, hdc);
+}
+
 
 void li_win_init(void (*cb)(li_event_t*)) {
 	WNDCLASS wndClass = { 0 };
@@ -32,7 +54,7 @@ void li_win_poll(void) {
 
 li_win_t li_win_create(int width, int height) {
 	li_win_t win;
-	win.p = CreateWindowExW(0, LI_DEFAULT_CLASS_NAME, L"New Window", 
+	win.p = CreateWindowExW(CS_OWNDC, LI_DEFAULT_CLASS_NAME, L"New Window", 
 		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
 		width, height, NULL, NULL, LI_WIN_HANDLE, NULL);
 	li_assert(win.p != 0);
@@ -41,6 +63,7 @@ li_win_t li_win_create(int width, int height) {
 
 
 void li_win_destroy(li_win_t win) {
+	_windows_release_hdcs(win);
 	DestroyWindow(win.p);
 }
 
@@ -110,12 +133,12 @@ int _windows_handle_key_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_para
 			else
 				event.any.type = li_event_key_press;
 			li_win_cb(&event);
-			return 0;
+			return msg == WM_SYSKEYDOWN;
 		case WM_KEYUP:
 		case WM_SYSKEYUP:
 			event.any.type = li_event_key_release;
 			li_win_cb(&event);
-			return 0;
+			return msg == WM_SYSKEYUP;
 		default:
 			return 1;
 	}
@@ -193,4 +216,67 @@ LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
 
 	}
 	return DefWindowProc(hwnd, msg, w_param, l_param);
+}
+
+PIXELFORMATDESCRIPTOR _windows_get_pfd(void) {
+	PIXELFORMATDESCRIPTOR pfd;
+
+	memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+	pfd.nVersion = 1;
+	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+	pfd.iPixelType = PFD_TYPE_RGBA;
+	pfd.cColorBits = 32;
+	pfd.cDepthBits = 24;
+	pfd.cStencilBits = 8;
+	return pfd;
+}
+
+li_ctx_t li_ctx_create(li_win_t win) {
+	PIXELFORMATDESCRIPTOR pfd;
+	li_ctx_t dummy_context;
+	li_ctx_t actual_context;
+	int pixelFormat;
+	HDC hdc;
+
+	hdc = _windows_get_hdc(win);
+	pfd = _windows_get_pfd();
+	pixelFormat = ChoosePixelFormat(hdc, &pfd);
+	li_assert(pixelFormat != 0);
+	li_assert(SetPixelFormat(hdc, pixelFormat, &pfd));
+
+	dummy_context.p = (void*) wglCreateContext(hdc);
+	li_assert(dummy_context.p != NULL);
+	li_assert(wglMakeCurrent(hdc, dummy_context.p));
+	
+	int contextAttribs[] = {
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+		WGL_CONTEXT_MINOR_VERSION_ARB, 2,
+		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+		0
+	};
+
+	PROC proc = wglGetProcAddress("wglCreateContextAttribsARB");
+	PFNWGLCREATECONTEXTATTRIBSARBPROC func = *(PFNWGLCREATECONTEXTATTRIBSARBPROC*) &proc; 
+	actual_context.p = func(hdc, NULL, contextAttribs);
+	li_assert(wglDeleteContext(dummy_context.p));
+	
+	return actual_context;
+}
+
+void li_ctx_destroy(li_ctx_t ctx) {
+	li_assert(wglDeleteContext(ctx.p));
+}
+
+void li_ctx_make_current(li_win_t win, li_ctx_t ctx) {
+	li_assert(wglMakeCurrent(_windows_get_hdc(win), ctx.p));
+}
+
+void li_ctx_swap_buffers(li_win_t win) {
+	SwapBuffers(_windows_get_hdc(win));
+}
+
+void *li_ctx_get_proc_addr(const char *name) {
+	PROC fun = wglGetProcAddress(name);
+	return *(void**) &fun;
 }

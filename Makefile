@@ -9,10 +9,10 @@ SANDBOX_INCLUDE		:= -I$(LIENGINE_DIR)/include -I$(SANDBOX_DIR)/include
 BIN_DIR				:= bin
 
 ifeq ($(platform), linux)
-	CC				:= clang
-	OFLAGS			:= -lX11 -ldl -fsanitize=address -g3 -O0
-	CFLAGS			:= -Wall -Wextra -pedantic -std=c11 -DLI_PLATFORM_POSIX -fPIC -fsanitize=address -g3 -O0
-	CXX				:= clang++
+	CC				:= gcc
+	OFLAGS			:= -lX11 -ldl -lGL -fsanitize=address -g -O0
+	CFLAGS			:= -Wall -Wextra -pedantic -std=c11 -DLI_PLATFORM_POSIX -fPIC -fsanitize=address -g -O0
+	CXX				:= g++
 	LIB_CMD			:= ar
 
 	STATIC_PREFIX	:=
@@ -23,11 +23,11 @@ ifeq ($(platform), linux)
 	BIN_SUFFIX		:=
 
 	LIENGINE_SRC	:= platform/posix/dl.c platform/posix/entry.c win.c assert.c
-	LIENGINE_WIN_SRC:= platform/xlib/win.c platform/xlib/keymap.c
+	LIENGINE_WIN_SRC:= platform/xlib/win.c platform/xlib/keymap.c assert.c
 	SANDBOX_SRC		:= main.c
 else ifeq ($(platform), linux-mingw)
 	CC				:= x86_64-w64-mingw32-gcc
-	OFLAGS			:= -lmingw32
+	OFLAGS			:= -lmingw32 -lopengl32 -lgdi32
 	CFLAGS			:= -Wall -Wextra -pedantic -std=c11 -DLI_PLATFORM_WINDOWS -fPIC -municode
 	CXX				:= x86_64-w64-mingw32-g++
 	LIB_CMD			:= x86_64-w64-mingw32-ar
@@ -40,7 +40,7 @@ else ifeq ($(platform), linux-mingw)
 	BIN_SUFFIX		:= .exe
 
 	LIENGINE_SRC	:= platform/windows/dl.c platform/windows/entry.c win.c assert.c
-	LIENGINE_WIN_SRC:= platform/windows/win.c platform/windows/keymap.c
+	LIENGINE_WIN_SRC:= platform/windows/win.c platform/windows/keymap.c assert.c
 	SANDBOX_SRC		:= main.c
 else
 $(error "invalid platform $(platform)")
@@ -64,7 +64,7 @@ $(LIENGINE_BIN): $(LIENGINE_OBJ)
 
 $(LIENGINE_WIN_BIN): $(LIENGINE_BIN) $(LIENGINE_WIN_OBJ)
 	mkdir -p $(BIN_DIR)
-	$(CC) $(LIENGINE_WIN_OBJ) -o $(LIENGINE_WIN_BIN) -shared $(OFLAGS) $(LIENGINE_BIN)
+	$(CC) $(LIENGINE_WIN_OBJ) -o $(LIENGINE_WIN_BIN) -shared $(OFLAGS)
 
 $(SANDBOX_BIN): $(LIENGINE_BIN) $(SANDBOX_OBJ)
 	mkdir -p $(BIN_DIR)
@@ -89,3 +89,6 @@ clean:
 	rm -rf $(SANDBOX_DIR)/obj
 
 re: clean all
+
+run: re
+	LSAN_OPTIONS=suppressions=lightning.supp $(SANDBOX_BIN)
