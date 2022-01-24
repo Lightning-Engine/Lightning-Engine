@@ -90,7 +90,7 @@ class MacosConfig(BaseConfig):
 	fmt = PosixFmt
 	cflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Og", "-g"]
 	cxxflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Og", "-g"]
-	ldflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Wl,-R,$ORIGIN"]
+	ldflags = ["-std=c11", "-Wall", "-Wextra", "-pedantic", "-fsanitize=address", "-Wl,-rpath,$ORIGIN"]
 
 	@classmethod
 	async def shared(cls, tgt, objs, libs):
