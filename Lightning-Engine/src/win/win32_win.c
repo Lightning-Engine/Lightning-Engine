@@ -1,5 +1,6 @@
 #include "li/win.h"
 #include "li/assert.h"
+#include "li/dl.h"
 #include <windows.h>
 #include <GL/gl.h>
 #include "li/vendor/wglext.h"
@@ -7,6 +8,7 @@
 static const wchar_t *LI_DEFAULT_CLASS_NAME = L"LIWINDOW";
 static HINSTANCE LI_WIN_HANDLE;
 static void (*li_win_cb)(li_event_t*);
+static li_dl_t opengl32 = { .p = NULL };
 
 LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param);
 
@@ -31,14 +33,14 @@ void _windows_release_hdcs(li_win_t win) {
 
 
 void li_win_init(void (*cb)(li_event_t*)) {
-	WNDCLASS wndClass = { 0 };
+	WNDCLASSW wndClass = { 0 };
 	LI_WIN_HANDLE = GetModuleHandleA(NULL);
 	wndClass.hInstance = LI_WIN_HANDLE;
 	wndClass.lpszClassName = LI_DEFAULT_CLASS_NAME;
 	wndClass.lpfnWndProc = winProc;
 	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	li_win_cb = cb;
-	li_assert(RegisterClass(&wndClass) != 0);
+	li_assert(RegisterClassW(&wndClass) != 0);
 }
 
 void li_win_exit(void) {
@@ -296,6 +298,15 @@ void li_ctx_swap_buffers(li_win_t win) {
 }
 
 void *li_ctx_get_proc_addr(const char *name) {
+	if (opengl32.p == NULL)
+		opengl32 = li_dl_open("opengl32.dll");
+	li_assert(opengl32.p != NULL);
 	PROC fun = wglGetProcAddress(name);
-	return *(void**) &fun;
+	void *ptr = *(void**) &fun;
+	// https://www.khronos.org/opengl/wiki/Load_OpenGL_Functions
+	// > While the MSDN documentation says that wglGetProcAddress returns NULL on failure,
+	// > some implementations will return other values. 1, 2, and 3 are used, as well as -1. 
+	if (ptr == (void*) 0 || ptr == (void*) 1 || ptr == (void*) 2 || ptr == (void*) 3 || ptr == (void*) -1)
+		ptr = li_dl_sym(opengl32, name);
+	return ptr;
 }
