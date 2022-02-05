@@ -97,6 +97,7 @@ static win_cb_proc_t li_win_cb;
 		int_event.any.type = li_event_key_press;
 	int_event.any.window.p = [event window];
 	int_event.key.key = li_win_xlat_key([event keyCode]);
+	int_event.key.state = li_win_xlat_key_state([event modifierFlags]);
 	li_win_cb(&int_event);
 }
 
@@ -106,6 +107,7 @@ static win_cb_proc_t li_win_cb;
 	int_event.any.type = li_event_key_release;
 	int_event.any.window.p = [event window];
 	int_event.key.key = li_win_xlat_key([event keyCode]);
+	int_event.key.state = li_win_xlat_key_state([event modifierFlags]);
 	li_win_cb(&int_event);
 }
 
