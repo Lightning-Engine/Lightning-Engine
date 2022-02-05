@@ -1,15 +1,15 @@
 #import "Cocoa/Cocoa.h"
 #include "li/win.h"
 #include "li/keymap.h"
+#include <stdio.h>
 
 static const NSUInteger LI_WINDOW_STYLE = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
 static win_cb_proc_t li_win_cb;
 @class LiWindowDelegate;
 
 @interface LiWindowDelegate : NSView <NSWindowDelegate> {
-@public
-	bool running;
 }
+- (void)handleButtonEvent:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed;
 @end
 
 @implementation LiWindowDelegate
@@ -36,7 +36,56 @@ static win_cb_proc_t li_win_cb;
 	int_event.any.window.p = [event window];
 	int_event.motion.x = point.x;
 	int_event.motion.y = point.y;
-	li_win_cb(&event);
+	int_event.motion.state = 0;
+	li_win_cb(&int_event);
+}
+
+- (void)handleButtonEvent:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed {
+	li_event_t int_event;
+	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
+	
+	int_event.any.window.p = [event window];
+	if (isPressed)
+		int_event.any.type = li_event_button_press;
+	else
+		int_event.any.type = li_event_button_release;
+	int_event.button.button = eventButton;
+	int_event.button.x = point.x;
+	int_event.button.y = point.y;
+	int_event.button.state = 0;
+	li_win_cb(&int_event);
+}
+
+- (void) leftMouseDown: (NSEvent*) event {
+	[self handleButtonEvent:event button:li_button_left pressed:1];
+}
+
+- (void) rightMouseDown: (NSEvent*) event {
+	[self handleButtonEvent:event button:li_button_right pressed:1];
+}
+
+- (void) leftMouseUp: (NSEvent*) event {
+	[self handleButtonEvent:event button:li_button_left pressed:0];
+}
+
+- (void) rightMouseUp: (NSEvent*) event {
+	[self handleButtonEvent:event button:li_button_right pressed:0];
+}
+
+- (void) otherMouseDown: (NSEvent*) event {
+	[self handleButtonEvent:event button:li_button_unknown pressed:1];
+}
+
+- (void) otherMouseUp: (NSEvent*) event {
+	[self handleButtonEvent:event button:li_button_unknown pressed:0];
+}
+
+- (void) mouseDown: (NSEvent *) event {
+	[self handleButtonEvent:event button:li_button_left pressed:1];
+}
+
+- (void) mouseUp: (NSEvent *) event {
+	[self handleButtonEvent:event button:li_button_left pressed:0];
 }
 
 - (void) keyDown: (NSEvent *) event {
@@ -60,8 +109,16 @@ static win_cb_proc_t li_win_cb;
 	li_win_cb(&int_event);
 }
 
-- (void) windowDidMove:(NSNotification *)notification {
+- (void) windowDidResize:(NSNotification *) notification {
+	li_event_t int_event;
+	NSWindow *window = [notification object];
+	NSSize size = [[window contentView] frame].size;
 
+	int_event.any.type = li_event_window_resize;
+	int_event.any.window.p = window;
+	int_event.resize.width = (int) size.width;
+	int_event.resize.height = (int) size.height;
+	li_win_cb(&int_event);
 }
 @end
 
@@ -145,36 +202,3 @@ void li_ctx_swap_buffers(li_win_t win) {
 void *li_ctx_get_proc_addr(const char *name) {
 	return 0;
 }
-/*
-void win_cb(li_event_t *event) {
-	switch (event->any.type) {
-		case li_event_close:
-			break;
-		case li_event_key_press:
-			printf("key_press { key=%d, state=%d }\n", event->key.key, event->key.state);
-			break;
-		case li_event_key_release:
-			printf("key_release { key=%d, state=%d }\n", event->key.key, event->key.state);
-			break;
-		case li_event_key_repeat:
-			printf("key_repeat { key=%d, state=%d }\n", event->key.key, event->key.state);
-			break;
-		case li_event_button_press:
-			printf("button_press { x=%d, y=%d, button=%d, state=%d }\n", event->button.x, event->button.y, event->button.button, event->button.state);
-			break;
-		case li_event_button_release:
-			printf("button_release { x=%d, y=%d, button=%d, state=%d }\n", event->button.x, event->button.y, event->button.button, event->button.state);
-			break;
-		case li_event_motion_notify:
-			printf("motion { x=%d, y=%d, state=%d }\n", event->motion.x, event->motion.y, event->motion.state);
-			break;
-	}
-}
-
-int main(void) {
-	li_win_init(win_cb);
-	li_win_t win = li_win_create(650, 480);
-	while (1)
-		li_win_poll();
-	return (0);
-}*/

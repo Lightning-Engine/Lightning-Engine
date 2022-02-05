@@ -39,6 +39,9 @@ void win_cb(li_event_t *event) {
 			width = event->resize.width;
 			height = event->resize.height;
 			break;
+		default:
+			printf("Unkown event\n");
+			break;
 	}
 }
 

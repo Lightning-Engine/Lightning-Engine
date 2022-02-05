@@ -3,7 +3,6 @@
 
 #include "li/keymap.h"
 
-
 typedef union li_win {
 	void *p;
 	unsigned long lu;
