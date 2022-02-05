@@ -1,9 +1,5 @@
 #include "li/win.h"
-#ifdef __APPLE__
-#include <opengl/gl.h>
-#else
-#include <GL/gl.h>
-#endif
+#include "li/gl.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -45,27 +41,31 @@ void win_cb(li_event_t *event) {
 int main(void) {
 	li_win_t window;
 	li_ctx_t context;
+	li_gl_t gl;
 
 	li_win_init(win_cb);
 	window = li_win_create(width, height);
 	li_win_map(window);
-	// context = li_ctx_create(window);
-	// li_ctx_make_current(window, context);
-	// printf("%s\n", glGetString(GL_VERSION));
+	context = li_ctx_create(window);
+	li_ctx_make_current(window, context);
+	li_gl_init(&gl);
+	printf("%s\n", gl.GetString(GL_VERSION));
 	while (running) {
-		// glViewport(0, 0, width, height);
-		// glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		// glClear(GL_COLOR_BUFFER_BIT);
-		// glBegin(GL_TRIANGLES);
-		// glColor3f(1.0f, 0.0f, 0.0f);
-		// glVertex2f(-0.5f, -0.5f);
-		// glVertex2f(0.0f, 0.5f);
-		// glVertex2f(0.5f, -0.5f);
-		// glEnd();
-		// glFlush();
+		gl.Viewport(0, 0, width, height);
+		gl.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		gl.Clear(GL_COLOR_BUFFER_BIT);
+		gl.Begin(GL_TRIANGLES);
+		gl.Color3f(1.0f, 0.0f, 0.0f);
+		gl.Vertex2f(-0.5f, -0.5f);
+		gl.Vertex2f(0.0f, 0.5f);
+		gl.Vertex2f(0.5f, -0.5f);
+		gl.End();
+		gl.Flush();
+		li_ctx_swap_buffers(window);
 		li_win_poll();
-		// li_ctx_swap_buffers(window);
 	}
+	li_ctx_destroy(context);
+	// li_win_destroy(window);
 	li_win_exit();
 	return EXIT_SUCCESS;
 }

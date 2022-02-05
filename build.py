@@ -142,15 +142,15 @@ arg = sys.argv[1]
 if arg == "gnu":
 	config = GnuConfig
 	platforms = ["linux", "xlib"]
-	run_command = "LSAN_OPTIONS=suppressions=lsan.supp bin/sandbox"
+	run_command = "LSAN_OPTIONS=suppressions=lsan.supp LD_PRELOAD=\"/usr/lib/libasan.so ./hack/libdlclose.so\" bin/sandbox"
 if arg == "clang":
 	config = ClangConfig
 	platforms = ["linux", "xlib"]
-	run_command = "LSAN_OPTIONS=suppressions=lsan.supp bin/sandbox"
+	run_command = "LSAN_OPTIONS=suppressions=lsan.supp LD_PRELOAD=\"/usr/lib/librt.so.1 ./hack/libdlclose.so\" bin/sandbox"
 if arg == "mingw":
 	config = MingwConfig
 	platforms = ["win32"]
-	run_command = "LSAN_OPTIONS=suppressions=lsan.supp bin/sandbox.exe"
+	run_command = "bin/sandbox.exe"
 if arg == "macos":
 	config = MacosConfig
 	platforms = ["macos"]
@@ -158,7 +158,7 @@ if arg == "macos":
 
 liengine = Target("shared", "liengine", "Lightning-Engine")
 liengine.libs = []
-liengine.srcs = ["li_assert.c", "li_win.c"]
+liengine.srcs = ["li_assert.c", "li_win.c", "li_gl.c"]
 liengine.deps = []
 liengine.incs = ["Lightning-Engine/include"]
 liengine.defs = []
