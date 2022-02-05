@@ -50,6 +50,7 @@ ifeq ($(platform),linux)
 	platform_executable_suffix =
 else ifeq ($(platform), mingw)
 	CC = x86_64-w64-mingw32-cc
+	CFLAGS = -municode
 	platform_engine_flags =
 	platform_engine_libs = $(bin_win_win32)
 	platform_engine_source = $(src_dir_engine)/win32_dl.c
@@ -74,7 +75,7 @@ all: $(bin_sandbox) $(platform_engine_libs)
 
 $(bin_engine): $(obj_engine)
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) -shared -o $@ $^ $(platform_engine_flags)
+	$(CC) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^ $(platform_engine_flags)
 
 $(bin_sandbox): $(obj_sandbox) $(bin_engine)
 	@mkdir -p $(@D)
@@ -82,15 +83,19 @@ $(bin_sandbox): $(obj_sandbox) $(bin_engine)
 
 $(bin_win_xlib): $(obj_win_xlib) $(bin_engine)
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) -shared -o $@ $^ -lX11 -lGL
+	$(CC) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^ -lX11 -lGL
 
 $(bin_win_win32): $(obj_win_win32) $(bin_engine)
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) -shared -o $@ $^ -lgdi32 -lopengl32
+	$(CC) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^ -lgdi32 -lopengl32
 
 $(bin_win_macos): $(obj_win_macos) $(bin_engine)
 	@mkdir -p $(@D)
+<<<<<<< HEAD
 	$(CC) $(LDFLAGS) -shared -o $@ $^ -framework Cocoa -framework Quartz -framework OpenGL
+=======
+	$(CC) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^ -framework Cocoa
+>>>>>>> 105a2c80c720505637e0a1ba709ca23939a44975
 
 $(tmp_dir_engine)/%.o: $(src_dir_engine)/%.c
 	@mkdir -p $(@D)
