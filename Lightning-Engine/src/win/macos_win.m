@@ -1,13 +1,17 @@
 #import "Cocoa/Cocoa.h"
+#import "QuartzCore/CVDisplayLink.h"
 #include "li/win.h"
 #include "li/keymap.h"
 #include <stdio.h>
 
 static const NSUInteger LI_WINDOW_STYLE = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
+static CVReturn dlCallBack(CVDisplayLinkRef, const CVTimeStamp*, const CVTimeStamp*, CVOptionFlags, CVOptionFlags*, void*);
 static win_cb_proc_t li_win_cb;
 @class LiWindowDelegate;
 
 @interface LiWindowDelegate : NSView <NSWindowDelegate> {
+@public
+	CVDisplayLinkRef displayLink;
 }
 - (void)handleButtonEvent:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed;
 @end
@@ -16,6 +20,9 @@ static win_cb_proc_t li_win_cb;
 - (id) initWithFrame: (NSRect) frame {
 	self = [super initWithFrame:frame];
 
+	CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
+	CVDisplayLinkSetOutputCallback(displayLink, &dlCallBack, self);
+	CVDisplayLinkStart(displayLink);
 	return self;
 }
 
@@ -26,6 +33,10 @@ static win_cb_proc_t li_win_cb;
 - (BOOL)canBecomeKeyView
 {
 	return YES;
+}
+
+- (CVReturn) getFrameForTime:(const CVTimeStamp*)outputTime {
+	return kCVReturnSuccess;
 }
 
 - (void) mouseMoved: (NSEvent *) event {
@@ -122,6 +133,11 @@ static win_cb_proc_t li_win_cb;
 	int_event.resize.height = (int) size.height;
 	li_win_cb(&int_event);
 }
+
+- (void)windowWillClose:(NSNotification *)notification {
+	CVDisplayLinkStop(displayLink);
+	CVDisplayLinkRelease(displayLink);
+}
 @end
 
 static LiWindowDelegate *LI_WIN_DELEGATE = 0;
@@ -203,4 +219,10 @@ void li_ctx_swap_buffers(li_win_t win) {
 
 void *li_ctx_get_proc_addr(const char *name) {
 	return 0;
+}
+
+static CVReturn dlCallBack(CVDisplayLinkRef displayLink, const CVTimeStamp* now,
+	const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* context) {
+	CVReturn result = [(LiWindowDelegate*)context getFrameForTime:outputTime];
+	return result;
 }
