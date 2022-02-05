@@ -33,14 +33,14 @@ void _windows_release_hdcs(li_win_t win) {
 
 
 void li_win_init(void (*cb)(li_event_t*)) {
-	WNDCLASS wndClass = { 0 };
+	WNDCLASSW wndClass = { 0 };
 	LI_WIN_HANDLE = GetModuleHandleA(NULL);
 	wndClass.hInstance = LI_WIN_HANDLE;
 	wndClass.lpszClassName = LI_DEFAULT_CLASS_NAME;
 	wndClass.lpfnWndProc = winProc;
 	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	li_win_cb = cb;
-	li_assert(RegisterClass(&wndClass) != 0);
+	li_assert(RegisterClassW(&wndClass) != 0);
 }
 
 void li_win_exit(void) {
