@@ -1,5 +1,5 @@
 CFLAGS = -std=c11 -Wall -Wextra -pedantic -Og -g
-LDFLAGS = -Wl,-rpath,\$$ORIGIN
+LDFLAGS =
 
 tmp_dir = build
 src_dir_engine = Lightning-Engine/src
@@ -40,6 +40,7 @@ ifndef platform
 endif
 
 ifeq ($(platform),linux)
+	LDFLAGS += -Wl,-rpath,\$$ORIGIN
 	platform_engine_flags = -ldl
 	platform_engine_libs = $(bin_win_xlib)
 	platform_engine_source = $(src_dir_engine)/posix_dl.c
@@ -57,6 +58,7 @@ else ifeq ($(platform), mingw)
 	platform_executable_prefix =
 	platform_executable_suffix = .exe
 else ifeq ($(platform), macos)
+	LDFLAGS += -Wl,-rpath,@loader_path
 	platform_engine_flags =
 	platform_engine_libs = $(bin_win_macos)
 	platform_engine_source = $(src_dir_engine)/posix_dl.c
@@ -88,9 +90,13 @@ $(bin_win_win32): $(obj_win_win32) $(bin_engine)
 
 $(bin_win_macos): $(obj_win_macos) $(bin_engine)
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) -shared -o $@ $^ -framework Cocoa
+	$(CC) $(LDFLAGS) -shared -o $@ $^ -framework Cocoa -framework Quartz -framework OpenGL
 
 $(tmp_dir_engine)/%.o: $(src_dir_engine)/%.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c -fPIC -o $@ $< -MMD -I$(inc_dir_engine)
+
+$(tmp_dir_engine)/%.o: $(src_dir_engine)/%.m
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c -fPIC -o $@ $< -MMD -I$(inc_dir_engine)
 
