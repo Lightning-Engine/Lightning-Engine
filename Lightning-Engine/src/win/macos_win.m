@@ -1,29 +1,78 @@
 #import "Cocoa/Cocoa.h"
 #import "QuartzCore/CVDisplayLink.h"
+#import "OpenGL/OpenGL.h"
+#import <mach-o/dyld.h>
+#import <stdlib.h>
+#import <string.h>
 #include "li/win.h"
 #include "li/keymap.h"
+#include "li/assert.h"
+#include <OpenGL/gl.h>
 #include <stdio.h>
 
 static const NSUInteger LI_WINDOW_STYLE = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
 static CVReturn dlCallBack(CVDisplayLinkRef, const CVTimeStamp*, const CVTimeStamp*, CVOptionFlags, CVOptionFlags*, void*);
 static win_cb_proc_t li_win_cb;
-@class LiWindowDelegate;
 
-@interface LiWindowDelegate : NSView <NSWindowDelegate> {
+@class LiView;
+
+@interface LiView : NSOpenGLView {
 @public
 	CVDisplayLinkRef displayLink;
+	NSRect windowRect;
 }
 - (void)handleButtonEvent:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed;
 @end
 
-@implementation LiWindowDelegate
+@implementation LiView
 - (id) initWithFrame: (NSRect) frame {
-	self = [super initWithFrame:frame];
+	printf("Init with frame\n");
+	NSOpenGLPixelFormatAttribute attribs[] = {
+		NSOpenGLPFAMultisample,
+		NSOpenGLPFASampleBuffers, 0,
+		NSOpenGLPFASamples, 0,
+		NSOpenGLPFAAccelerated,
+		NSOpenGLPFADoubleBuffer,
+		NSOpenGLPFAColorSize, 32,
+		NSOpenGLPFADepthSize, 24,
+		NSOpenGLPFAAlphaSize, 8,
+		NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion4_1Core,
+		0
+	};
+	NSOpenGLPixelFormat *pfd = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
+	li_assert(pfd != 0);
+
+	self = [super initWithFrame:frame pixelFormat:[pfd autorelease]];
+	return self;
+}
+
+- (void) prepareOpenGL {
+	[super prepareOpenGL];
+
+	[[self openGLContext] makeCurrentContext];
+	int vsync = 1;
+	[[self openGLContext] setValues:&vsync forParameter:NSOpenGLContextParameterSwapInterval];
+	printf("reached prepareOpenGL\n");
 
 	CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
 	CVDisplayLinkSetOutputCallback(displayLink, &dlCallBack, self);
 	CVDisplayLinkStart(displayLink);
-	return self;
+
+	CGLContextObj cglContext = (CGLContextObj)[[self openGLContext] CGLContextObj];
+	CGLPixelFormatObj pfdObj = (CGLPixelFormatObj)[[self pixelFormat] CGLPixelFormatObj];
+	CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, pfdObj);
+
+	int dim[2] = {windowRect.size.width, windowRect.size.height};
+	CGLSetParameter(cglContext, kCGLCPSurfaceBackingSize, dim);
+	CGLEnable(cglContext, kCGLCPSurfaceBackingSize);
+
+	CGLLockContext(cglContext);
+
+	printf("%s\n", glGetString(GL_VERSION));
+
+	CGLUnlockContext(cglContext);
+
+	CVDisplayLinkStart(displayLink);
 }
 
 - (BOOL)acceptsFirstResponder {
@@ -140,11 +189,8 @@ static win_cb_proc_t li_win_cb;
 }
 @end
 
-static LiWindowDelegate *LI_WIN_DELEGATE = 0;
-
 void li_win_init(win_cb_proc_t cb) {
 	li_win_cb = cb;
-	LI_WIN_DELEGATE = [LiWindowDelegate alloc];
 	[NSApplication sharedApplication];
 	[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 }
@@ -170,7 +216,7 @@ li_win_t li_win_create(int width, int height) {
 	li_win_t window;
 	NSWindow *native_window;
 	NSRect windowRect;
-	LiWindowDelegate *delegate;
+	LiView *view;
 
 	windowRect = NSMakeRect(0, 0, width, height);
 	native_window = [[NSWindow alloc] initWithContentRect:windowRect
@@ -178,12 +224,12 @@ li_win_t li_win_create(int width, int height) {
 								backing:NSBackingStoreBuffered
 								defer:NO];   
 	window.p = native_window;
-	[native_window setContentView:LI_WIN_DELEGATE];
-	[native_window makeFirstResponder:LI_WIN_DELEGATE];
-	[native_window setDelegate:LI_WIN_DELEGATE];
+	view = [[LiView alloc] initWithFrame:windowRect];
+	[native_window setContentView:view];
+	[native_window makeFirstResponder:view];
+	[native_window setDelegate:view];
 	[native_window setAcceptsMouseMovedEvents:YES];
 	[native_window setRestorable:NO];
-	[native_window makeKeyAndOrderFront:nil];
 	return window;
 }
 
@@ -195,7 +241,9 @@ void li_win_destroy(li_win_t win) {
 }
 
 void li_win_map(li_win_t win) {
-
+	NSWindow *native_window;
+	native_window = win.p;
+	[native_window makeKeyAndOrderFront:nil];
 }
 
 li_ctx_t li_ctx_create(li_win_t win) {
@@ -206,23 +254,31 @@ li_ctx_t li_ctx_create(li_win_t win) {
 }
 
 void li_ctx_destroy(li_ctx_t ctx) {
-
+	(void)ctx;
 }
 
 void li_ctx_make_current(li_win_t win, li_ctx_t ctx) {
-
+	(void)win;
+	(void)ctx;
 }
 
 void li_ctx_swap_buffers(li_win_t win) {
-
+	(void)win;
 }
 
 void *li_ctx_get_proc_addr(const char *name) {
-	return 0;
+	char *symbol_name = malloc(strlen(name) + 2);
+	strcpy(symbol_name + 1, name);
+	symbol_name[0] = '_';
+	NSSymbol symbol = NULL;
+	if (NSIsSymbolNameDefined(symbol_name))
+		symbol = NSLookupAndBindSymbol(symbol_name);
+	free(symbol_name);
+	return symbol ? NSAddressOfSymbol(symbol) : NULL;
 }
 
 static CVReturn dlCallBack(CVDisplayLinkRef displayLink, const CVTimeStamp* now,
 	const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* context) {
-	CVReturn result = [(LiWindowDelegate*)context getFrameForTime:outputTime];
+	CVReturn result = [(LiView*)context getFrameForTime:outputTime];
 	return result;
 }

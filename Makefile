@@ -48,6 +48,7 @@ ifeq ($(platform),linux)
 	platform_shared_suffix = .so
 	platform_executable_prefix =
 	platform_executable_suffix =
+	platform_soname = -Wl,-soname,
 else ifeq ($(platform), mingw)
 	CC = x86_64-w64-mingw32-cc
 	CFLAGS = -municode
@@ -58,6 +59,7 @@ else ifeq ($(platform), mingw)
 	platform_shared_suffix = .dll
 	platform_executable_prefix =
 	platform_executable_suffix = .exe
+	platform_soname = -Wl,-soname,
 else ifeq ($(platform), macos)
 	LDFLAGS += -Wl,-rpath,@loader_path
 	platform_engine_flags =
@@ -67,6 +69,7 @@ else ifeq ($(platform), macos)
 	platform_shared_suffix = .so
 	platform_executable_prefix =
 	platform_executable_suffix =
+	platform_soname = -Wl,-install_name,@rpath/
 else
 $(error "invalid platform $(platform)")
 endif
@@ -75,7 +78,7 @@ all: $(bin_sandbox) $(platform_engine_libs)
 
 $(bin_engine): $(obj_engine)
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^ $(platform_engine_flags)
+	$(CC) $(LDFLAGS) $(platform_soname)$(notdir $@) -shared -o $@ $^ $(platform_engine_flags)
 
 $(bin_sandbox): $(obj_sandbox) $(bin_engine)
 	@mkdir -p $(@D)
@@ -83,19 +86,15 @@ $(bin_sandbox): $(obj_sandbox) $(bin_engine)
 
 $(bin_win_xlib): $(obj_win_xlib) $(bin_engine)
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^ -lX11 -lGL
+	$(CC) $(LDFLAGS) $(platform_soname)$(notdir $@) -shared -o $@ $^ -lX11 -lGL
 
 $(bin_win_win32): $(obj_win_win32) $(bin_engine)
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^ -lgdi32 -lopengl32
+	$(CC) $(LDFLAGS) $(platform_soname)$(notdir $@) -shared -o $@ $^ -lgdi32 -lopengl32
 
 $(bin_win_macos): $(obj_win_macos) $(bin_engine)
 	@mkdir -p $(@D)
-<<<<<<< HEAD
-	$(CC) $(LDFLAGS) -shared -o $@ $^ -framework Cocoa -framework Quartz -framework OpenGL
-=======
-	$(CC) $(LDFLAGS) -Wl,-soname,$(notdir $@) -shared -o $@ $^ -framework Cocoa
->>>>>>> 105a2c80c720505637e0a1ba709ca23939a44975
+	$(CC) $(LDFLAGS) $(platform_soname)$(notdir $@) -shared -o $@ $^ -framework Cocoa -framework Quartz -framework OpenGL
 
 $(tmp_dir_engine)/%.o: $(src_dir_engine)/%.c
 	@mkdir -p $(@D)
