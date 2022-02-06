@@ -204,11 +204,10 @@ LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
 	li_event_t event;
 
 	switch (msg) {
-		case WM_DESTROY:
+		case WM_CLOSE:
 			event.any.type = li_event_close;
 			event.any.window.p = hwnd;
 			li_win_cb(&event);
-			PostQuitMessage(0);
 			return 0;
 		case WM_KEYUP:
 		case WM_SYSKEYUP:
