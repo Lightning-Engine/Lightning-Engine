@@ -1,4 +1,5 @@
 #include "li/application.hh"
+#include <functional>
 
 extern "C" {
 	#include "li/assert.h"
@@ -49,6 +50,7 @@ namespace li {
 
 	bool windowed_application::init() {
 		win = std::unique_ptr<window>(new window(initial_width, initial_height));
+		win->dispatcher.add_callback<window_close_event>([&](window_close_event &event) { (void) event; stop(); });
 		win->make_current();
 		return application::init();
 	}

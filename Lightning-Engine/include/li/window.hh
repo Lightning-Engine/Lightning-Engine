@@ -18,6 +18,9 @@ namespace li {
 		li_win_t win;
 		li_ctx_t ctx;
 		li_gl_t gl;
+
+		int width;
+		int height;
 	public:
 		event_dispatcher<
 			window_close_event,
@@ -41,7 +44,11 @@ namespace li {
 		void swap_buffers();
 		const li::gl &get_gl();
 
+		inline int get_width() { return width; }
+		inline int get_height() { return height; }
+
 		static void poll();
+		static void handle_event(li_event_t *event); // TODO: private
 	};
 }
 

@@ -40,7 +40,7 @@ namespace li {
 
 		template<typename Event>
 		void add_callback(std::function<void(Event &)> handler) {
-			(std::initializer_list<int> { (
+			(void) (std::initializer_list<int> { (
 				dispatcher_pusher<Event, Events>::push(*this, handler), 0
 			)... });
 		}

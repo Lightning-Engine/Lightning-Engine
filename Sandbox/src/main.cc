@@ -5,11 +5,7 @@
 
 class sandbox : public li::windowed_application {
 public:
-	int width;
-	int height;
-	float xp = 0;
-	float yp = 0;
-	GLuint vbo, ebo, vs_id, fs_id, program_id;
+	GLuint vbo, ebo, vao, vs_id, fs_id, program_id;
 
 	GLfloat vertices[12] = {
 		-0.5f, -0.5f, 0.0f,
@@ -36,17 +32,13 @@ void main() {\n\
 	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n\
 }\n";
 
-	sandbox() : li::windowed_application(640, 480), width(640), height(480) { }
+	sandbox() : li::windowed_application(640, 480) { }
 
 	bool init() override {
 		if (!windowed_application::init())
 			return false;
 		const li::gl &gl = get_window().get_gl();
-		li::window &window = get_window();
-		window.dispatcher.add_listener<li::window_close_event>(*this);
-		window.dispatcher.add_listener<li::window_resize_event>(*this);
-		window.dispatcher.add_listener<li::motion_notify_event>(*this);
-		
+
 		vs_id = gl.CreateShader(GL_VERTEX_SHADER);
 		fs_id = gl.CreateShader(GL_FRAGMENT_SHADER);
 		gl.ShaderSource(vs_id, 1, &vertex_shader, NULL);
@@ -72,6 +64,7 @@ void main() {\n\
 		program_id = gl.CreateProgram();
 		gl.AttachShader(program_id, vs_id);
 		gl.AttachShader(program_id, fs_id);
+		gl.BindAttribLocation(program_id, 0, "aPos");
 		gl.LinkProgram(program_id);
 
 		gl.GetProgramiv(program_id, GL_LINK_STATUS, &success);
@@ -81,12 +74,14 @@ void main() {\n\
 		}
 
 		gl.UseProgram(program_id);
-
+		gl.GenVertexArrays(1, &vao);
+		gl.BindVertexArray(vao);
 		gl.GenBuffers(1, &vbo);
 		gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
 		gl.BufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 		gl.VertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 		gl.EnableVertexAttribArray(0);
+		gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
 		gl.GenBuffers(1, &ebo);
 		gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 		gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
@@ -98,28 +93,15 @@ void main() {\n\
 	}
 
 	void update() override {
+		li::window &window = get_window();
 		const li::gl &gl = get_window().get_gl();
-		gl.Viewport(0, 0, width, height);
+		gl.Viewport(0, 0, window.get_width(), window.get_height());
 		gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		gl.Clear(GL_COLOR_BUFFER_BIT);
-		gl.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		// gl.DrawArrays(GL_TRIANGLES, 0, 3);
+		gl.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 		gl.Flush();
 		windowed_application::update();
-	}
-
-	void on(li::window_close_event &event) {
-		(void) event;
-		stop();
-	}
-
-	void on(li::window_resize_event &event) {
-		width = event.width;
-		height = event.height;
-	}
-
-	void on(li::motion_notify_event &event) {
-		xp = (float) event.x / width * 2 - 1;
-		yp = (float) event.y / height * 2 - 1;
 	}
 };
 

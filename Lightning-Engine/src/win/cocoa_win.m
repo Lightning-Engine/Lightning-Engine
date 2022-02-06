@@ -297,6 +297,7 @@ li_ctx_t li_ctx_create(li_win_t win, int version) {
 	li_assert(pfd != 0);
 
 	NSOpenGLContext *context = [[NSOpenGLContext alloc] initWithFormat:pfd shareContext:nil];
+	[[window contentView] setWantsBestResolutionOpenGLSurface:false];
 	[context setView:[window contentView]];
 	
 	assert(context != nil);
