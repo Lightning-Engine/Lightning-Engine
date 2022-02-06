@@ -5,20 +5,18 @@
 #include <GL/gl.h>
 #include <GL/wgl.h>
 
-static const wchar_t *LI_DEFAULT_CLASS_NAME = L"LIWINDOW";
-static HINSTANCE LI_WIN_HANDLE;
-static void (*li_win_cb)(li_event_t*);
-static li_dl_t opengl32 = { .p = NULL };
+static const wchar_t *li_win32_class_name = L"LIWINDOW";
+static HINSTANCE li_win32_handle;
+static void (*li_win32_win_cb)(li_event_t*);
+static li_dl_t li_win32_opengl32 = { .p = NULL };
 
-LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param);
-
+LRESULT CALLBACK li_win32_win_proc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param);
 
 HDC _windows_get_hdc(li_win_t win) {
 	LONG_PTR ptr = GetWindowLongPtrW(win.p, GWLP_USERDATA);
 	if (ptr == 0) {
 		ptr = (LONG_PTR) GetDC(win.p);
 		SetWindowLongPtrW(win.p, GWLP_USERDATA, (LONG_PTR) ptr);
-		
 	}
 	return (HDC) ptr;
 }
@@ -33,14 +31,14 @@ void _windows_release_hdcs(li_win_t win) {
 
 
 void li_win_init(void (*cb)(li_event_t*)) {
-	WNDCLASSW wndClass = { 0 };
-	LI_WIN_HANDLE = GetModuleHandleA(NULL);
-	wndClass.hInstance = LI_WIN_HANDLE;
-	wndClass.lpszClassName = LI_DEFAULT_CLASS_NAME;
-	wndClass.lpfnWndProc = winProc;
-	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-	li_win_cb = cb;
-	li_assert(RegisterClassW(&wndClass) != 0);
+	WNDCLASSW wnd_class = { 0 };
+	li_win32_handle = GetModuleHandleA(NULL);
+	wnd_class.hInstance = li_win32_handle;
+	wnd_class.lpszClassName = li_win32_class_name;
+	wnd_class.lpfnWndProc = li_win32_win_proc;
+	wnd_class.hCursor = LoadCursor(NULL, IDC_ARROW);
+	li_win32_win_cb = cb;
+	li_assert(RegisterClassW(&wnd_class) != 0);
 }
 
 void li_win_exit(void) {
@@ -57,9 +55,9 @@ void li_win_poll(void) {
 
 li_win_t li_win_create(int width, int height) {
 	li_win_t win;
-	win.p = CreateWindowExW(CS_OWNDC, LI_DEFAULT_CLASS_NAME, L"New Window", 
+	win.p = CreateWindowExW(CS_OWNDC, li_win32_class_name, L"New Window", 
 		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-		width, height, NULL, NULL, LI_WIN_HANDLE, NULL);
+		width, height, NULL, NULL, li_win32_handle, NULL);
 	li_assert(win.p != 0);
 	return win;
 }
@@ -135,12 +133,12 @@ int _windows_handle_key_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_para
 				event.any.type = li_event_key_repeat;
 			else
 				event.any.type = li_event_key_press;
-			li_win_cb(&event);
+			li_win32_win_cb(&event);
 			return msg == WM_SYSKEYDOWN;
 		case WM_KEYUP:
 		case WM_SYSKEYUP:
 			event.any.type = li_event_key_release;
-			li_win_cb(&event);
+			li_win32_win_cb(&event);
 			return msg == WM_SYSKEYUP;
 		default:
 			return 1;
@@ -162,7 +160,7 @@ int _windows_handle_mouse_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_pa
 			event.button.x = LOWORD(l_param);
 			event.button.y = HIWORD(l_param);
 			event.any.type = li_event_button_press;
-			li_win_cb(&event);
+			li_win32_win_cb(&event);
 			return 0;
 		case WM_LBUTTONUP:
 		case WM_MBUTTONUP:
@@ -173,14 +171,14 @@ int _windows_handle_mouse_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_pa
 			event.button.x = LOWORD(l_param);
 			event.button.y = HIWORD(l_param);
 			event.any.type = li_event_button_release;
-			li_win_cb(&event);
+			li_win32_win_cb(&event);
 			return 0;
 		case WM_MOUSEMOVE:
 			event.motion.state = li_win_xlat_key_state(_windows_get_key_state());
 			event.motion.x = LOWORD(l_param);
 			event.motion.y = HIWORD(l_param);
 			event.any.type = li_event_motion_notify;
-			li_win_cb(&event);
+			li_win32_win_cb(&event);
 			return 0;
 		default:
 			return 1;
@@ -196,18 +194,18 @@ int _windows_handle_resize_event(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_p
 	event.resize.any.type = li_event_window_resize;
 	event.resize.width = LOWORD(l_param);
 	event.resize.height = HIWORD(l_param);
-	li_win_cb(&event);
+	li_win32_win_cb(&event);
 	return 0;
 }
 
-LRESULT CALLBACK winProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
+LRESULT CALLBACK li_win32_win_proc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
 	li_event_t event;
 
 	switch (msg) {
 		case WM_CLOSE:
 			event.any.type = li_event_close;
 			event.any.window.p = hwnd;
-			li_win_cb(&event);
+			li_win32_win_cb(&event);
 			return 0;
 		case WM_KEYUP:
 		case WM_SYSKEYUP:
@@ -301,15 +299,15 @@ void li_ctx_swap_buffers(li_win_t win, li_ctx_t ctx) {
 }
 
 void *li_ctx_get_proc_addr(const char *name) {
-	if (opengl32.p == NULL)
-		opengl32 = li_dl_open("opengl32.dll");
-	li_assert(opengl32.p != NULL);
+	if (li_win32_opengl32.p == NULL)
+		li_win32_opengl32 = li_dl_open("opengl32.dll");
+	li_assert(li_win32_opengl32.p != NULL);
 	PROC fun = wglGetProcAddress(name);
 	void *ptr = *(void**) &fun;
 	// https://www.khronos.org/opengl/wiki/Load_OpenGL_Functions
 	// > While the MSDN documentation says that wglGetProcAddress returns NULL on failure,
 	// > some implementations will return other values. 1, 2, and 3 are used, as well as -1. 
 	if (ptr == (void*) 0 || ptr == (void*) 1 || ptr == (void*) 2 || ptr == (void*) 3 || ptr == (void*) -1)
-		ptr = li_dl_sym(opengl32, name);
+		ptr = li_dl_sym(li_win32_opengl32, name);
 	return ptr;
 }

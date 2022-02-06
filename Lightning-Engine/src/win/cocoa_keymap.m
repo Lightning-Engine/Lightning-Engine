@@ -111,16 +111,16 @@ li_button_t li_win_xlat_button(int button) {
 }
 
 li_key_state_t li_win_xlat_key_state(int state) {
-	li_key_state_t keyState = 0;
+	li_key_state_t key_state = 0;
 	if (state & NSEventModifierFlagCapsLock)
-		keyState |= li_key_state_caps_lock;
+		key_state |= li_key_state_caps_lock;
 	if (state & NSEventModifierFlagShift)
-		keyState |= li_key_state_shift;
+		key_state |= li_key_state_shift;
 	if (state & NSEventModifierFlagControl)
-		keyState |= li_key_state_control;
+		key_state |= li_key_state_control;
 	if (state & NSEventModifierFlagOption)
-		keyState |= li_key_state_alt;
+		key_state |= li_key_state_alt;
 	if (state & NSEventModifierFlagCommand)
-		keyState |= li_key_state_super;
-	return keyState;
+		key_state |= li_key_state_super;
+	return key_state;
 }

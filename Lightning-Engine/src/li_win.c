@@ -8,13 +8,13 @@
 	typedef rtype (*name##_type)args_decl; \
 	static name##_type _##name; \
 	rtype name args_decl { \
-		li_win_load(); \
+		_li_win_load(); \
 		ret _##name args_call; \
 	}
 
 static li_dl_t lib = { .p = NULL };
 static int win_loaded = 0;
-static void li_win_load();
+static void _li_win_load();
 
 LI_FORWARD(, void, li_win_init, (void (*cb)(li_event_t*)), (cb))
 LI_FORWARD(, void, li_win_exit, (void), ())
@@ -28,7 +28,7 @@ LI_FORWARD(, void, li_ctx_make_current, (li_win_t win, li_ctx_t ctx), (win, ctx)
 LI_FORWARD(, void, li_ctx_swap_buffers, (li_win_t win, li_ctx_t ctx), (win, ctx))
 LI_FORWARD(return, void*, li_ctx_get_proc_addr, (const char* name), (name))
 
-static void li_win_load() {
+static void _li_win_load(void) {
 	if (!win_loaded) {
 		if (lib.p == NULL)
 			lib = li_dl_open("libliengine_win_xlib.so");

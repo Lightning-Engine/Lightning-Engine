@@ -13,7 +13,7 @@ static int li_xlib_screen;
 static Atom li_xlib_wm_delete_window;
 static win_cb_proc_t li_xlib_win_cb;
 
-static int event_is_repeat(XEvent *ev) {
+static int _event_is_repeat(XEvent *ev) {
 	XEvent ev2;
 	if (XPending(li_xlib_display)) {
 		XPeekEvent(li_xlib_display, &ev2);
@@ -25,7 +25,7 @@ static int event_is_repeat(XEvent *ev) {
 	return 0;
 }
 
-static void event_handle(XEvent *ev) {
+static void _event_handle(XEvent *ev) {
 	li_event_t event;
 	event.any.window.lu = ev->xany.window;
 	switch (ev->type) {
@@ -39,7 +39,7 @@ static void event_handle(XEvent *ev) {
 		case KeyRelease:
 			if (ev->type == KeyRelease)
 				event.any.type = li_event_key_release;
-			else if (event_is_repeat(ev))
+			else if (_event_is_repeat(ev))
 				event.any.type = li_event_key_repeat;
 			else if (ev->type == KeyPress)
 				event.any.type = li_event_key_press;
@@ -93,7 +93,7 @@ void li_win_poll(void) {
 	XEvent ev;
 	while (XPending(li_xlib_display)) {
 		XNextEvent(li_xlib_display, &ev);
-		event_handle(&ev);
+		_event_handle(&ev);
 	}
 }
 

@@ -20,15 +20,15 @@ static CFBundleRef li_cocoa_framework;
 @interface LiCocoaWindowDelegate : NSObject <NSWindowDelegate> {
 	LiCocoaWindow *window;
 }
-- (instancetype)initWithWindow:(LiCocoaWindow*)init_window;
+- (instancetype)_init_with_window:(LiCocoaWindow*)init_window;
 @end
 
 @interface LiView : NSView {
 @public
 	LiCocoaWindow *window;
 }
-- (instancetype)initWithWindow:(LiCocoaWindow*)init_window;
-- (void)handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed;
+- (instancetype)_init_with_window:(LiCocoaWindow*)init_window;
+- (void)__handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed;
 @end
 
 @implementation LiCocoaWindow
@@ -42,7 +42,7 @@ static CFBundleRef li_cocoa_framework;
 @end
 
 @implementation LiCocoaWindowDelegate
-- (instancetype)initWithWindow:(LiCocoaWindow*)init_window {
+- (instancetype)_init_with_window:(LiCocoaWindow*)init_window {
 	self = [super init];
 	window = init_window;
 	return self;
@@ -71,13 +71,13 @@ static CFBundleRef li_cocoa_framework;
 @end
 
 @implementation LiView
-- (instancetype)initWithWindow:(LiCocoaWindow*)init_window {
+- (instancetype)_init_with_window:(LiCocoaWindow*)init_window {
 	self = [super init];
 	window = init_window;
 	return self;
 }
 
-- (void)handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed {
+- (void)_handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed {
 	li_event_t int_event;
 	NSPoint point = [event locationInWindow];
 	
@@ -94,35 +94,35 @@ static CFBundleRef li_cocoa_framework;
 }
 
 - (void) leftMouseDown: (NSEvent*) event {
-	[self handle_button_event:event button:li_button_left pressed:1];
+	[self _handle_button_event:event button:li_button_left pressed:1];
 }
 
 - (void) rightMouseDown: (NSEvent*) event {
-	[self handle_button_event:event button:li_button_right pressed:1];
+	[self _handle_button_event:event button:li_button_right pressed:1];
 }
 
 - (void) leftMouseUp: (NSEvent*) event {
-	[self handle_button_event:event button:li_button_left pressed:0];
+	[self _handle_button_event:event button:li_button_left pressed:0];
 }
 
 - (void) rightMouseUp: (NSEvent*) event {
-	[self handle_button_event:event button:li_button_right pressed:0];
+	[self _handle_button_event:event button:li_button_right pressed:0];
 }
 
 - (void) otherMouseDown: (NSEvent*) event {
-	[self handle_button_event:event button:li_button_unknown pressed:1];
+	[self _handle_button_event:event button:li_button_unknown pressed:1];
 }
 
 - (void) otherMouseUp: (NSEvent*) event {
-	[self handle_button_event:event button:li_button_unknown pressed:0];
+	[self _handle_button_event:event button:li_button_unknown pressed:0];
 }
 
 - (void) mouseDown: (NSEvent *) event {
-	[self handle_button_event:event button:li_button_left pressed:1];
+	[self _handle_button_event:event button:li_button_left pressed:1];
 }
 
 - (void) mouseUp: (NSEvent *) event {
-	[self handle_button_event:event button:li_button_left pressed:0];
+	[self _handle_button_event:event button:li_button_left pressed:0];
 }
 
 - (void) keyDown: (NSEvent *) event {
@@ -161,7 +161,7 @@ static CFBundleRef li_cocoa_framework;
 }
 @end
 
-int setup_nsgl(void) {
+int _setup_nsgl(void) {
 	if (li_cocoa_framework)
 		return 1;
 	li_cocoa_framework = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.opengl"));
@@ -172,7 +172,7 @@ void li_win_init(win_cb_proc_t cb) {
 	li_cocoa_win_cb = cb;
 	[NSApplication sharedApplication];
 	[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-	li_assert(setup_nsgl());
+	li_assert(_setup_nsgl());
 }
 
 void li_win_exit(void) {
@@ -204,8 +204,8 @@ li_win_t li_win_create(int width, int height) {
 		styleMask:li_cocoa_win_style
 		backing:NSBackingStoreBuffered
 		defer:NO];
-	delegate = [[LiCocoaWindowDelegate alloc] initWithWindow:native_window];
-	view = [[LiView alloc] initWithWindow:native_window];
+	delegate = [[LiCocoaWindowDelegate alloc] _init_with_window:native_window];
+	view = [[LiView alloc] _init_with_window:native_window];
 	[native_window setContentView:view];
 	[native_window makeFirstResponder:view];
 	[native_window setDelegate:delegate];
