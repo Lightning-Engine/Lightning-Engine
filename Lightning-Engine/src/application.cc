@@ -48,7 +48,7 @@ namespace li {
 	}
 
 	bool windowed_application::init() {
-		win = std::make_unique<window>(initial_width, initial_height);
+		win = std::unique_ptr<window>(new window(initial_width, initial_height));
 		win->make_current();
 		return application::init();
 	}

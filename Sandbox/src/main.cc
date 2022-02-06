@@ -29,9 +29,9 @@ public:
 
 int main(void) {
 	sandbox sandbox(640, 480);
-	sandbox.dispatcher.push<li::window_close_event>(sandbox);
-	sandbox.dispatcher.push<li::window_resize_event>(sandbox);
-	sandbox.dispatcher.push<li::motion_notify_event>(sandbox);
+	sandbox.dispatcher.add_listener<li::window_close_event>(sandbox);
+	sandbox.dispatcher.add_listener<li::window_resize_event>(sandbox);
+	sandbox.dispatcher.add_listener<li::motion_notify_event>(sandbox);
 	sandbox.make_current();
 	const li::gl &gl = sandbox.get_gl();
 

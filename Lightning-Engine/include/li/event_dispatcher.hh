@@ -39,15 +39,15 @@ namespace li {
 		}
 
 		template<typename Event>
-		void push(std::function<void(Event &)> handler) {
+		void add_callback(std::function<void(Event &)> handler) {
 			(std::initializer_list<int> { (
 				dispatcher_pusher<Event, Events>::push(*this, handler), 0
 			)... });
 		}
 
 		template<typename Event, typename Listener>
-		void push(Listener &listener) {
-			push<Event>(std::bind(static_cast<void(Listener::*)(Event &)>(&Listener::on), &listener, std::placeholders::_1));
+		void add_listener(Listener &listener) {
+			add_callback<Event>(std::bind(static_cast<void(Listener::*)(Event &)>(&Listener::on), &listener, std::placeholders::_1));
 		}
 	};
 }
