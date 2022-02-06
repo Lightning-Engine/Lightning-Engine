@@ -28,7 +28,7 @@ static CFBundleRef li_cocoa_framework;
 	LiCocoaWindow *window;
 }
 - (instancetype)_init_with_window:(LiCocoaWindow*)init_window;
-- (void)__handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed;
+- (void)_handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed;
 @end
 
 @implementation LiCocoaWindow
