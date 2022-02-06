@@ -37,6 +37,7 @@ void li_win_init(void (*cb)(li_event_t*)) {
 	wnd_class.lpszClassName = li_win32_class_name;
 	wnd_class.lpfnWndProc = li_win32_win_proc;
 	wnd_class.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wnd_class.cbWndExtra = sizeof(void*);
 	li_win32_win_cb = cb;
 	li_assert(RegisterClassW(&wnd_class) != 0);
 }
@@ -70,6 +71,16 @@ void li_win_destroy(li_win_t win) {
 
 void li_win_map(li_win_t win) {
 	ShowWindow(win.p, SW_SHOW);
+}
+
+void li_win_set_data(li_win_t win, void* data) {
+	SetLastError(0);
+	SetWindowLongPtrW(win.p, 0, data);
+	li_assert(GetLastError() == 0);
+}
+
+void *li_win_get_data(li_win_t win) {
+	return (void*) GetWindowLongPtrW(win.p, 0);
 }
 
 int _windows_translate_button(UINT button_event, WPARAM w_param) {

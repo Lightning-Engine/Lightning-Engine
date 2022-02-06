@@ -51,6 +51,8 @@ int main(void) {
 	li_win_map(window);
 	context = li_ctx_create(window, 2);
 	li_ctx_make_current(window, context);
+	li_win_set_data(window, (void*) 13);
+	printf("%p\n", li_win_get_data(window));
 	li_gl_init(&gl);
 	printf("%s\n", gl.GetString(GL_VERSION));
 	while (running) {

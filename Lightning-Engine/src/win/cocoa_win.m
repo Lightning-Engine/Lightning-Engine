@@ -14,6 +14,7 @@ static win_cb_proc_t li_cocoa_win_cb;
 static CFBundleRef li_cocoa_framework;
 
 @interface LiCocoaWindow : NSWindow {
+	@property (readwrite) void *user_pointer;
 }
 @end
 
@@ -32,6 +33,8 @@ static CFBundleRef li_cocoa_framework;
 @end
 
 @implementation LiCocoaWindow
+@synthesize user_pointer;
+
 - (BOOL)acceptsFirstResponder {
     return YES;
 }
@@ -229,6 +232,14 @@ void li_win_map(li_win_t win) {
 
 	native_window = win.p;
 	[native_window makeKeyAndOrderFront:nil];
+}
+
+void li_win_set_data(li_win_t win, void *data) {
+	[(LiCocoaWindow*) win.p setUser_pointer:data];
+}
+
+void *li_win_get_data(li_win_t win) {
+	return [(LiCocoaWindow*) win.p getUser_pointer];
 }
 
 li_ctx_t li_ctx_create(li_win_t win, int version) {

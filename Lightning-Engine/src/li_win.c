@@ -27,6 +27,8 @@ LI_FORWARD(, void, li_ctx_destroy, (li_win_t win, li_ctx_t ctx), (win, ctx))
 LI_FORWARD(, void, li_ctx_make_current, (li_win_t win, li_ctx_t ctx), (win, ctx))
 LI_FORWARD(, void, li_ctx_swap_buffers, (li_win_t win, li_ctx_t ctx), (win, ctx))
 LI_FORWARD(return, void*, li_ctx_get_proc_addr, (const char* name), (name))
+LI_FORWARD(, void, li_win_set_data, (li_win_t win, void *data), (win, data))
+LI_FORWARD(return, void*, li_win_get_data, (li_win_t win), (win))
 
 static void _li_win_load(void) {
 	if (!win_loaded) {
@@ -49,6 +51,8 @@ static void _li_win_load(void) {
 		LI_LOAD_SYMBOL(li_ctx_make_current)
 		LI_LOAD_SYMBOL(li_ctx_swap_buffers)
 		LI_LOAD_SYMBOL(li_ctx_get_proc_addr)
+		LI_LOAD_SYMBOL(li_win_set_data)
+		LI_LOAD_SYMBOL(li_win_get_data)
 		win_loaded = 1;
 	}
 }

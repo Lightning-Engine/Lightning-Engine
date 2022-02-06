@@ -71,6 +71,8 @@ void li_win_poll(void);
 li_win_t li_win_create(int width, int height);
 void li_win_destroy(li_win_t win);
 void li_win_map(li_win_t win);
+void li_win_set_data(li_win_t win, void *data);
+void *li_win_get_data(li_win_t win);
 
 li_ctx_t li_ctx_create(li_win_t win, int version);
 void li_ctx_destroy(li_win_t win, li_ctx_t ctx);

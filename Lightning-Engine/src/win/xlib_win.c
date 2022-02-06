@@ -11,6 +11,7 @@ Display *li_xlib_display;
 static Window li_xlib_root;
 static int li_xlib_screen;
 static Atom li_xlib_wm_delete_window;
+static XContext li_xlib_data;
 static win_cb_proc_t li_xlib_win_cb;
 
 static int _event_is_repeat(XEvent *ev) {
@@ -82,6 +83,7 @@ void li_win_init(void (*cb)(li_event_t*)) {
 	li_xlib_root = XDefaultRootWindow(li_xlib_display);
 	li_xlib_screen = XDefaultScreen(li_xlib_display);
 	li_xlib_wm_delete_window = XInternAtom(li_xlib_display, "WM_DELETE_WINDOW", False);
+	li_xlib_data = XUniqueContext();
 	li_xlib_win_cb = cb;
 }
 
@@ -112,6 +114,16 @@ void li_win_destroy(li_win_t win) {
 
 void li_win_map(li_win_t win) {
 	XMapWindow(li_xlib_display, win.lu);
+}
+
+void li_win_set_data(li_win_t win, void* data) {
+	XSaveContext(li_xlib_display, win.lu, li_xlib_data, (XPointer) data);
+}
+
+void *li_win_get_data(li_win_t win) {
+	XPointer data;
+	li_assert(XFindContext(li_xlib_display, win.lu, li_xlib_data, &data));
+	return data;
 }
 
 li_ctx_t li_ctx_create(li_win_t win, int version) {
