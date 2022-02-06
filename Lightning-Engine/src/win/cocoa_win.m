@@ -83,7 +83,7 @@ static CFBundleRef li_cocoa_framework;
 - (void)_handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed {
 	li_event_t int_event;
 	NSPoint point = [event locationInWindow];
-	
+
 	int_event.any.window.p = [event window];
 	if (isPressed)
 		int_event.any.type = li_event_button_press;
@@ -154,7 +154,10 @@ static CFBundleRef li_cocoa_framework;
 - (void) mouseMoved: (NSEvent *) event {
 	li_event_t int_event;
 	NSPoint point = [event locationInWindow];
+	NSRect rect = [[[event window] contentView] frame];
 
+	if (point.x < 0 || point.y < 0 || point.x > rect.size.width || point.y > rect.size.height)
+		return;
 	int_event.any.type = li_event_motion_notify;
 	int_event.any.window.p = [event window];
 	int_event.motion.x = point.x;
