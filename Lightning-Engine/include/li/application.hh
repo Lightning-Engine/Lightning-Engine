@@ -1,19 +1,18 @@
 #ifndef LI_APPLICATION_HH
 #define LI_APPLICATION_HH
 
-#include "window.hh"
+#include "li/window.hh"
 #include <memory>
 
 namespace li {
-
 	class application {
+	public:
 		bool running;
 
-	public:
 		application();
 		~application();
-		virtual void start();
-		virtual void stop();
+		void start();
+		void stop();
 
 	protected:
 		virtual bool init();
@@ -34,8 +33,9 @@ namespace li {
 		virtual bool deinit() override;
 
 		virtual void update() override;
-	};
 
+		inline window &get_window() const { return *win; }
+	};
 }
 
 #endif

@@ -12,7 +12,7 @@ extern "C" {
 namespace li {
 	typedef li_gl_t gl;
 
-	// TODO: now that window can dispatch events to any listener it does not need to be polymorphic so we can remove the virtual constructor
+	// TODO: be able to specify opengl profile, maybe have a seperate method to construct it?
 
 	class window {
 		li_win_t win;
@@ -35,7 +35,7 @@ namespace li {
 		window(window&&) = delete;
 		window& operator=(const window&) = delete;
 		window& operator=(window&&) = delete;
-		virtual ~window();
+		~window();
 
 		void make_current();
 		void swap_buffers();

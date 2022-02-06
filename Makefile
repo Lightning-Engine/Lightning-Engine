@@ -65,6 +65,9 @@ ifndef platform
 endif
 
 ifeq ($(platform),linux)
+	CFLAGS += -fsanitize=address
+	CXXFLAGS += -fsanitize=address
+	LDFLAGS += -fsanitize=address
 	LDFLAGS += -Wl,-rpath,\$$ORIGIN
 	src_engine += $(src_dir_engine)/posix_dl.c
 	platform_engine_flags = -ldl
@@ -85,6 +88,9 @@ else ifeq ($(platform), mingw)
 	platform_executable = $(1).exe
 	platform_soname = -Wl,-soname,$(1)
 else ifeq ($(platform), macos)
+	CFLAGS += -fsanitize=address
+	CXXFLAGS += -fsanitize=address
+	LDFLAGS += -fsanitize=address
 	LDFLAGS += -Wl,-rpath,@loader_path
 	src_engine += $(src_dir_engine)/posix_dl.c
 	platform_engine_flags = 
@@ -161,7 +167,7 @@ re: clean
 	$(SILENT)$(MAKE)
 .PHONY: run
 run: all
-	$(SILENT)./$(bin_sandbox)
+	$(SILENT)ASAN_OPTIONS=detect_leaks=0 ./$(bin_sandbox)
 .PHONY: rerun
 rerun: clean
 	$(SILENT)$(MAKE) run
