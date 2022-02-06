@@ -55,6 +55,7 @@ else ifeq ($(platform), mingw)
 	CXX = x86_64-w64-mingw32-g++
 	CFLAGS += -municode
 	CXXFLAGS += -municode
+	LDFLAGS += -static
 	platform_engine_flags =
 	platform_engine_libs = $(bin_win_win32)
 	platform_engine_source = $(src_dir_engine)/win32_dl.c

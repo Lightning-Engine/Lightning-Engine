@@ -75,7 +75,7 @@ void li_win_map(li_win_t win) {
 
 void li_win_set_data(li_win_t win, void* data) {
 	SetLastError(0);
-	SetWindowLongPtrW(win.p, 0, data);
+	SetWindowLongPtrW(win.p, 0, (LONG_PTR) data);
 	li_assert(GetLastError() == 0);
 }
 
