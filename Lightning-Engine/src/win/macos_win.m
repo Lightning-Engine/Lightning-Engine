@@ -14,19 +14,73 @@ static const NSUInteger LI_WINDOW_STYLE = NSWindowStyleMaskTitled | NSWindowStyl
 static CVReturn dlCallBack(CVDisplayLinkRef, const CVTimeStamp*, const CVTimeStamp*, CVOptionFlags, CVOptionFlags*, void*);
 static win_cb_proc_t li_win_cb;
 
-@class LiView;
+@interface LiWindow : NSWindow {
+}
+@end
+
+@interface LiWindowDelegate : NSObject <NSWindowDelegate> {
+	LiWindow *window;
+}
+- (instancetype)initWithWindow:(LiWindow*)initWindow;
+@end
 
 @interface LiView : NSOpenGLView {
 @public
-	CVDisplayLinkRef displayLink;
-	NSRect windowRect;
+	LiWindow *window;
+	CVDisplayLinkRef _displayLink;
 }
+@property CVDisplayLinkRef displayLink;
+
+- (instancetype)initWithWindow:(LiWindow*)initWindow;
+- (void) destroyLiView;
+- (CVReturn)getFrameForTime:(const CVTimeStamp*)outputTime;
 - (void)handleButtonEvent:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed;
 @end
 
+@implementation LiWindow
+- (BOOL)acceptsFirstResponder {
+    return YES;
+}
+
+- (BOOL)canBecomeKeyView {
+	return YES;
+}
+@end
+
+@implementation LiWindowDelegate
+- (instancetype)initWithWindow:(LiWindow*)initWindow {
+	self = [super init];
+	window = initWindow;
+	return self;
+}
+
+- (void) windowDidResize:(NSNotification *) notification {
+	li_event_t int_event;
+	NSSize size = [[window contentView] frame].size;
+
+	int_event.any.type = li_event_window_resize;
+	int_event.any.window.p = window;
+	int_event.resize.width = (int) size.width;
+	int_event.resize.height = (int) size.height;
+	li_win_cb(&int_event);
+}
+
+- (BOOL) windowShouldClose:(NSNotification *)notification {
+	li_event_t int_event;
+
+	int_event.any.type = li_event_close;
+	int_event.any.window.p = window;
+	li_win_cb(&int_event);
+
+	
+	return NO;
+}
+@end
+
 @implementation LiView
-- (id) initWithFrame: (NSRect) frame {
-	printf("Init with frame\n");
+@synthesize displayLink;
+
+- (instancetype)initWithWindow:(LiWindow*)initWindow {
 	NSOpenGLPixelFormatAttribute attribs[] = {
 		NSOpenGLPFAMultisample,
 		NSOpenGLPFASampleBuffers, 0,
@@ -42,67 +96,14 @@ static win_cb_proc_t li_win_cb;
 	NSOpenGLPixelFormat *pfd = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
 	li_assert(pfd != 0);
 
-	self = [super initWithFrame:frame pixelFormat:[pfd autorelease]];
+	self = [super initWithFrame:[[initWindow contentView] frame] pixelFormat:[pfd autorelease]];
+	window = initWindow;
 	return self;
-}
-
-- (void) prepareOpenGL {
-	[super prepareOpenGL];
-
-	[[self openGLContext] makeCurrentContext];
-	int vsync = 1;
-	[[self openGLContext] setValues:&vsync forParameter:NSOpenGLContextParameterSwapInterval];
-	printf("reached prepareOpenGL\n");
-
-	CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
-	CVDisplayLinkSetOutputCallback(displayLink, &dlCallBack, self);
-	CVDisplayLinkStart(displayLink);
-
-	CGLContextObj cglContext = (CGLContextObj)[[self openGLContext] CGLContextObj];
-	CGLPixelFormatObj pfdObj = (CGLPixelFormatObj)[[self pixelFormat] CGLPixelFormatObj];
-	CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, pfdObj);
-
-	int dim[2] = {windowRect.size.width, windowRect.size.height};
-	CGLSetParameter(cglContext, kCGLCPSurfaceBackingSize, dim);
-	CGLEnable(cglContext, kCGLCPSurfaceBackingSize);
-
-	CGLLockContext(cglContext);
-
-	printf("%s\n", glGetString(GL_VERSION));
-
-	CGLUnlockContext(cglContext);
-
-	CVDisplayLinkStart(displayLink);
-}
-
-- (BOOL)acceptsFirstResponder {
-    return YES;
-}
-
-- (BOOL)canBecomeKeyView
-{
-	return YES;
-}
-
-- (CVReturn) getFrameForTime:(const CVTimeStamp*)outputTime {
-	return kCVReturnSuccess;
-}
-
-- (void) mouseMoved: (NSEvent *) event {
-	li_event_t int_event;
-	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
-
-	int_event.any.type = li_event_motion_notify;
-	int_event.any.window.p = [event window];
-	int_event.motion.x = point.x;
-	int_event.motion.y = point.y;
-	int_event.motion.state = 0;
-	li_win_cb(&int_event);
 }
 
 - (void)handleButtonEvent:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed {
 	li_event_t int_event;
-	NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
+	NSPoint point = [event locationInWindow];
 	
 	int_event.any.window.p = [event window];
 	if (isPressed)
@@ -171,19 +172,52 @@ static win_cb_proc_t li_win_cb;
 	li_win_cb(&int_event);
 }
 
-- (void) windowDidResize:(NSNotification *) notification {
+- (void) mouseMoved: (NSEvent *) event {
 	li_event_t int_event;
-	NSWindow *window = [notification object];
-	NSSize size = [[window contentView] frame].size;
+	NSPoint point = [event locationInWindow];
 
-	int_event.any.type = li_event_window_resize;
-	int_event.any.window.p = window;
-	int_event.resize.width = (int) size.width;
-	int_event.resize.height = (int) size.height;
+	int_event.any.type = li_event_motion_notify;
+	int_event.any.window.p = [event window];
+	int_event.motion.x = point.x;
+	int_event.motion.y = point.y;
+	int_event.motion.state = 0;
 	li_win_cb(&int_event);
 }
 
-- (void)windowWillClose:(NSNotification *)notification {
+- (CVReturn) getFrameForTime:(const CVTimeStamp*)outputTime {
+	return kCVReturnSuccess;
+}
+
+- (void) prepareOpenGL {
+	[super prepareOpenGL];
+
+	[[self openGLContext] makeCurrentContext];
+	int vsync = 1;
+	[[self openGLContext] setValues:&vsync forParameter:NSOpenGLContextParameterSwapInterval];
+	printf("reached prepareOpenGL\n");
+
+	CVDisplayLinkCreateWithActiveCGDisplays(&displayLink);
+	CVDisplayLinkSetOutputCallback(displayLink, &dlCallBack, self);
+	CVDisplayLinkStart(displayLink);
+
+	CGLContextObj cglContext = (CGLContextObj)[[self openGLContext] CGLContextObj];
+	CGLPixelFormatObj pfdObj = (CGLPixelFormatObj)[[self pixelFormat] CGLPixelFormatObj];
+	CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, pfdObj);
+
+	int dim[2] = {[self frame].size.width, [self frame].size.height};
+	CGLSetParameter(cglContext, kCGLCPSurfaceBackingSize, dim);
+	CGLEnable(cglContext, kCGLCERasterization);
+
+	CGLLockContext(cglContext);
+
+	printf("%s\n", glGetString(GL_VERSION));
+
+	CGLUnlockContext(cglContext);
+
+	CVDisplayLinkStart(displayLink);
+}
+
+- (void) destroyLiView {
 	CVDisplayLinkStop(displayLink);
 	CVDisplayLinkRelease(displayLink);
 }
@@ -214,34 +248,40 @@ void li_win_poll(void) {
 
 li_win_t li_win_create(int width, int height) {
 	li_win_t window;
-	NSWindow *native_window;
 	NSRect windowRect;
+	LiWindow *native_window;
+	LiWindowDelegate *delegate;
 	LiView *view;
 
 	windowRect = NSMakeRect(0, 0, width, height);
-	native_window = [[NSWindow alloc] initWithContentRect:windowRect
-								styleMask:LI_WINDOW_STYLE
-								backing:NSBackingStoreBuffered
-								defer:NO];   
-	window.p = native_window;
-	view = [[LiView alloc] initWithFrame:windowRect];
+	native_window = [[LiWindow alloc] initWithContentRect:windowRect
+		styleMask:LI_WINDOW_STYLE
+		backing:NSBackingStoreBuffered
+		defer:NO];
+	view = [[LiView alloc] initWithWindow:native_window];
+	delegate = [[LiWindowDelegate alloc] initWithWindow:native_window];
 	[native_window setContentView:view];
 	[native_window makeFirstResponder:view];
-	[native_window setDelegate:view];
+	[native_window setDelegate:delegate];
 	[native_window setAcceptsMouseMovedEvents:YES];
 	[native_window setRestorable:NO];
+	window.p = native_window;
 	return window;
 }
 
 void li_win_destroy(li_win_t win) {
-	NSWindow *native_window;
+	LiWindow *native_window;
 
 	native_window = win.p;
-	[native_window dealloc];
+	[(LiView*) [native_window contentView] destroyLiView];
+	[[native_window contentView] release];
+	[[native_window delegate] release];
+	[native_window close];
 }
 
 void li_win_map(li_win_t win) {
-	NSWindow *native_window;
+	LiWindow *native_window;
+
 	native_window = win.p;
 	[native_window makeKeyAndOrderFront:nil];
 }
@@ -250,6 +290,7 @@ li_ctx_t li_ctx_create(li_win_t win) {
 	li_ctx_t context;
 
 	context.p = 0;
+	(void)win;
 	return context;
 }
 
@@ -279,6 +320,10 @@ void *li_ctx_get_proc_addr(const char *name) {
 
 static CVReturn dlCallBack(CVDisplayLinkRef displayLink, const CVTimeStamp* now,
 	const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* context) {
+	(void)now;
+	(void)flagsIn;
+	(void)flagsOut;
+	(void)displayLink;
 	CVReturn result = [(LiView*)context getFrameForTime:outputTime];
 	return result;
 }

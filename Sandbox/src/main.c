@@ -3,14 +3,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int running = 1;
+static li_win_t window1;
+static li_win_t window2;
+static int running1 = 1;
+static int running2 = 2;
 static int width = 640;
 static int height = 480;
 
 void win_cb(li_event_t *event) {
 	switch (event->any.type) {
 		case li_event_close:
-			running = 0;
+			if (event->any.window.p == window1.p)
+				running1 = 0;
+			if (event->any.window.p == window2.p)
+				running2 = 0;
+			li_win_destroy(event->any.window);
 			break;
 		case li_event_key_press:
 			printf("key_press { key=%d, state=%d }\n", event->key.key, event->key.state);
@@ -42,19 +49,21 @@ void win_cb(li_event_t *event) {
 }
 
 int main(void) {
-	li_win_t window;
-	li_ctx_t context;
+	/*li_win_t window;*/
+	/*li_ctx_t context;*/
 	li_gl_t gl;
 
 	li_win_init(win_cb);
-	window = li_win_create(width, height);
-	li_win_map(window);
-	context = li_ctx_create(window);
+	window1 = li_win_create(width, height);
+	window2 = li_win_create(width, height);
+	li_win_map(window1);
+	li_win_map(window2);
+	/*context = li_ctx_create(window);
 	li_ctx_make_current(window, context);
 	li_gl_init(&gl);
-	printf("%s\n", gl.GetString(GL_VERSION));
-	while (running) {
-		gl.Viewport(0, 0, width, height);
+	printf("%s\n", gl.GetString(GL_VERSION));*/
+	while (running1 || running2) {
+		/*gl.Viewport(0, 0, width, height);
 		gl.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		gl.Clear(GL_COLOR_BUFFER_BIT);
 		gl.Begin(GL_TRIANGLES);
@@ -63,12 +72,12 @@ int main(void) {
 		gl.Vertex2f(0.0f, 0.5f);
 		gl.Vertex2f(0.5f, -0.5f);
 		gl.End();
-		gl.Flush();
-		li_ctx_swap_buffers(window);
+		gl.Flush();*/
+		/*if (running1)
+			li_ctx_swap_buffers(window1);*/
 		li_win_poll();
 	}
-	li_ctx_destroy(context);
-	// li_win_destroy(window);
+	/*li_ctx_destroy(context);*/
 	li_win_exit();
 	return EXIT_SUCCESS;
 }

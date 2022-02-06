@@ -62,7 +62,7 @@ else ifeq ($(platform), mingw)
 	platform_soname = -Wl,-soname,
 else ifeq ($(platform), macos)
 	LDFLAGS += -Wl,-rpath,@loader_path
-	platform_engine_flags =
+	platform_engine_flags = 
 	platform_engine_libs = $(bin_win_macos)
 	platform_engine_source = $(src_dir_engine)/posix_dl.c
 	platform_shared_prefix = lib
@@ -102,7 +102,7 @@ $(tmp_dir_engine)/%.o: $(src_dir_engine)/%.c
 
 $(tmp_dir_engine)/%.o: $(src_dir_engine)/%.m
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c -fPIC -o $@ $< -MMD -I$(inc_dir_engine)
+	$(CC) $(CFLAGS) -c -fPIC -o $@ $< -MMD -I$(inc_dir_engine) -Wno-deprecated-declarations
 
 $(tmp_dir_sandbox)/%.o: $(src_dir_sandbox)/%.c
 	@mkdir -p $(@D)
