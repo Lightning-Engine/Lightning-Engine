@@ -117,6 +117,9 @@ re: clean
 .PHONY: run
 run: all
 	./$(bin_sandbox)
+.PHONY: rerun
+rerun: clean
+	$(MAKE) run
 
 -include $(dep_engine)
 -include $(dep_sandbox)
