@@ -122,7 +122,7 @@ void li_win_set_data(li_win_t win, void* data) {
 
 void *li_win_get_data(li_win_t win) {
 	XPointer data;
-	li_assert(XFindContext(li_xlib_display, win.lu, li_xlib_data, &data));
+	li_assert(XFindContext(li_xlib_display, win.lu, li_xlib_data, &data) == 0);
 	return data;
 }
 
