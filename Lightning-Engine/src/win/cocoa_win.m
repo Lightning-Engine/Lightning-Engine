@@ -14,8 +14,8 @@ static win_cb_proc_t li_cocoa_win_cb;
 static CFBundleRef li_cocoa_framework;
 
 @interface LiCocoaWindow : NSWindow {
-	@property (readwrite) void *user_pointer;
 }
+@property (readwrite) void *user_pointer;
 @end
 
 @interface LiCocoaWindowDelegate : NSObject <NSWindowDelegate> {
@@ -30,7 +30,8 @@ static CFBundleRef li_cocoa_framework;
 }
 - (instancetype) _init_with_window:(LiCocoaWindow*)init_window;
 - (void) _handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed;
-- (void) _handle_drag_event:(NSEvent*)event;
+- (void) _handle_mouse_move_event:(NSEvent*)event;
++ (int) _get_mouse_state;
 @end
 
 @implementation LiCocoaWindow
@@ -81,6 +82,17 @@ static CFBundleRef li_cocoa_framework;
 	return self;
 }
 
++ (int) _get_mouse_state {
+	int state = 0;
+	int pressed = [NSEvent pressedMouseButtons];
+
+	if (pressed & 1 << 0)
+		state |= li_button_state_left;
+	if (pressed & 2 << 0)
+		state |= li_button_state_right;
+	return state;
+}
+
 - (void) _handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed {
 	li_event_t int_event;
 	NSPoint point = [event locationInWindow];
@@ -93,23 +105,24 @@ static CFBundleRef li_cocoa_framework;
 	int_event.button.button = eventButton;
 	int_event.button.x = point.x;
 	int_event.button.y = point.y;
-	int_event.button.state = 0;
+	int_event.button.state = li_win_xlat_key_state([event modifierFlags]) | [LiView _get_mouse_state];
 	li_cocoa_win_cb(&int_event);
 }
 
-- (void) _handle_drag_event:(NSEvent*)event button:(int)eventButton {
+- (void) _handle_mouse_move_event:(NSEvent*)event {
 	li_event_t int_event;
 	NSPoint point = [event locationInWindow];
-	NSRect rect = [[[event window] contentView] frame];
 
-	if (point.x < 0 || point.y < 0 || point.x >= rect.size.width || point.y >= rect.size.height)
-		return;
-	int_event.any.type = li_event_motion_notify;
 	int_event.any.window.p = [event window];
+	int_event.any.type = li_event_motion_notify;
 	int_event.motion.x = point.x;
 	int_event.motion.y = point.y;
-	int_event.motion.state = 0;
+	int_event.motion.state = li_win_xlat_key_state([event modifierFlags]) | [LiView _get_mouse_state];
 	li_cocoa_win_cb(&int_event);
+}
+
+- (void) leftMouseDown: (NSEvent*) event {
+	[self _handle_button_event:event button:li_button_left pressed:1];
 }
 
 - (void) rightMouseDown: (NSEvent*) event {
@@ -145,7 +158,7 @@ static CFBundleRef li_cocoa_framework;
 		int_event.any.type = li_event_key_press;
 	int_event.any.window.p = [event window];
 	int_event.key.key = li_win_xlat_key([event keyCode]);
-	int_event.key.state = li_win_xlat_key_state([event modifierFlags]);
+	int_event.key.state = li_win_xlat_key_state([event modifierFlags]) | [LiView _get_mouse_state];
 	li_cocoa_win_cb(&int_event);
 }
 
@@ -155,39 +168,26 @@ static CFBundleRef li_cocoa_framework;
 	int_event.any.type = li_event_key_release;
 	int_event.any.window.p = [event window];
 	int_event.key.key = li_win_xlat_key([event keyCode]);
-	int_event.key.state = li_win_xlat_key_state([event modifierFlags]);
+	int_event.key.state = li_win_xlat_key_state([event modifierFlags]) | [LiView _get_mouse_state];
 	li_cocoa_win_cb(&int_event);
 }
 
 - (void) mouseMoved: (NSEvent *) event {
-	li_event_t int_event;
-	NSPoint point = [event locationInWindow];
-	NSRect rect = [[[event window] contentView] frame];
-
-	if (point.x < 0 || point.y < 0 || point.x >= rect.size.width || point.y >= rect.size.height)
-		return;
-	int_event.any.type = li_event_motion_notify;
-	int_event.any.window.p = [event window];
-	int_event.motion.x = point.x;
-	int_event.motion.y = point.y;
-	int_event.motion.state = 0;
-	li_cocoa_win_cb(&int_event);
+	[self _handle_mouse_move_event:event];
 }
 
-- (void) mouseDragged:(NSEvent *) event {
-	li_event_t int_event;
-	NSPoint point = [event locationInWindow];
-	NSRect rect = [[[event window] contentView] frame];
-
-	if (point.x < 0 || point.y < 0 || point.x >= rect.size.width || point.y >= rect.size.height)
-		return;
-	int_event.any.type = li_event_motion_notify;
-	int_event.any.window.p = [event window];
-	int_event.motion.x = point.x;
-	int_event.motion.y = point.y;
-	int_event.motion.state = 0;
-	li_cocoa_win_cb(&int_event);
+- (void) mouseDragged: (NSEvent *) event {
+	[self _handle_mouse_move_event:event];
 }
+
+- (void) rightMouseDragged: (NSEvent *) event {
+	[self _handle_mouse_move_event:event];
+}
+
+- (void) otherMouseDragged: (NSEvent *) event {
+	[self _handle_mouse_move_event:event];
+}
+
 @end
 
 int _setup_nsgl(void) {
@@ -211,12 +211,15 @@ void li_win_exit(void) {
 void li_win_poll(void) {
 	NSEvent* event;
 
-	event = [NSApp nextEventMatchingMask:NSEventMaskAny
-		untilDate:[NSDate distantPast]
-		inMode:NSDefaultRunLoopMode
-		dequeue:YES];
+	while (1) {
+		event = [NSApp nextEventMatchingMask:NSEventMaskAny
+			untilDate:[NSDate distantPast]
+			inMode:NSDefaultRunLoopMode
+			dequeue:YES];
 
-	if (event != nil) {
+		if (event == nil)
+			break;
+
 		[NSApp sendEvent:event];
 	}
 }
@@ -265,7 +268,7 @@ void li_win_set_data(li_win_t win, void *data) {
 }
 
 void *li_win_get_data(li_win_t win) {
-	return [(LiCocoaWindow*) win.p getUser_pointer];
+	return [(LiCocoaWindow*) win.p user_pointer];
 }
 
 li_ctx_t li_ctx_create(li_win_t win, int version) {
