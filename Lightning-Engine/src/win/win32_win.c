@@ -30,7 +30,7 @@ void _windows_release_hdcs(li_win_t win) {
 }
 
 
-void li_win_init(void (*cb)(li_event_t*)) {
+void li_win_init(win_cb_proc_t cb) {
 	WNDCLASSW wnd_class = { 0 };
 	li_win32_handle = GetModuleHandleA(NULL);
 	wnd_class.hInstance = li_win32_handle;
@@ -214,7 +214,7 @@ LRESULT CALLBACK li_win32_win_proc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l
 
 	switch (msg) {
 		case WM_CLOSE:
-			event.any.type = li_event_close;
+			event.any.type = li_event_window_close;
 			event.any.window.p = hwnd;
 			li_win32_win_cb(&event);
 			return 0;

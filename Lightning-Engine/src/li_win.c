@@ -16,7 +16,7 @@ static li_dl_t lib = { .p = NULL };
 static int win_loaded = 0;
 static void _li_win_load();
 
-LI_FORWARD(, void, li_win_init, (void (*cb)(li_event_t*)), (cb))
+LI_FORWARD(, void, li_win_init, (win_cb_proc_t cb), (cb))
 LI_FORWARD(, void, li_win_exit, (void), ())
 LI_FORWARD(, void, li_win_poll, (void), ())
 LI_FORWARD(return, li_win_t, li_win_create, (int width, int height), (width, height))

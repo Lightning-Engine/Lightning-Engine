@@ -13,7 +13,7 @@ typedef union li_ctx {
 } li_ctx_t;
 
 typedef enum li_event_type {
-	li_event_close,
+	li_event_window_close,
 	li_event_key_press,
 	li_event_key_release,
 	li_event_key_repeat,

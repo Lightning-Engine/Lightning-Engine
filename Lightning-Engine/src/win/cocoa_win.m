@@ -21,15 +21,16 @@ static CFBundleRef li_cocoa_framework;
 @interface LiCocoaWindowDelegate : NSObject <NSWindowDelegate> {
 	LiCocoaWindow *window;
 }
-- (instancetype)_init_with_window:(LiCocoaWindow*)init_window;
+- (instancetype) _init_with_window:(LiCocoaWindow*)init_window;
 @end
 
 @interface LiView : NSView {
 @public
 	LiCocoaWindow *window;
 }
-- (instancetype)_init_with_window:(LiCocoaWindow*)init_window;
-- (void)_handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed;
+- (instancetype) _init_with_window:(LiCocoaWindow*)init_window;
+- (void) _handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed;
+- (void) _handle_drag_event:(NSEvent*)event;
 @end
 
 @implementation LiCocoaWindow
@@ -45,13 +46,13 @@ static CFBundleRef li_cocoa_framework;
 @end
 
 @implementation LiCocoaWindowDelegate
-- (instancetype)_init_with_window:(LiCocoaWindow*)init_window {
+- (instancetype) _init_with_window:(LiCocoaWindow*)init_window {
 	self = [super init];
 	window = init_window;
 	return self;
 }
 
-- (void)windowDidResize:(NSNotification *) notification {
+- (void) windowDidResize:(NSNotification *) notification {
 	li_event_t int_event;
 	NSSize size = [[window contentView] frame].size;
 
@@ -62,10 +63,10 @@ static CFBundleRef li_cocoa_framework;
 	li_cocoa_win_cb(&int_event);
 }
 
-- (BOOL)windowShouldClose:(NSNotification *)notification {
+- (BOOL) windowShouldClose:(NSNotification *)notification {
 	li_event_t int_event;
 
-	int_event.any.type = li_event_close;
+	int_event.any.type = li_event_window_close;
 	int_event.any.window.p = window;
 	li_cocoa_win_cb(&int_event);
 	
@@ -74,13 +75,13 @@ static CFBundleRef li_cocoa_framework;
 @end
 
 @implementation LiView
-- (instancetype)_init_with_window:(LiCocoaWindow*)init_window {
+- (instancetype) _init_with_window:(LiCocoaWindow*)init_window {
 	self = [super init];
 	window = init_window;
 	return self;
 }
 
-- (void)_handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed {
+- (void) _handle_button_event:(NSEvent*)event button:(int)eventButton pressed:(int) isPressed {
 	li_event_t int_event;
 	NSPoint point = [event locationInWindow];
 
@@ -96,16 +97,23 @@ static CFBundleRef li_cocoa_framework;
 	li_cocoa_win_cb(&int_event);
 }
 
-- (void) leftMouseDown: (NSEvent*) event {
-	[self _handle_button_event:event button:li_button_left pressed:1];
+- (void) _handle_drag_event:(NSEvent*)event button:(int)eventButton {
+	li_event_t int_event;
+	NSPoint point = [event locationInWindow];
+	NSRect rect = [[[event window] contentView] frame];
+
+	if (point.x < 0 || point.y < 0 || point.x >= rect.size.width || point.y >= rect.size.height)
+		return;
+	int_event.any.type = li_event_motion_notify;
+	int_event.any.window.p = [event window];
+	int_event.motion.x = point.x;
+	int_event.motion.y = point.y;
+	int_event.motion.state = 0;
+	li_cocoa_win_cb(&int_event);
 }
 
 - (void) rightMouseDown: (NSEvent*) event {
 	[self _handle_button_event:event button:li_button_right pressed:1];
-}
-
-- (void) leftMouseUp: (NSEvent*) event {
-	[self _handle_button_event:event button:li_button_left pressed:0];
 }
 
 - (void) rightMouseUp: (NSEvent*) event {
@@ -156,7 +164,22 @@ static CFBundleRef li_cocoa_framework;
 	NSPoint point = [event locationInWindow];
 	NSRect rect = [[[event window] contentView] frame];
 
-	if (point.x < 0 || point.y < 0 || point.x > rect.size.width || point.y > rect.size.height)
+	if (point.x < 0 || point.y < 0 || point.x >= rect.size.width || point.y >= rect.size.height)
+		return;
+	int_event.any.type = li_event_motion_notify;
+	int_event.any.window.p = [event window];
+	int_event.motion.x = point.x;
+	int_event.motion.y = point.y;
+	int_event.motion.state = 0;
+	li_cocoa_win_cb(&int_event);
+}
+
+- (void) mouseDragged:(NSEvent *) event {
+	li_event_t int_event;
+	NSPoint point = [event locationInWindow];
+	NSRect rect = [[[event window] contentView] frame];
+
+	if (point.x < 0 || point.y < 0 || point.x >= rect.size.width || point.y >= rect.size.height)
 		return;
 	int_event.any.type = li_event_motion_notify;
 	int_event.any.window.p = [event window];

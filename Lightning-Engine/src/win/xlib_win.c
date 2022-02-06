@@ -32,7 +32,7 @@ static void _event_handle(XEvent *ev) {
 	switch (ev->type) {
 		case ClientMessage:
 			if ((unsigned long) ev->xclient.data.l[0] == li_xlib_wm_delete_window) {
-				event.any.type = li_event_close;
+				event.any.type = li_event_window_close;
 				li_xlib_win_cb(&event);
 			}
 			break;
@@ -76,7 +76,7 @@ static void _event_handle(XEvent *ev) {
 	}
 }
 
-void li_win_init(void (*cb)(li_event_t*)) {
+void li_win_init(win_cb_proc_t cb) {
 	li_xlib_display = XOpenDisplay(NULL);
 	li_assert(li_xlib_display != NULL);
 	
