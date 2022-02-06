@@ -3,7 +3,7 @@
 #include "li/dl.h"
 #include <windows.h>
 #include <GL/gl.h>
-#include "li/vendor/wglext.h"
+#include <GL/wgl.h>
 
 static const wchar_t *LI_DEFAULT_CLASS_NAME = L"LIWINDOW";
 static HINSTANCE LI_WIN_HANDLE;
@@ -252,7 +252,9 @@ PIXELFORMATDESCRIPTOR _windows_get_pfd(void) {
 	return pfd;
 }
 
-li_ctx_t li_ctx_create(li_win_t win) {
+li_ctx_t li_ctx_create(li_win_t win, int version) {
+	(void) version;
+
 	PIXELFORMATDESCRIPTOR pfd;
 	li_ctx_t dummy_context;
 	li_ctx_t actual_context;
@@ -285,7 +287,8 @@ li_ctx_t li_ctx_create(li_win_t win) {
 	return actual_context;
 }
 
-void li_ctx_destroy(li_ctx_t ctx) {
+void li_ctx_destroy(li_win_t win, li_ctx_t ctx) {
+	(void) win;
 	li_assert(wglDeleteContext(ctx.p));
 }
 
@@ -293,7 +296,8 @@ void li_ctx_make_current(li_win_t win, li_ctx_t ctx) {
 	li_assert(wglMakeCurrent(_windows_get_hdc(win), ctx.p));
 }
 
-void li_ctx_swap_buffers(li_win_t win) {
+void li_ctx_swap_buffers(li_win_t win, li_ctx_t ctx) {
+	(void) ctx;
 	SwapBuffers(_windows_get_hdc(win));
 }
 

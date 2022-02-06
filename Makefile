@@ -30,10 +30,10 @@ src_win_win32 = $(src_dir_engine)/win/win32_win.c $(src_dir_engine)/win/win32_ke
 obj_win_win32 = $(patsubst $(src_dir_engine)/%.c,$(tmp_dir_engine)/%.o,$(src_win_win32))
 dep_win_win32 = $(patsubst $(src_dir_engine)/%.c,$(tmp_dir_engine)/%.d,$(src_win_win32))
 
-bin_win_macos = $(bin_dir)/$(platform_shared_prefix)liengine_win_macos$(platform_shared_suffix)
-src_win_macos = $(src_dir_engine)/win/macos_win.c $(src_dir_engine)/win/macos_keymap.c
-obj_win_macos = $(patsubst $(src_dir_engine)/%.c,$(tmp_dir_engine)/%.o,$(src_win_macos))
-dep_win_macos = $(patsubst $(src_dir_engine)/%.c,$(tmp_dir_engine)/%.d,$(src_win_macos))
+bin_win_cocoa = $(bin_dir)/$(platform_shared_prefix)liengine_win_cocoa$(platform_shared_suffix)
+src_win_cocoa = $(src_dir_engine)/win/cocoa_win.c $(src_dir_engine)/win/cocoa_keymap.c
+obj_win_cocoa = $(patsubst $(src_dir_engine)/%.c,$(tmp_dir_engine)/%.o,$(src_win_cocoa))
+dep_win_cocoa = $(patsubst $(src_dir_engine)/%.c,$(tmp_dir_engine)/%.d,$(src_win_cocoa))
 
 ifndef platform
 	platform = linux
@@ -63,7 +63,7 @@ else ifeq ($(platform), mingw)
 else ifeq ($(platform), macos)
 	LDFLAGS += -Wl,-rpath,@loader_path
 	platform_engine_flags = 
-	platform_engine_libs = $(bin_win_macos)
+	platform_engine_libs = $(bin_win_cocoa)
 	platform_engine_source = $(src_dir_engine)/posix_dl.c
 	platform_shared_prefix = lib
 	platform_shared_suffix = .so
@@ -92,9 +92,9 @@ $(bin_win_win32): $(obj_win_win32) $(bin_engine)
 	@mkdir -p $(@D)
 	$(CC) $(LDFLAGS) $(platform_soname)$(notdir $@) -shared -o $@ $^ -lgdi32 -lopengl32
 
-$(bin_win_macos): $(obj_win_macos) $(bin_engine)
+$(bin_win_cocoa): $(obj_win_cocoa) $(bin_engine)
 	@mkdir -p $(@D)
-	$(CC) $(LDFLAGS) $(platform_soname)$(notdir $@) -shared -o $@ $^ -framework Cocoa -framework Quartz -framework OpenGL
+	$(CC) $(LDFLAGS) $(platform_soname)$(notdir $@) -shared -o $@ $^ -framework Cocoa -framework OpenGL
 
 $(tmp_dir_engine)/%.o: $(src_dir_engine)/%.c
 	@mkdir -p $(@D)
@@ -118,5 +118,8 @@ re: clean
 run: all
 	./$(bin_sandbox)
 
--include $(dep)
+-include $(dep_engine)
+-include $(dep_sandbox)
 -include $(dep_win_xlib)
+-include $(dep_win_win32)
+-include $(dep_win_cocoa)

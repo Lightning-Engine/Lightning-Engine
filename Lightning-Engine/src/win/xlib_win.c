@@ -11,7 +11,7 @@ Display *li_xlib_display;
 static Window li_xlib_root;
 static int li_xlib_screen;
 static Atom li_xlib_wm_delete_window;
-static void(*li_xlib_win_cb)(li_event_t*);
+static win_cb_proc_t li_xlib_win_cb;
 
 static int event_is_repeat(XEvent *ev) {
 	XEvent ev2;
@@ -114,21 +114,21 @@ void li_win_map(li_win_t win) {
 	XMapWindow(li_xlib_display, win.lu);
 }
 
-li_ctx_t li_ctx_create(li_win_t win) {
-	static const int visual_attribs[] = {
+li_ctx_t li_ctx_create(li_win_t win, int version) {
+	int visual_attribs[] = {
 		GLX_RENDER_TYPE, GLX_RGBA_BIT,
 		GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
 		GLX_DOUBLEBUFFER, True,
 		None,
 	};
-
-	static const int context_attribs[] = {
+	int context_attribs[] = {
 		GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
 		GLX_CONTEXT_MINOR_VERSION_ARB, 2,
 		GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
 		None,
 	};
 
+	(void) version;
 	(void) win;
 	int num_fbc;
 	GLXFBConfig *fbc = glXChooseFBConfig(li_xlib_display, li_xlib_screen, visual_attribs, &num_fbc);
@@ -142,7 +142,8 @@ li_ctx_t li_ctx_create(li_win_t win) {
 	return ctx;
 }
 
-void li_ctx_destroy(li_ctx_t ctx) {
+void li_ctx_destroy(li_win_t win, li_ctx_t ctx) {
+	(void) win;
 	glXDestroyContext(li_xlib_display, ctx.p);
 }
 
@@ -150,7 +151,8 @@ void li_ctx_make_current(li_win_t win, li_ctx_t ctx) {
 	glXMakeCurrent(li_xlib_display, win.lu, ctx.p);
 }
 
-void li_ctx_swap_buffers(li_win_t win) {
+void li_ctx_swap_buffers(li_win_t win, li_ctx_t ctx) {
+	(void) ctx;
 	glXSwapBuffers(li_xlib_display, win.lu);
 }
 

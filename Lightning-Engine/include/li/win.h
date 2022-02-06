@@ -72,10 +72,10 @@ li_win_t li_win_create(int width, int height);
 void li_win_destroy(li_win_t win);
 void li_win_map(li_win_t win);
 
-li_ctx_t li_ctx_create(li_win_t win);
-void li_ctx_destroy(li_ctx_t ctx);
+li_ctx_t li_ctx_create(li_win_t win, int version);
+void li_ctx_destroy(li_win_t win, li_ctx_t ctx);
 void li_ctx_make_current(li_win_t win, li_ctx_t ctx);
-void li_ctx_swap_buffers(li_win_t win);
+void li_ctx_swap_buffers(li_win_t win, li_ctx_t ctx);
 void *li_ctx_get_proc_addr(const char *name);
 
 #endif

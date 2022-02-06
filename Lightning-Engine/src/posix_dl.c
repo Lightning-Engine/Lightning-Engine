@@ -1,13 +1,12 @@
 #include "li/dl.h"
 #include <dlfcn.h>
-#include <stdio.h>
+// #include <stdio.h>
 
 li_dl_t li_dl_open(const char *filename) {
 	li_dl_t dl;
 	dl.p = dlopen(filename, RTLD_LAZY);
-	if (dl.p == NULL) {
-		fprintf(stderr, "%s\n", dlerror());
-	}
+	// if (dl.p == NULL)
+	// 	fprintf(stderr, "%s\n", dlerror());
 	return dl;
 }
 

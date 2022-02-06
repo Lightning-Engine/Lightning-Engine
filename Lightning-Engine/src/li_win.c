@@ -22,10 +22,10 @@ LI_FORWARD(, void, li_win_poll, (void), ())
 LI_FORWARD(return, li_win_t, li_win_create, (int width, int height), (width, height))
 LI_FORWARD(, void, li_win_destroy, (li_win_t win), (win))
 LI_FORWARD(, void, li_win_map, (li_win_t win), (win))
-LI_FORWARD(return, li_ctx_t, li_ctx_create, (li_win_t win), (win))
-LI_FORWARD(, void, li_ctx_destroy, (li_ctx_t ctx), (ctx))
+LI_FORWARD(return, li_ctx_t, li_ctx_create, (li_win_t win, int version), (win, version))
+LI_FORWARD(, void, li_ctx_destroy, (li_win_t win, li_ctx_t ctx), (win, ctx))
 LI_FORWARD(, void, li_ctx_make_current, (li_win_t win, li_ctx_t ctx), (win, ctx))
-LI_FORWARD(, void, li_ctx_swap_buffers, (li_win_t win), (win))
+LI_FORWARD(, void, li_ctx_swap_buffers, (li_win_t win, li_ctx_t ctx), (win, ctx))
 LI_FORWARD(return, void*, li_ctx_get_proc_addr, (const char* name), (name))
 
 static void li_win_load() {
@@ -35,7 +35,7 @@ static void li_win_load() {
 		if (lib.p == NULL)
 			lib = li_dl_open("liengine_win_win32.dll");
 		if (lib.p == NULL)
-			lib = li_dl_open("libliengine_win_macos.so");
+			lib = li_dl_open("libliengine_win_cocoa.so");
 		li_assert(lib.p != NULL);
 
 		LI_LOAD_SYMBOL(li_win_init)
