@@ -57,6 +57,7 @@ static CFBundleRef li_cocoa_framework;
 	li_event_t int_event;
 	NSSize size = [[window contentView] frame].size;
 
+	(void) notification;
 	int_event.any.type = li_event_window_resize;
 	int_event.any.window.p = window;
 	int_event.resize.width = (int) size.width;
@@ -67,10 +68,10 @@ static CFBundleRef li_cocoa_framework;
 - (BOOL) windowShouldClose:(NSNotification *)notification {
 	li_event_t int_event;
 
+	(void) notification;
 	int_event.any.type = li_event_window_close;
 	int_event.any.window.p = window;
 	li_cocoa_win_cb(&int_event);
-	
 	return NO;
 }
 @end
