@@ -1,6 +1,7 @@
 #include "li/window.hh"
 #include "li/application.hh"
 #include "li/gl.h"
+#include "li/math/vector.hh"
 #include <iostream>
 
 class sandbox : public li::windowed_application {
@@ -106,7 +107,12 @@ void main() {\n\
 };
 
 int main(void) {
-	sandbox sandbox;
-	sandbox.start();
+	li::vec2i test = { 1, 2 };
+	li::vec2f test2(1, 2);
+	test = test2;
+	std::cout << li::vec3d(test, 8) << std::endl;
+
+	// sandbox sandbox;
+	// sandbox.start();
 	return 0;
 }
