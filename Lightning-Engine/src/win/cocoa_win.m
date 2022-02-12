@@ -324,6 +324,7 @@ void li_ctx_swap_buffers(li_win_t win, li_ctx_t ctx) {
 	NSOpenGLContext *context;
 	(void) win;
 	context = ctx.p;
+	[context update];
 	[context flushBuffer];
 }
 
