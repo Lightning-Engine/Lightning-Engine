@@ -2,11 +2,11 @@
 #define LI_LIST_H
 
 typedef struct li_list {
-    struct li_list next;
+    struct li_list *next;
     void *data;
 } li_list_t;
 
-li_list_t li_lstnew(void *data);
+li_list_t *li_lstnew(void *data);
 /*Deletes only one, does not clear the rest of the list*/
 void li_lstdel(li_list_t *lst);
 /*Calls li_lstdel on this node and all the following nodes*/

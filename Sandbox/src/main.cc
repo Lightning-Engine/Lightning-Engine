@@ -2,6 +2,7 @@
 #include "li/application.hh"
 #include "li/gl.h"
 #include "li/math/vector.hh"
+#include "li/util/log.h"
 #include <iostream>
 
 class sandbox : public li::windowed_application {

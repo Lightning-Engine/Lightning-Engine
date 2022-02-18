@@ -1,4 +1,7 @@
-#include "li/list.h"
+#include "li/util/list.h"
+
+#include "li/memory.h"
+#include <stdlib.h>
 
 li_list_t *li_lstnew(void *data) {
 	li_list_t *list;
@@ -43,6 +46,9 @@ void li_lstadd_frnt(li_list_t **lst, li_list_t *ele) {
 }
 
 void li_lstrem(li_list_t **lst, int (*check)(void*,void*), void *param) {
+	li_list_t *tmp;
+
+	tmp = *lst;
 	while (*lst && check((*lst)->data, param)) {
 		tmp = (*lst)->next;
 		li_lstdel(*lst);
@@ -52,16 +58,21 @@ void li_lstrem(li_list_t **lst, int (*check)(void*,void*), void *param) {
 		if (check((*lst)->data, param)) {
 			tmp->next = (*lst)->next;
 			li_lstdel(*lst);
-			*lst = temp->next;
+			*lst = tmp->next;
 		} else {
 			tmp = *lst;
-			*lst = *lst->next;
+			*lst = (*lst)->next;
 		}
 	}
 }
 
 void li_lstfor(const li_list_t *lst, void (*proc)(void*,void*), void *param) {
-	while (*lst) {
-		proc((*lst)->data, param);
-		*lst = (*lst)->next;
+	while (lst) {
+		proc(lst->data, param);
+		lst = lst->next;
+	}
+}
+
+int li_ptreq(void *a, void *b) {
+	return a == b;
 }
