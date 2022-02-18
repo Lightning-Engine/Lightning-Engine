@@ -11,6 +11,10 @@
 #define LI_LOG_BUFFER_SIZE 1024
 #endif
 
+#if LI_LOG_BUFFER_SIZE <= 0
+#error LI_LOG_BUFFER_SIZE must be > 0
+#endif
+
 typedef struct li_log_str li_log_str_t;
 typedef struct li_flush_param li_flush_param_t;
 typedef struct li_sink li_sink_t;
@@ -22,6 +26,7 @@ struct li_log_str {
 };
 
 typedef void (*li_sink_flush_proc)(li_sink_t*, li_log_str_t*);
+typedef int (*li_log_fmt_proc)(char**, const char*);
 
 struct li_flush_param {
 	const char *str;
@@ -35,17 +40,20 @@ struct li_sink {
 };
 
 struct li_logger {
-	char data[LI_LOG_BUFFER_SIZE];
+	char data[LI_LOG_BUFFER_SIZE + 1];
 	size_t offset;
 	li_list_t *sinks;
+	li_log_fmt_proc fmt_proc;
 };
 
 void li_log_init(li_logger_t *logger);
 void li_log_destroy(li_logger_t *logger);
 
+void li_log_set_fmt(li_logger_t *logger, li_log_fmt_proc fmt_proc);
+
 void li_sink_init(li_sink_t *sink, li_sink_flush_proc flush_proc, void *param);
 
-int li_log_add_sink(li_logger_t *logger, li_sink_t *sink);
+int li_log_add_sink(li_logger_t *logger, li_sink_flush_proc flush_proc, void *param);
 int li_log_del_sink(li_logger_t *logger, li_sink_t *sink);
 
 int li_log(li_logger_t *logger, const char *format, ...);
