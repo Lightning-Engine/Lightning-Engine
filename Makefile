@@ -167,7 +167,7 @@ re: clean
 	$(SILENT)$(MAKE)
 .PHONY: run
 run: all
-	$(SILENT)ASAN_OPTIONS=detect_leaks=0 ./$(bin_sandbox)
+	$(SILENT)ASAN_OPTIONS=detect_leaks=1 ./$(bin_sandbox)
 .PHONY: rerun
 rerun: clean
 	$(SILENT)$(MAKE) run
