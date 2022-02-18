@@ -1,9 +1,16 @@
 #include "li/window.hh"
 #include "li/application.hh"
-#include "li/gl.h"
 #include "li/math/vector.hh"
-#include "li/util/log.h"
+#include "li/math/matrix.hh"
+#include "li/util/logger.hh"
 #include <iostream>
+#include <chrono>
+
+extern "C" {
+	#include "li/gl.h"
+	#include "li/util/log.h"
+	#include "li/memory.h"
+}
 
 class sandbox : public li::windowed_application {
 public:
@@ -34,7 +41,7 @@ void main() {\n\
 	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n\
 }\n";
 
-	sandbox() : li::windowed_application(640, 480) { }
+	sandbox() : li::windowed_application({ 640, 480 }) { }
 
 	bool init() override {
 		if (!windowed_application::init())
@@ -97,7 +104,7 @@ void main() {\n\
 	void update() override {
 		li::window &window = get_window();
 		const li::gl &gl = get_window().get_gl();
-		gl.Viewport(0, 0, window.get_width(), window.get_height());
+		gl.Viewport(0, 0, window.get_size().WIDTH, window.get_size().HEIGHT);
 		gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		gl.Clear(GL_COLOR_BUFFER_BIT);
 		// gl.DrawArrays(GL_TRIANGLES, 0, 3);
@@ -107,12 +114,43 @@ void main() {\n\
 	}
 };
 
-int main(void) {
-	li::vec2i test = { 1, 2 };
-	li::vec2f test2(1, 2);
-	test = test2;
-	std::cout << li::vec3d(test, 8) << std::endl;
+void log_cool_callback(li_sink_t *sink, li_log_str_t *str) {
+	printf("%s", str->str);
+	(void) sink;
+}
 
+void log_cooler_callback(li_sink_t *sink, li_log_str_t *str) {
+	printf("%s", str->str);
+	(void) sink;
+}
+
+int log_cool_fmt(char **out, const char *str) {
+	int len;
+
+	auto time = std::chrono::system_clock::now().time_since_epoch().count() / 1000000000;
+	len = snprintf(NULL, 0, "[%lu]: %s\n", time, str) + 1;
+	*out = (char*) li_safe_malloc(len);
+	snprintf(*out, len, "[%lu]: %s\n", time, str);
+	return len;
+}
+
+int main(void) {
+	li_logger_t logger;
+	li::logger log("test");
+	li::matrix<int, 4, 4> lhs = {
+		{ 1, 0, 0, 5 },
+		{ 0, 1, 0, 6 },
+		{ 0, 0, 1, 7 },
+		{ 0, 0, 0, 1 },
+	};
+
+	// li_log_init(&logger);
+	// li_log_set_fmt(&logger, log_cool_fmt);
+	// li_log_add_sink(&logger, log_cool_callback, NULL);
+	// li_log(&logger, "%s\n", "Hallo");
+	// li_log_flush(&logger);
+	log.init();
+	log.log("Hello {} {} {}", "World!", 0, lhs * li::vec4i { 0, 0, 0, 1 });
 	// sandbox sandbox;
 	// sandbox.start();
 	return 0;

@@ -6,62 +6,43 @@
 #include <initializer_list>
 #include <iostream>
 #include <cstdint>
+#include <cmath>
+
+#define X operator[](0)
+#define Y operator[](1)
+#define Z operator[](2)
+#define W operator[](3)
+#define R operator[](0)
+#define G operator[](1)
+#define B operator[](2)
+#define A operator[](3)
+#define WIDTH operator[](0)
+#define HEIGHT operator[](1)
+#define DEPTH operator[](2)
+#define TIME operator[](3)
 
 namespace li {
 	template<class T, std::size_t N>
 	class vector {
-	public:
 		std::array<T, N> data;
-
-		vector() = default;
-
-		vector(T value) {
-			std::fill(data.begin(), data.end(), value);
+	public:
+		vector() {
+			for (std::size_t i = 0; i < N; i++)
+				data[i] = 0;
 		}
 
-		vector(std::initializer_list<T> list) {
-			std::copy(list.begin(), list.begin() + std::min(N, list.size()), data.begin());
+		vector(std::initializer_list<T> list) : vector() {
+			for (std::size_t i = 0; i < N; i++)
+				data[i] = list.begin()[i];
 		}
 
-		template<class... Args>
-		vector(Args... args) {
-			static_assert(sizeof...(Args) == N, "");
-			*this = vector({ T(args)... });
+		template<class U, std::size_t O>
+		vector(vector<U, O> other) : vector() {
+			for (std::size_t i = 0; i < std::min(N, O); i++)
+				data[i] = other.data[i];
 		}
 
-		template<class U, std::size_t M>
-		vector(const vector<U, M> &other) {
-			static_assert(N <= M, "");
-			std::copy(other.data.begin(), other.data.begin() + N, data.begin());
-		}
-
-		template<class U, std::size_t M>
-		vector(const vector<U, M> &other, T value) {
-			std::copy(other.data.begin(), other.data.begin() + std::min(N, M), data.begin());
-			std::fill(data.begin() + std::min(N, M), data.end(), value);
-		}
-
-		template<class U, std::size_t M>
-		vector(const vector<U, M> &other, std::initializer_list<T> list) {
-			static_assert(M <= N, "");
-			std::copy(other.data.begin(), other.data.end(), data.begin());
-			std::copy(list.begin(), list.begin() + std::min(N - M, list.size()), data.begin() + std::min(N, M));
-		}
-
-		template<class U, std::size_t M, class... Args>
-		vector(const vector<U, M> &other, Args... args) {
-			static_assert(sizeof...(Args) + M == N, "");
-			*this = vector(other, { T(args)... });
-		}
-
-		template<class U, std::size_t M>
-		vector &operator=(const vector<U, N> &other) {
-			static_assert(N <= M, "");
-			std::copy(other.data.begin(), other.data.begin() + N, data.begin());
-			return *this;
-		}
-
-		const T &operator[](std::size_t i) const {
+		T operator[](std::size_t i) const {
 			return data[i];
 		}
 
@@ -69,44 +50,123 @@ namespace li {
 			return data[i];
 		}
 
-		const T &x() const { static_assert(0 < N, ""); return data[0]; }
-		const T &y() const { static_assert(1 < N, ""); return data[1]; }
-		const T &z() const { static_assert(2 < N, ""); return data[2]; }
-		const T &w() const { static_assert(3 < N, ""); return data[3]; }
-		T &x() { static_assert(0 < N, ""); return data[0]; }
-		T &y() { static_assert(1 < N, ""); return data[1]; }
-		T &z() { static_assert(2 < N, ""); return data[2]; }
-		T &w() { static_assert(3 < N, ""); return data[3]; }
+#define LI_VECTOR_ASSIGNMENT_OPERATOR(op) \
+		template<class U> \
+		vector &operator op(vector<U, N> other) { \
+			for (std::size_t i = 0; i < N; i++) \
+				data[i] op other[i]; \
+			return *this; \
+		} \
+		template<class U> \
+		vector &operator op(U other) { \
+			for (std::size_t i = 0; i < N; i++) \
+				data[i] op other; \
+			return *this; \
+		}
 
-		const T &red() const { static_assert(0 < N, ""); return data[0]; }
-		const T &green() const { static_assert(1 < N, ""); return data[1]; }
-		const T &blue() const { static_assert(2 < N, ""); return data[2]; }
-		const T &alpha() const { static_assert(3 < N, ""); return data[3]; }
-		T &red() { static_assert(0 < N, ""); return data[0]; }
-		T &green() { static_assert(1 < N, ""); return data[1]; }
-		T &blue() { static_assert(2 < N, ""); return data[2]; }
-		T &alpha() { static_assert(3 < N, ""); return data[3]; }
+		LI_VECTOR_ASSIGNMENT_OPERATOR(+=)
+		LI_VECTOR_ASSIGNMENT_OPERATOR(-=)
+		LI_VECTOR_ASSIGNMENT_OPERATOR(*=)
+		LI_VECTOR_ASSIGNMENT_OPERATOR(/=)
+		LI_VECTOR_ASSIGNMENT_OPERATOR(%=)
+		LI_VECTOR_ASSIGNMENT_OPERATOR(&=)
+		LI_VECTOR_ASSIGNMENT_OPERATOR(|=)
+		LI_VECTOR_ASSIGNMENT_OPERATOR(^=)
+		LI_VECTOR_ASSIGNMENT_OPERATOR(<<=)
+		LI_VECTOR_ASSIGNMENT_OPERATOR(>>=)
 
-		const T &width() const { static_assert(0 < N, ""); return data[0]; }
-		const T &height() const { static_assert(1 < N, ""); return data[1]; }
-		const T &depth() const { static_assert(2 < N, ""); return data[2]; }
-		const T &time() const { static_assert(3 < N, ""); return data[3]; }
-		T &width() { static_assert(0 < N, ""); return data[0]; }
-		T &height() { static_assert(1 < N, ""); return data[1]; }
-		T &depth() { static_assert(2 < N, ""); return data[2]; }
-		T &time() { static_assert(3 < N, ""); return data[3]; }
+		vector &normalize() {
+			return *this = normalize(*this);
+		}
 	};
 
-	template<class T, std::size_t N>
-	std::ostream &operator<<(std::ostream &os, const vector<T, N> &v) {
-		os << "[";
+#define LI_VECTOR_UNARY_OPERATOR(op) \
+	template<class T, std::size_t N> \
+	auto operator op(vector<T, N> vec) -> vector<decltype(op vec[0]), N> { \
+		vector<decltype(op vec[0]), N> result; \
+		for (std::size_t i = 0; i < N; i++) \
+			result[i] = op vec[i]; \
+		return result; \
+	}
+
+	LI_VECTOR_UNARY_OPERATOR(+)
+	LI_VECTOR_UNARY_OPERATOR(-)
+	LI_VECTOR_UNARY_OPERATOR(~)
+
+#define LI_VECTOR_BINARY_OPERATOR(op) \
+	template<class T, class U, std::size_t N> \
+	auto operator op(vector<T, N> lhs, vector<U, N> rhs) -> vector<decltype(lhs[0] op rhs[0]), N> { \
+		vector<decltype(lhs[0] op rhs[0]), N> result; \
+		for (std::size_t i = 0; i < N; i++) \
+			result[i] = lhs[i] op rhs[i]; \
+		return result; \
+	} \
+	template<class T, class U, std::size_t N> \
+	auto operator op(vector<T, N> lhs, U rhs) -> vector<decltype(lhs[0] op rhs), N> { \
+		vector<decltype(lhs[0] op rhs), N> result; \
+		for (std::size_t i = 0; i < N; i++) \
+			result[i] = lhs[i] op rhs; \
+		return result; \
+	} \
+	template<class T, class U, std::size_t N> \
+	auto operator op(T lhs, vector<U, N> rhs) -> vector<decltype(lhs op rhs[0]), N> { \
+		vector<decltype(lhs op rhs[0]), N> result; \
+		for (std::size_t i = 0; i < N; i++) \
+			result[i] = lhs op rhs[i]; \
+		return result; \
+	}
+
+	LI_VECTOR_BINARY_OPERATOR(+)
+	LI_VECTOR_BINARY_OPERATOR(-)
+	LI_VECTOR_BINARY_OPERATOR(*)
+	LI_VECTOR_BINARY_OPERATOR(/)
+	LI_VECTOR_BINARY_OPERATOR(%)
+	LI_VECTOR_BINARY_OPERATOR(&)
+	LI_VECTOR_BINARY_OPERATOR(|)
+	LI_VECTOR_BINARY_OPERATOR(^)
+	// LI_VECTOR_BINARY_OPERATOR(<<)
+	// LI_VECTOR_BINARY_OPERATOR(>>)
+
+	template<class T, class U, std::size_t N>
+	bool operator==(vector<T, N> lhs, vector<U, N> rhs) {
+		for (std::size_t i = 0; i < N; i++)
+			if (lhs[i] != rhs[i])
+				return false;
+		return true;
+	}
+
+	template<class T, class U, std::size_t N>
+	bool operator!=(vector<T, N> lhs, vector<U, N> rhs) {
+		return !(lhs == rhs);
+	}
+
+	template<class CharT, class T, std::size_t N>
+	std::basic_ostream<CharT> &operator<<(std::basic_ostream<CharT> &os, vector<T, N> vec) {
+		const char *sep = "[";
 		for (std::size_t i = 0; i < N; ++i) {
-			os << v[i];
-			if (i != N - 1)
-				os << ", ";
+			os << sep << vec[i];
+			sep = " ";
 		}
 		os << "]";
 		return os;
+	}
+
+	template<class T, std::size_t N>
+	double magnitude(vector<T, N> vec) {
+		return std::sqrt(dot(vec, vec));
+	}
+
+	template<class T, std::size_t N>
+	auto normalize(vector<T, N> vec) -> decltype(vec / magnitude(vec)) {
+		return vec / magnitude(vec);
+	}
+
+	template<class T, class U, std::size_t N>
+	auto dot(vector<T, N> lhs, vector<U, N> rhs) -> decltype(lhs[0] * rhs[0]) {
+		decltype(lhs[0] * rhs[0]) result = 0;
+		for (std::size_t i = 0; i < N; i++)
+			result += lhs[i] * rhs[i];
+		return result;
 	}
 
 	template<class T>

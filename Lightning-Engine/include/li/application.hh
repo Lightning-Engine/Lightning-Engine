@@ -23,11 +23,11 @@ namespace li {
 
 	class windowed_application : public application {
 		std::unique_ptr<window> win;
-		int initial_width, initial_height;
+		vec2i initial_size;
 
 		windowed_application();
 	public:
-		windowed_application(int width, int height);
+		windowed_application(vec2i size);
 
 		virtual bool init() override;
 		virtual bool deinit() override;

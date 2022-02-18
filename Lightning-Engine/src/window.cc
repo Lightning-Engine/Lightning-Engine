@@ -2,8 +2,8 @@
 #include <stdlib.h>
 
 namespace li {
-	window::window(int width, int height) : width(width), height(height) {
-		win = li_win_create(width, height);
+	window::window(vec2i size) : size(size) {
+		win = li_win_create(size.WIDTH, size.HEIGHT);
 		li_win_set_data(win, this);
 		ctx = li_ctx_create(win, 4);
 		li_win_map(win);
@@ -63,8 +63,7 @@ namespace li {
 			}
 			case li_event_button_press: {
 				li::button_press_event button_press_event;
-				button_press_event.x = event->button.x;
-				button_press_event.y = event->button.y;
+				button_press_event.position = { event->button.x, event->button.y };
 				button_press_event.button = event->button.button;
 				button_press_event.state = event->button.state;
 				window->dispatcher(button_press_event);
@@ -72,8 +71,7 @@ namespace li {
 			}
 			case li_event_button_release: {
 				li::button_release_event button_release_event;
-				button_release_event.x = event->button.x;
-				button_release_event.y = event->button.y;
+				button_release_event.position = { event->button.x, event->button.y };
 				button_release_event.button = event->button.button;
 				button_release_event.state = event->button.state;
 				window->dispatcher(button_release_event);
@@ -81,16 +79,14 @@ namespace li {
 			}
 			case li_event_motion_notify: {
 				li::motion_notify_event motion_notify_event;
-				motion_notify_event.x = event->motion.x;
-				motion_notify_event.y = event->motion.y;
+				motion_notify_event.position = { event->motion.x, event->motion.y };
 				motion_notify_event.state = event->motion.state;
 				window->dispatcher(motion_notify_event);
 				break;
 			}
 			case li_event_window_resize: {
 				li::window_resize_event window_resize_event;
-				window->width = window_resize_event.width = event->resize.width;
-				window->height = window_resize_event.height = event->resize.height;
+				window->size = window_resize_event.size = { event->resize.width, event->resize.height };
 				window->dispatcher(window_resize_event);
 				break;
 			}

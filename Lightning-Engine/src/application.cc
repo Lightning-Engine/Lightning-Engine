@@ -40,16 +40,16 @@ namespace li {
 		return true;
 	}
 
-	windowed_application::windowed_application() : windowed_application(500, 500) {
+	windowed_application::windowed_application() : windowed_application({ 500, 500 }) {
 
 	}
 
-	windowed_application::windowed_application(int width, int height) : initial_width(width), initial_height(height) {
+	windowed_application::windowed_application(vec2i size) : initial_size(size) {
 
 	}
 
 	bool windowed_application::init() {
-		win = std::unique_ptr<window>(new window(initial_width, initial_height));
+		win = std::unique_ptr<window>(new window(initial_size));
 		win->dispatcher.add_callback<window_close_event>([&](window_close_event &event) { (void) event; stop(); });
 		win->make_current();
 		return application::init();

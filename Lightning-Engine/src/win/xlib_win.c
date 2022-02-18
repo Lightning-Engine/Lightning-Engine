@@ -102,6 +102,7 @@ void li_win_poll(void) {
 li_win_t li_win_create(int width, int height) {
 	li_win_t win;
 	win.lu = XCreateSimpleWindow(li_xlib_display, li_xlib_root, 0, 0, width, height, 0, 0, 0);
+	XStoreName(li_xlib_display, win.lu, "Lightning Engine");
 	li_assert(win.lu != 0);
 	XSelectInput(li_xlib_display, win.lu, ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask);
 	XSetWMProtocols(li_xlib_display, win.lu, &li_xlib_wm_delete_window, 1);

@@ -3,6 +3,7 @@
 
 #include "event.hh"
 #include "event_dispatcher.hh"
+#include "math/vector.hh"
 
 extern "C" {
 	#include "li/win.h"
@@ -19,8 +20,7 @@ namespace li {
 		li_ctx_t ctx;
 		li_gl_t gl;
 
-		int width;
-		int height;
+		vec2i size;
 	public:
 		event_dispatcher<
 			window_close_event,
@@ -33,7 +33,7 @@ namespace li {
 			window_resize_event
 		> dispatcher;
 
-		window(int width, int height);
+		window(vec2i size);
 		window(const window&) = delete;
 		window(window&&) = delete;
 		window& operator=(const window&) = delete;
@@ -44,8 +44,7 @@ namespace li {
 		void swap_buffers();
 		const li::gl &get_gl();
 
-		inline int get_width() { return width; }
-		inline int get_height() { return height; }
+		inline vec2i get_size() { return size; }
 
 		static void poll();
 		static void handle_event(li_event_t *event); // TODO: private

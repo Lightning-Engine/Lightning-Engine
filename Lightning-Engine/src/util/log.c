@@ -14,7 +14,6 @@ void li_log_init(li_logger_t *logger) {
 }
 
 void li_log_destroy(li_logger_t *logger) {
-	free(logger->data);
 	if (logger->sinks)
 		li_lstclr(logger->sinks);
 }
@@ -76,16 +75,17 @@ void _li_log_write(li_logger_t *logger, const char *restrict str, size_t len) {
 }
 
 int li_log(li_logger_t *logger, const char *restrict format, ...) {
-	va_list args;
+	va_list args, args_cpy;
 	char *buffer, *fmt_str;
 	int len, fmt_len;
 
 	va_start(args, format);
+	va_copy(args_cpy, args);
 	len = vsnprintf(NULL, 0, format, args) + 1;
 	
 	buffer = li_safe_malloc(sizeof(char) * len);
 
-	vsnprintf(buffer, len, format, args);
+	vsnprintf(buffer, len, format, args_cpy);
 	if (logger->fmt_proc) {
 		fmt_len = logger->fmt_proc(&fmt_str, buffer);
 		_li_log_write(logger, fmt_str, fmt_len);

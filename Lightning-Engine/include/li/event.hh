@@ -1,6 +1,8 @@
 #ifndef LI_EVENT_HH
 #define LI_EVENT_HH
 
+#include "math/vector.hh"
+
 extern "C" {
 	#include "li/keymap.h"
 }
@@ -12,16 +14,14 @@ namespace li {
 
 	class window_resize_event : public window_event {
 	public:
-		int width;
-		int height;
+		vec2i size;
 	};
 
 	class window_close_event : public window_event { };
 
 	class mouse_event : public window_event {
 	public:
-		int x;
-		int y;
+		vec2i position;
 		li_key_state_t state;
 	};
 
