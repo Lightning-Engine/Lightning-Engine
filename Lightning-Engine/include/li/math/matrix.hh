@@ -39,6 +39,29 @@ namespace li {
 		vector<T, Width> &operator[](std::size_t i) {
 			return data[i];
 		}
+
+		static matrix identity() {
+			matrix result;
+			for (std::size_t i = 0; i < std::min(Width, Height); i++)
+				result[i][i] = 1;
+			return result;
+		}
+
+		template<std::size_t N>
+		static matrix scale(vector<T, N> vec) {
+			matrix result = identity();
+			for (std::size_t i = 0; i < N; i++)
+				result[i][i] *= vec[i];
+			return result;
+		}
+
+		template<std::size_t N>
+		static matrix translate(vector<T, N> vec) {
+			matrix result = identity();
+			for (std::size_t i = 0; i < N; i++)
+				result[i][Width - 1] += vec[i];
+			return result;
+		}
 	};
 
 	template<class T, class U, std::size_t Width, std::size_t Height>
@@ -71,30 +94,6 @@ namespace li {
 		for (std::size_t y = 0; y < Height; y++)
 			for (std::size_t x = 0; x < Width; x++)
 				result[y][x] = mat[x][y];
-		return result;
-	}
-
-	template<class T, std::size_t Size>
-	matrix<T, Size, Size> identity() {
-		matrix<T, Size, Size> result;
-		for (std::size_t i = 0; i < Size; i++)
-			result[i][i] = 1;
-		return result;
-	}
-
-	template<class T, std::size_t Size>
-	matrix<T, Size, Size> scale(vector<T, Size> vec) {
-		matrix<T, Size, Size> result = identity<T, Size>();
-		for (std::size_t i = 0; i < Size; i++)
-			result[i][i] *= vec[i];
-		return result;
-	}
-
-	template<class T, std::size_t Size>
-	matrix<T, Size, Size> translate(vector<T, Size> vec) {
-		matrix<T, Size, Size> result = identity<T, Size>();
-		for (std::size_t i = 0; i < Size; i++)
-			result[i][Size - 1] += vec[i];
 		return result;
 	}
 

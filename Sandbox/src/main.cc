@@ -137,12 +137,7 @@ int log_cool_fmt(char **out, const char *str) {
 int main(void) {
 	li_logger_t logger;
 	li::logger log("test");
-	li::matrix<int, 4, 4> lhs = {
-		{ 1, 0, 0, 5 },
-		{ 0, 1, 0, 6 },
-		{ 0, 0, 1, 7 },
-		{ 0, 0, 0, 1 },
-	};
+	li::matrix<int, 4, 4> lhs = li::matrix<int, 4, 4>::translate(li::vec4i { 5, 6, 7, 0 });
 
 	// li_log_init(&logger);
 	// li_log_set_fmt(&logger, log_cool_fmt);
