@@ -15,7 +15,7 @@ void li_log_init(li_logger_t *logger) {
 
 void li_log_destroy(li_logger_t *logger) {
 	if (logger->sinks)
-		li_lstclr(logger->sinks);
+		li_lstclr(logger->sinks, free);
 }
 
 void li_log_set_fmt(li_logger_t *logger, li_log_fmt_proc fmt_proc) {

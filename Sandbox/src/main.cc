@@ -135,15 +135,9 @@ int log_cool_fmt(char **out, const char *str) {
 }
 
 int main(void) {
-	li_logger_t logger;
 	li::logger log("test");
 	li::matrix<int, 4, 4> lhs = li::matrix<int, 4, 4>::translate(li::vec4i { 5, 6, 7, 0 });
 
-	// li_log_init(&logger);
-	// li_log_set_fmt(&logger, log_cool_fmt);
-	// li_log_add_sink(&logger, log_cool_callback, NULL);
-	// li_log(&logger, "%s\n", "Hallo");
-	// li_log_flush(&logger);
 	log.init();
 	log.log("Hello {} {} {}", "World!", 0, lhs * li::vec4i { 0, 0, 0, 1 });
 	// sandbox sandbox;

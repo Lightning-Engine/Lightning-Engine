@@ -12,17 +12,19 @@ li_list_t *li_lstnew(void *data) {
 	return (list);
 }
 
-void li_lstdel(li_list_t *lst) {
+void li_lstdel(li_list_t *lst, void (*del)(void*)) {
+	if (del)
+		del(lst->data);
 	free(lst);
 }
 
-void li_lstclr(li_list_t *lst) {
+void li_lstclr(li_list_t *lst, void (*del)(void*)) {
 	li_list_t *tmp;
 
 	tmp = lst;
 	while (lst) {
 		tmp = lst->next;
-		li_lstdel(lst);
+		li_lstdel(lst, del);
 		lst = tmp;
 	}
 }
@@ -45,19 +47,19 @@ void li_lstadd_frnt(li_list_t **lst, li_list_t *ele) {
 	*lst = ele;
 }
 
-void li_lstrem(li_list_t **lst, int (*check)(void*,void*), void *param) {
+void li_lstrem(li_list_t **lst, int (*check)(void*,void*), void (*del)(void*), void *param) {
 	li_list_t *tmp;
 
 	tmp = *lst;
 	while (*lst && check((*lst)->data, param)) {
 		tmp = (*lst)->next;
-		li_lstdel(*lst);
+		li_lstdel(*lst, del);
 		*lst = tmp;
 	}
 	while (*lst) {
 		if (check((*lst)->data, param)) {
 			tmp->next = (*lst)->next;
-			li_lstdel(*lst);
+			li_lstdel(*lst, del);
 			*lst = tmp->next;
 		} else {
 			tmp = *lst;

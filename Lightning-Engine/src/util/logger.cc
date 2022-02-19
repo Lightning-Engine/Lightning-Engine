@@ -23,7 +23,7 @@ namespace li {
 	}
 
 	logger::~logger() {
-		// li_log_destroy(&int_logger);
+		li_log_destroy(&int_logger);
 	}
 
 	bool logger::init() {
