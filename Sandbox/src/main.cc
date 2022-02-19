@@ -135,11 +135,9 @@ int log_cool_fmt(char **out, const char *str) {
 }
 
 int main(void) {
-	li::logger log("test");
-	li::mat4f lhs = li::mat4f::translate(li::vec4i { 5, 6, 7, 0 });
+	li::mat4d lhs = li::mat4d::rotate<0, 1>(M_PI / 2);
 
-	log.init();
-	log.log("{} {} {}", "World!", 0, lhs * li::vec4i { 0, 0, 0, 1 });
+	li::logger::get_logger("debug").log("\n{}", lhs * li::vec4d { 1, 2, 3, 4 });
 	// sandbox sandbox;
 	// sandbox.start();
 	return 0;

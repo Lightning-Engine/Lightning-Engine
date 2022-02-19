@@ -1,5 +1,5 @@
-#ifndef LI_LOG_H
-#define LI_LOG_H
+#ifndef LI_UTIL_LOG_H
+#define LI_UTIL_LOG_H
 
 #include <li/util/list.h>
 #include <sys/types.h>
@@ -25,8 +25,8 @@ struct li_log_str {
 	size_t len;
 };
 
-typedef void (*li_sink_flush_proc)(li_sink_t*, li_log_str_t*);
-typedef int (*li_log_fmt_proc)(char**, const char*);
+typedef void (*li_sink_flush_proc)(li_log_str_t*, void*);
+typedef int (*li_log_fmt_proc)(char**, const char*, void*);
 
 struct li_flush_param {
 	const char *str;
@@ -44,12 +44,13 @@ struct li_logger {
 	size_t offset;
 	li_list_t *sinks;
 	li_log_fmt_proc fmt_proc;
+	void *fmt_param;
 };
 
 void li_log_init(li_logger_t *logger);
 void li_log_destroy(li_logger_t *logger);
 
-void li_log_set_fmt(li_logger_t *logger, li_log_fmt_proc fmt_proc);
+void li_log_set_fmt(li_logger_t *logger, li_log_fmt_proc fmt_proc, void *param);
 
 void li_sink_init(li_sink_t *sink, li_sink_flush_proc flush_proc, void *param);
 

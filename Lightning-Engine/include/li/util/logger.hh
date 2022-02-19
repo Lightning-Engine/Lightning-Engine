@@ -6,6 +6,7 @@
 #include <cstring>
 #include <memory>
 #include <algorithm>
+#include <vector>
 
 extern "C" {
 	#include "li/assert.h"
@@ -148,6 +149,18 @@ namespace li {
 		template<typename Char, typename... T>
 		void log(const Char *format, T&&... args) {
 			log(basic_string_view<Char>(format), std::forward<T>(args)...);
+		}
+
+		static logger &get_logger(const char *name) {
+			static std::vector<std::unique_ptr<logger>> loggers;
+			for (auto &logger : loggers) {
+				if (logger->logger_name == name)
+					return *logger;
+			}
+			std::unique_ptr<logger> log = std::unique_ptr<logger>(new logger(name));
+			log->init();
+			loggers.push_back(std::move(log));
+			return *loggers.back();
 		}
 	};
 }

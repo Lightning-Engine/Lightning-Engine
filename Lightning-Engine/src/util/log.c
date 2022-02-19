@@ -2,6 +2,7 @@
 
 #include "li/assert.h"
 #include "li/memory.h"
+#include "li/util/asprintf.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +12,7 @@ void li_log_init(li_logger_t *logger) {
 	logger->offset = 0;
 	logger->sinks = NULL;
 	logger->fmt_proc = NULL;
+	logger->fmt_param = NULL;
 }
 
 void li_log_destroy(li_logger_t *logger) {
@@ -18,8 +20,9 @@ void li_log_destroy(li_logger_t *logger) {
 		li_lstclr(logger->sinks, free);
 }
 
-void li_log_set_fmt(li_logger_t *logger, li_log_fmt_proc fmt_proc) {
+void li_log_set_fmt(li_logger_t *logger, li_log_fmt_proc fmt_proc, void *param) {
 	logger->fmt_proc = fmt_proc;
+	logger->fmt_param = param;
 }
 
 void li_sink_init(li_sink_t *sink, li_sink_flush_proc flush_proc, void *param) {
@@ -43,7 +46,7 @@ int li_log_del_sink(li_logger_t *logger, li_sink_t *sink) {
 }
 
 void _li_sink_flush(void *sink, void *log_str) {
-	((li_sink_t *) sink)->flush_proc(sink, log_str);
+	((li_sink_t *) sink)->flush_proc(log_str, ((li_sink_t*) sink)->param);
 }
 
 void _li_log_flush(li_logger_t *logger, const char *restrict buffer, size_t len) {
@@ -75,19 +78,15 @@ void _li_log_write(li_logger_t *logger, const char *restrict str, size_t len) {
 }
 
 int li_log(li_logger_t *logger, const char *restrict format, ...) {
-	va_list args, args_cpy;
+	va_list args;
 	char *buffer, *fmt_str;
 	int len, fmt_len;
 
 	va_start(args, format);
-	va_copy(args_cpy, args);
-	len = vsnprintf(NULL, 0, format, args) + 1;
-	
-	buffer = li_safe_malloc(sizeof(char) * len);
-
-	vsnprintf(buffer, len, format, args_cpy);
+	len = li_avsprintf(&buffer, format, args);
+	va_end(args);	
 	if (logger->fmt_proc) {
-		fmt_len = logger->fmt_proc(&fmt_str, buffer);
+		fmt_len = logger->fmt_proc(&fmt_str, buffer, logger->fmt_param);
 		_li_log_write(logger, fmt_str, fmt_len);
 		free(fmt_str);
 	} else
