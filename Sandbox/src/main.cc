@@ -136,10 +136,10 @@ int log_cool_fmt(char **out, const char *str) {
 
 int main(void) {
 	li::logger log("test");
-	li::matrix<int, 4, 4> lhs = li::matrix<int, 4, 4>::translate(li::vec4i { 5, 6, 7, 0 });
+	li::mat4f lhs = li::mat4f::translate(li::vec4i { 5, 6, 7, 0 });
 
 	log.init();
-	log.log("Hello {} {} {}", "World!", 0, lhs * li::vec4i { 0, 0, 0, 1 });
+	log.log("{} {} {}", "World!", 0, lhs * li::vec4i { 0, 0, 0, 1 });
 	// sandbox sandbox;
 	// sandbox.start();
 	return 0;

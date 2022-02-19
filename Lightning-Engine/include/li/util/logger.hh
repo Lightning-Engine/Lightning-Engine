@@ -5,6 +5,7 @@
 #include <sstream>
 #include <cstring>
 #include <memory>
+#include <algorithm>
 
 extern "C" {
 	#include "li/assert.h"
@@ -42,6 +43,89 @@ namespace li {
 		constexpr iterator end() const noexcept { return data + size; }
 	};
 
+
+	template<typename Char>
+	class char_traits {};
+
+	template<>
+	class char_traits<char> {
+	public:
+		static constexpr const char *fmt() {
+			return "%s";
+		}
+
+		static constexpr char bspc() {
+			return '{';
+		}
+
+		static constexpr char espc() {
+			return '}';
+		}
+	};
+
+	template<>
+	class char_traits<wchar_t> {
+	public:
+		static constexpr const char *fmt() {
+			return "%ls";
+		}
+
+		static constexpr wchar_t bspc() {
+			return L'{';
+		}
+
+		static constexpr wchar_t espc() {
+			return L'}';
+		}
+	};
+
+
+	template<typename Char, typename First>
+	void _format(typename basic_string_view<Char>::iterator current, typename basic_string_view<Char>::iterator end,
+				std::basic_ostream<Char>& out, First&& first) {
+		const Char *spec;
+
+		spec = std::find(current, end, char_traits<Char>::bspc());
+		if (!spec || spec == end)
+			out << std::basic_string<Char>(current, end - current);
+		else {
+			const Char *next = spec + 1;
+
+			if (current != spec)
+				out << std::basic_string<Char>(current, spec - current);
+			li_assert(*next == char_traits<Char>::espc());
+			out << first;
+			if (next != end)
+				out << std::basic_string<Char>(next + 1, end - next);
+		}
+	}
+
+	template<typename Char, typename First, typename... T>
+	void _format(typename basic_string_view<Char>::iterator current, typename basic_string_view<Char>::iterator end,
+				std::basic_ostream<Char>& out, First&& first, T&&... args) {
+		typename basic_string_view<Char>::iterator spec;
+
+		spec = std::find(current, end, char_traits<Char>::bspc());
+		if (!spec || spec == end)
+			out << std::basic_string<Char>(current, end - current);
+		else {
+			const Char *next = spec + 1;
+
+			if (current != spec)
+				out << std::basic_string<Char>(current, spec - current);
+			li_assert(*next == char_traits<Char>::espc());
+			out << first;
+			if (next != end)
+				_format(next + 1, end, out, std::forward<T>(args)...);
+		}
+	}
+
+	template<typename Char, typename... T>
+	void format(std::basic_ostream<Char> &out,
+											basic_string_view<Char> format, T&&... args) {
+		_format(format.begin(), format.end(), out, std::forward<T>(args)...);
+	}
+
 	class logger {
 		std::string logger_name;
 		li_logger_t int_logger;
@@ -52,60 +136,18 @@ namespace li {
 		~logger();
 
 		bool init();
-
-	protected:
-		template<typename Char, typename First>
-		void _format(typename basic_string_view<Char>::iterator current, typename basic_string_view<Char>::iterator end,
-					std::basic_ostream<Char>& out, First&& first) {
-			const Char *spec;
-
-			spec = (const Char*) std::memchr(current, '{', end - current);
-			if (!spec || spec == end)
-				out << std::basic_string<Char>(current, end - current);
-			else {
-				const Char *next = spec + 1;
-
-				if (current != spec)
-					out << std::basic_string<Char>(current, spec - current);
-				li_assert(*next == '}');
-				out << first;
-				if (next != end)
-					out << std::basic_string<Char>(next + 1, end - next);
-			}
-		}
-
-		template<typename Char, typename First, typename... T>
-		void _format(typename basic_string_view<Char>::iterator current, typename basic_string_view<Char>::iterator end,
-					std::basic_ostream<Char>& out, First&& first, T&&... args) {
-			const Char *spec;
-
-			spec = (const Char*) std::memchr(current, '{', end - current);
-			if (!spec || spec == end)
-				out << std::basic_string<Char>(current, end - current);
-			else {
-				const Char *next = spec + 1;
-
-				if (current != spec)
-					out << std::basic_string<Char>(current, spec - current);
-				li_assert(*next == '}');
-				out << first;
-				if (next != end)
-					_format(next + 1, end, out, args...);
-			}
+	public:
+		template<typename Char, typename... T>
+		void log(basic_string_view<Char> format, T&&... args) {
+			std::basic_ostringstream<Char> out;
+			li::format(out, format, args...);
+			li_log(&int_logger, char_traits<Char>::fmt(), out.str().c_str());
+			li_log_flush(&int_logger);
 		}
 
 		template<typename Char, typename... T>
-		void format_str(std::basic_ostream<Char>& out,
-												basic_string_view<Char> format, T&&... args) {
-			_format(format.begin(), format.end(), out, args...);
-		}
-	public:
-		template<typename... T>
-		void log(basic_string_view<char> format, T&&... args) {
-			std::basic_ostringstream<char> out;
-			format_str(out, format, args...);
-			li_log(&int_logger, "%s", out.str().c_str());
-			li_log_flush(&int_logger);
+		void log(const Char *format, T&&... args) {
+			log(basic_string_view<Char>(format), std::forward<T>(args)...);
 		}
 	};
 }
