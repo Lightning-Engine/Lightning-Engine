@@ -6,12 +6,20 @@
 #include <cstring>
 #include <memory>
 #include <algorithm>
-#include <vector>
+#include <map>
+#include <mutex>
 
 extern "C" {
 	#include "li/assert.h"
 	#include "li/util/log.h"
 }
+
+#define LI_TRACE(...) li::logger::get_logger("trace").log(__VA_ARGS__)
+#define LI_DEBUG(...) li::logger::get_logger("debug").log(__VA_ARGS__)
+#define LI_INFO(...) li::logger::get_logger("info").log(__VA_ARGS__)
+#define LI_WARN(...) li::logger::get_logger("warn").log(__VA_ARGS__)
+#define LI_ERROR(...) li::logger::get_logger("error").log(__VA_ARGS__)
+#define LI_FATAL(...) li::logger::get_logger("fatal").log(__VA_ARGS__)
 
 namespace li {
 
@@ -121,6 +129,12 @@ namespace li {
 		}
 	}
 
+	template<typename Char, typename First>
+	void _format(typename basic_string_view<Char>::iterator current, typename basic_string_view<Char>::iterator end,
+				std::basic_ostream<Char>& out) {
+		out << std::basic_string<Char>(current, end - current);
+	}
+
 	template<typename Char, typename... T>
 	void format(std::basic_ostream<Char> &out,
 											basic_string_view<Char> format, T&&... args) {
@@ -152,15 +166,17 @@ namespace li {
 		}
 
 		static logger &get_logger(const char *name) {
-			static std::vector<std::unique_ptr<logger>> loggers;
-			for (auto &logger : loggers) {
-				if (logger->logger_name == name)
-					return *logger;
+			static std::map<std::string, std::unique_ptr<logger>> loggers;
+			static std::mutex loggers_mutex;
+
+			std::lock_guard<std::mutex> lock(loggers_mutex);
+			auto it = loggers.find(name);
+			if (it == loggers.end()) {
+				loggers[name] = std::unique_ptr<logger>(new logger(name));
+				it = loggers.find(name);
+				it->second->init();
 			}
-			std::unique_ptr<logger> log = std::unique_ptr<logger>(new logger(name));
-			log->init();
-			loggers.push_back(std::move(log));
-			return *loggers.back();
+			return *it->second;
 		}
 	};
 }

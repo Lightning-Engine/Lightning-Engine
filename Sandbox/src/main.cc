@@ -3,6 +3,8 @@
 #include "li/math/vector.hh"
 #include "li/math/matrix.hh"
 #include "li/util/logger.hh"
+#include "li/gl/shader.hh"
+#include "li/gl/buffer.hh"
 #include <iostream>
 #include <chrono>
 
@@ -15,6 +17,13 @@ extern "C" {
 class sandbox : public li::windowed_application {
 public:
 	GLuint vbo, ebo, vao, vs_id, fs_id, program_id;
+	li::opengl::shader<li::opengl::shader_type::vertex_shader> vshader;
+	li::opengl::shader<li::opengl::shader_type::fragment_shader> fshader;
+	li::opengl::program prog;
+
+	li::opengl::buffer<float> vertex_buffer;
+	li::opengl::buffer<unsigned int> index_buffer;
+	li::opengl::vertex_array vertex_array;
 
 	GLfloat vertices[12] = {
 		-0.5f, -0.5f, 0.0f,
@@ -46,54 +55,57 @@ void main() {\n\
 	bool init() override {
 		if (!windowed_application::init())
 			return false;
-		const li::gl &gl = get_window().get_gl();
 
-		vs_id = gl.CreateShader(GL_VERTEX_SHADER);
-		fs_id = gl.CreateShader(GL_FRAGMENT_SHADER);
-		gl.ShaderSource(vs_id, 1, &vertex_shader, NULL);
-		gl.ShaderSource(fs_id, 1, &fragment_shader, NULL);
-		gl.CompileShader(vs_id);
-		gl.CompileShader(fs_id);
+		// li::opengl::buffer<li::opengl::array_buffer> vbo;
 
-		int success;
-		char info_log[512];
+		// li::gl::shader vs = gl.CreateShader(GL_VERTEX_SHADER);
 
-		gl.GetShaderiv(vs_id, GL_COMPILE_STATUS, &success);
-		if (!success) {
-			gl.GetShaderInfoLog(vs_id, 512, NULL, info_log);
-			std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << info_log << std::endl;
-		}
+		// li::gl::shader vs(gl, li::gl::vertex_shader);
+		// li::gl::shader fs(gl, li::gl::fragment_shader);
+		// vs.compile(gl);
+		// fs.compile(gl);
+		// li::gl::program program(gl);
+		// program.attach(gl, vs_compiled);
+		// program.attach(gl, fs_compiled);
+		// program.link(gl);
 
-		gl.GetShaderiv(fs_id, GL_COMPILE_STATUS, &success);
-		if (!success) {
-			gl.GetShaderInfoLog(fs_id, 512, NULL, info_log);
-			std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << info_log << std::endl;
-		}
+		// li::gl::buffer<data> vb(gl, li::gl::array_buffer);
+		// li::gl::buffer<data, li::triangles> eb(gl, li::gl::element_array_buffer);
+		// vb.data(gl, vertices, sizeof(vertices));
+		// li::gl::bind(vb, )
+		// models -> meshes -> implementation defined
+		// textures
+		// materials (shaders)
 
-		program_id = gl.CreateProgram();
-		gl.AttachShader(program_id, vs_id);
-		gl.AttachShader(program_id, fs_id);
-		gl.BindAttribLocation(program_id, 0, "aPos");
-		gl.LinkProgram(program_id);
+		// eb.draw(gl, vb, li::gl::triangles, 0, 6);
 
-		gl.GetProgramiv(program_id, GL_LINK_STATUS, &success);
-		if (!success) {
-			gl.GetProgramInfoLog(program_id, 512, NULL, info_log);
-			std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << info_log << std::endl;
-		}
+		vshader.create();
+		fshader.create();
+		prog.create();
+		vshader.set_source(vertex_shader);
+		fshader.set_source(fragment_shader);
 
-		gl.UseProgram(program_id);
-		gl.GenVertexArrays(1, &vao);
-		gl.BindVertexArray(vao);
-		gl.GenBuffers(1, &vbo);
-		gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
-		gl.BufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-		gl.VertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-		gl.EnableVertexAttribArray(0);
-		gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
-		gl.GenBuffers(1, &ebo);
-		gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+		vshader.compile();
+		fshader.compile();
+		prog.attach_shader(vshader);
+		prog.attach_shader(fshader);
+		prog.link();
+
+		prog.enable();
+
+		vertex_buffer.create();
+		index_buffer.create();
+		vertex_array.create();
+
+		li::opengl::vertex_array_binding vertex_array_binding(vertex_array);
+		li::opengl::buffer_binding<GLfloat, li::opengl::array_buffer> vertex_buffer_binding(vertex_buffer);
+		li::opengl::buffer_binding<GLuint, li::opengl::element_array_buffer> index_buffer_binding(index_buffer);
+
+		vertex_buffer_binding.data(sizeof(vertices) / sizeof(*vertices), vertices);
+		index_buffer_binding.data(sizeof(indices) / sizeof(*indices), indices);
+		vertex_array_binding.attrib<0, float>(3, GL_FLOAT, 0, vertex_buffer_binding);
+		vertex_array_binding.enable<0>();
+
 		return true;
 	}
 
@@ -103,13 +115,15 @@ void main() {\n\
 
 	void update() override {
 		li::window &window = get_window();
-		const li::gl &gl = get_window().get_gl();
-		gl.Viewport(0, 0, window.get_size().WIDTH, window.get_size().HEIGHT);
-		gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		gl.Clear(GL_COLOR_BUFFER_BIT);
+		li::gl->Viewport(0, 0, window.get_size().WIDTH, window.get_size().HEIGHT);
+		li::gl->ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		li::gl->Clear(GL_COLOR_BUFFER_BIT);
 		// gl.DrawArrays(GL_TRIANGLES, 0, 3);
-		gl.DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
-		gl.Flush();
+		li::opengl::vertex_array_binding vertex_array_binding(vertex_array);
+		li::opengl::buffer_binding<unsigned int, li::opengl::element_array_buffer> index_buffer_binding(index_buffer);
+		LI_DEBUG("{}", (void*) li::gl->GetError());
+		li::gl->DrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
+		li::gl->Flush();
 		windowed_application::update();
 	}
 };
@@ -137,8 +151,8 @@ int log_cool_fmt(char **out, const char *str) {
 int main(void) {
 	li::mat4d lhs = li::mat4d::rotate<0, 1>(M_PI / 2);
 
-	li::logger::get_logger("debug").log("\n{}", lhs * li::vec4d { 1, 2, 3, 4 });
-	// sandbox sandbox;
-	// sandbox.start();
+	LI_FATAL("vector: {}", lhs * li::vec4d { 1, 2, 3, 4 });
+	sandbox sandbox;
+	sandbox.start();
 	return 0;
 }

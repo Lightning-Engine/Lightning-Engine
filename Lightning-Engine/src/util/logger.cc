@@ -49,7 +49,8 @@ namespace li {
 	}
 
 	void li_stdout_sink(li_log_str_t *str, void *param) {
-		std::cout << str->str;
+		(void) param;
+		fwrite(str->str, 1, str->len, stdout);
 	}
 
 	logger::~logger() {
@@ -59,7 +60,7 @@ namespace li {
 	bool logger::init() {
 		li_log_init(&int_logger);
 		li_log_set_fmt(&int_logger, log_default_fmt, (void*) logger_name.c_str());
-		li_log_add_sink(&int_logger, li_stdout_sink, NULL);
+		li_log_add_sink(&int_logger, li_stdout_sink, (void*) logger_name.c_str());
 		return true;
 	}
 

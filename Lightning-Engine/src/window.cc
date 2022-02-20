@@ -2,6 +2,8 @@
 #include <stdlib.h>
 
 namespace li {
+	thread_local li_gl_t *gl;
+
 	window::window(vec2i size) : size(size) {
 		win = li_win_create(size.WIDTH, size.HEIGHT);
 		li_win_set_data(win, this);
@@ -17,15 +19,12 @@ namespace li {
 	}
 
 	void window::make_current() {
+		li::gl = &gl;
 		li_ctx_make_current(win, ctx);
 	}
 
 	void window::swap_buffers() {
 		li_ctx_swap_buffers(win, ctx);
-	}
-
-	const li::gl &window::get_gl() {
-		return gl;
 	}
 
 	void window::poll() {

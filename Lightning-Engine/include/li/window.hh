@@ -11,7 +11,6 @@ extern "C" {
 }
 
 namespace li {
-	typedef li_gl_t gl;
 
 	// TODO: be able to specify opengl profile, maybe have a seperate method to construct it?
 
@@ -36,13 +35,12 @@ namespace li {
 		window(vec2i size);
 		window(const window&) = delete;
 		window(window&&) = delete;
-		window& operator=(const window&) = delete;
-		window& operator=(window&&) = delete;
+		window &operator=(const window&) = delete;
+		window &operator=(window&&) = delete;
 		~window();
 
 		void make_current();
 		void swap_buffers();
-		const li::gl &get_gl();
 
 		inline vec2i get_size() { return size; }
 
