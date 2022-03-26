@@ -1,13 +1,14 @@
 #ifndef LI_GL_SHADER_HH
 #define LI_GL_SHADER_HH
 
+#include "li/li.h"
+#include "li/window.hh"
+#include "li/util/logger.hh"
 #include "li/gl.h"
 #include <string>
 
 namespace li {
-
 	namespace opengl {
-
 		enum shader_type {
 			vertex_shader = GL_VERTEX_SHADER,
 			fragment_shader = GL_FRAGMENT_SHADER,
@@ -17,121 +18,113 @@ namespace li {
 			tess_eval_shader = GL_TESS_EVALUATION_SHADER
 		};
 
+		class shader_compile_error : public std::runtime_error {
+		public:
+			shader_compile_error(const std::string &msg) : std::runtime_error(msg) { }
+		};
+
+		class program_link_error : public std::runtime_error {
+		public:
+			program_link_error(const std::string &msg) : std::runtime_error(msg) { }
+		};
+
 		template<shader_type Type>
 		class shader {
-			GLuint id;
-
+			GLuint id = 0;
 		public:
-			shader() : id(0) {
-
-			}
+			shader() = default;
+			shader(const shader&) = delete;
+			shader &operator=(const shader&) = delete;
 
 			~shader() {
-				if (id)
-					destroy();
-			}
-
-			bool create() {
-				id = gl->CreateShader(Type);
-				return id;
-			}
-			
-			bool compile() {
-				GLint status, max_len;
-				GLchar *buffer;
-
-				if (LI_BUILD_DEBUG && !id)
-					LI_WARN("Dit not initialize shader");
-				gl->CompileShader(id);
-				gl->GetShaderiv(id, GL_COMPILE_STATUS, &status);
-				if (status == GL_FALSE) {
-					gl->GetShaderiv(id, GL_INFO_LOG_LENGTH, &max_len);
-					
-					buffer = new GLchar[max_len];
-					gl->GetShaderInfoLog(id, max_len * sizeof(GLchar), &max_len, buffer);
-					destroy();
-					LI_ERROR("Failed to compile shader. {}", buffer);
-					delete[] buffer;
-					return false;
-				}
-				return true;
-			}
-
-			void set_source(const std::string& source) {
-				if (LI_BUILD_DEBUG && !id)
-				LI_WARN("Dit not initialize shader");
-				const GLchar* gl_source = (const GLchar*) source.c_str();
-				gl->ShaderSource(id, 1, &gl_source, 0);
-			}
-
-			void destroy() {
 				gl->DeleteShader(id);
 			}
 
-			inline GLuint get_id() const { return id; }
-		};
+			void create() {
+				LI_WARN_IF(id != 0, "shader already created");
+				id = gl->CreateShader(Type);
+				// TODO: check error?
+			}
 
+			operator GLuint() {
+				LI_WARN_IF(id == 0, "shader not created");
+				return id;
+			}
+
+			void source(const char *string) {
+				gl->ShaderSource(*this, 1, &string, 0);
+			}
+			
+			void compile() {
+				GLint status, max_len;
+				std::vector<GLchar> buffer;
+
+				gl->CompileShader(*this);
+				gl->GetShaderiv(*this, GL_COMPILE_STATUS, &status);
+				if (status == GL_FALSE) {
+					gl->GetShaderiv(*this, GL_INFO_LOG_LENGTH, &max_len);
+					buffer.resize(max_len);
+					gl->GetShaderInfoLog(id, max_len, nullptr, buffer.data());
+					throw shader_compile_error(buffer.data());
+				}
+			}
+		};
 	
 		class program {
-			GLuint pid;
-			GLuint vertex_shader, fragment_shader, geometry_shader, compute_shader,
-				tess_control_shader, tess_eval_shader;
-
+			GLuint id = 0;
 		public:
-			program();
+			program() = default;
+			program(const program&) = delete;
+			program &operator=(const program&) = delete;
 
-			~program();
+			~program() {
+				gl->DeleteProgram(id);
+			}
 
-			template<shader_type Type>
-			constexpr GLuint& get_shader();
+			void create() {
+				LI_WARN_IF(id != 0, "program already created");
+				id = gl->CreateProgram();
+				// TODO: check error?
+			}
 
-			bool create();
+			operator GLuint() {
+				LI_WARN_IF(id == 0, "program not created");
+				return id;
+			}
 
-			void destroy();
-
-			void enable() const;
-
-			template<shader_type Type>
-			void attach_shader(const shader<Type>& shader) {
-				if (LI_BUILD_DEBUG && !pid)
-				LI_WARN("Dit not initialize shader program");
-				gl->AttachShader(pid, shader.get_id());
-				get_shader<Type>() = shader.get_id();
+			void use() {
+				gl->UseProgram(*this);
 			}
 
 			template<shader_type Type>
-			void detach_shader(const shader<Type>& shader) {
-				_detach_shader(shader.get_id());
-				get_shader<Type>() = 0;
+			void attach(shader<Type> &shader) {
+				gl->AttachShader(*this, shader);
 			}
 
-			bool link();
+			template<shader_type Type>
+			void detach(shader<Type> &shader) {
+				gl->DetachShader(*this, shader);
+			}
 
-			inline GLuint get_pid() const { return pid; }
+			void link() {
+				GLint status, max_len;
+				std::vector<GLchar> buffer;
 
-		protected:
-			void _detach_shader(GLuint shader);
+				gl->LinkProgram(*this);
+				gl->GetProgramiv(*this, GL_LINK_STATUS, &status);
+				if (status == GL_FALSE) {
+					gl->GetProgramiv(*this, GL_INFO_LOG_LENGTH, &max_len);
+					buffer.resize(max_len);
+					gl->GetProgramInfoLog(id, max_len, nullptr, buffer.data());
+					throw shader_compile_error(buffer.data());
+				}
+			}
 
-			void detach_all();
+			template<unsigned int Index>
+			void attrib_location(const char *name) {
+				gl->BindAttribLocation(*this, Index, name);
+			}
 		};
-
-		template<>
-		constexpr GLuint& program::get_shader<shader_type::vertex_shader>() { return vertex_shader; }
-
-		template<>
-		constexpr GLuint& program::get_shader<shader_type::fragment_shader>() { return fragment_shader; }
-
-		template<>
-		constexpr GLuint& program::get_shader<shader_type::geometry_shader>() { return geometry_shader; }
-
-		template<>
-		constexpr GLuint& program::get_shader<shader_type::compute_shader>() { return compute_shader; }
-
-		template<>
-		constexpr GLuint& program::get_shader<shader_type::tess_control_shader>() { return tess_control_shader; }
-
-		template<>
-		constexpr GLuint& program::get_shader<shader_type::tess_eval_shader>() { return tess_eval_shader; }
 	}
 }
 

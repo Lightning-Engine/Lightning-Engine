@@ -12,7 +12,7 @@ tmp_dir_sandbox = $(tmp_dir)/sandbox
 bin_dir = $(tmp_dir)/bin
 
 bin_engine = $(bin_dir)/$(call platform_shared,liengine)
-src_engine = $(src_dir_engine)/li_assert.c $(src_dir_engine)/li_gl.c $(src_dir_engine)/li_win.c $(src_dir_engine)/window.cc $(src_dir_engine)/application.cc $(src_dir_engine)/util/log.c $(src_dir_engine)/util/list.c $(src_dir_engine)/memory.c $(src_dir_engine)/util/logger.cc $(src_dir_engine)/util/asprintf.c $(src_dir_engine)/gl/shader.cc
+src_engine = $(src_dir_engine)/li_assert.c $(src_dir_engine)/li_gl.c $(src_dir_engine)/li_win.c $(src_dir_engine)/window.cc $(src_dir_engine)/application.cc $(src_dir_engine)/util/log.c $(src_dir_engine)/util/list.c $(src_dir_engine)/memory.c $(src_dir_engine)/util/logger.cc $(src_dir_engine)/util/asprintf.c
 obj_engine = $(patsubst $(src_dir_engine)/%,$(tmp_dir_engine)/%.o,$(basename $(src_engine)))
 dep_engine = $(patsubst $(src_dir_engine)/%,$(tmp_dir_engine)/%.d,$(basename $(src_engine)))
 

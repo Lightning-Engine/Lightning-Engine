@@ -28,6 +28,8 @@ namespace li {
 	class vector {
 		std::array<T, N> data;
 	public:
+		typedef T value_type;
+
 		vector() {
 			for (std::size_t i = 0; i < N; i++)
 				data[i] = 0;

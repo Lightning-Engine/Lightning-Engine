@@ -21,6 +21,13 @@ extern "C" {
 #define LI_ERROR(...) li::logger::get_logger("error").log(__VA_ARGS__)
 #define LI_FATAL(...) li::logger::get_logger("fatal").log(__VA_ARGS__)
 
+#define LI_TRACE_IF(cond, ...) if (cond) LI_TRACE(__VA_ARGS__)
+#define LI_DEBUG_IF(cond, ...) if (cond) LI_DEBUG(__VA_ARGS__)
+#define LI_INFO_IF(cond, ...) if (cond) LI_INFO(__VA_ARGS__)
+#define LI_WARN_IF(cond, ...) if (cond) LI_WARN(__VA_ARGS__)
+#define LI_ERROR_IF(cond, ...) if (cond) LI_ERROR(__VA_ARGS__)
+#define LI_FATAL_IF(cond, ...) if (cond) LI_FATAL(__VA_ARGS__)
+
 namespace li {
 
 	template<typename Char>
@@ -129,7 +136,7 @@ namespace li {
 		}
 	}
 
-	template<typename Char, typename First>
+	template<typename Char>
 	void _format(typename basic_string_view<Char>::iterator current, typename basic_string_view<Char>::iterator end,
 				std::basic_ostream<Char>& out) {
 		out << std::basic_string<Char>(current, end - current);

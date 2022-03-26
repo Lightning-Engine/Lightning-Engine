@@ -11,6 +11,7 @@ extern "C" {
 }
 
 namespace li {
+	extern thread_local li_gl_t *gl;
 
 	// TODO: be able to specify opengl profile, maybe have a seperate method to construct it?
 

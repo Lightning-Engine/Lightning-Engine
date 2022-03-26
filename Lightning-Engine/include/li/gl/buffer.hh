@@ -1,8 +1,9 @@
 #ifndef LI_GL_BUFFER_HH
 #define LI_GL_BUFFER_HH
 
+#include "li/util/logger.hh"
+#include "li/gl/util.hh"
 #include "li/window.hh"
-#include "li/gl.h"
 
 #include <cstddef>
 
@@ -37,49 +38,44 @@ namespace li {
 			stream_copy = GL_STREAM_COPY,
 		};
 
-		template<class T>
+		enum primitive_kind {
+			points = GL_POINTS,
+			lines = GL_LINES,
+			line_loop = GL_LINE_LOOP,
+			line_strip = GL_LINE_STRIP,
+			triangles = GL_TRIANGLES,
+			triangle_strip = GL_TRIANGLE_STRIP,
+			triangle_fan = GL_TRIANGLE_FAN,
+		};
+
+		template<typename T>
 		class buffer {
-			GLuint id;
+			GLuint id = 0;
 		public:
+			buffer() = default;
 			buffer(const buffer&) = delete;
 			buffer &operator=(const buffer&) = delete;
-			
-			buffer() {
-				id = 0;
-			}
-
-			buffer(buffer &&other) {
-				id = other.id;
-				other.id = 0;
-			}
 
 			~buffer() {
 				gl->DeleteBuffers(1, &id);
 			}
 
-			void create() {
+			void gen() {
+				LI_WARN_IF(id != 0, "buffer already generated");
 				gl->GenBuffers(1, &id);
 			}
 
 			operator GLuint() {
+				LI_WARN_IF(id == 0, "buffer not generated");
 				return id;
 			}
 		};
 
-		template<class T, buffer_binding_target Target>
+		template<typename T, buffer_binding_target Target>
 		class buffer_binding {
 		public:
-			buffer_binding(const buffer_binding&) = delete;
-			buffer_binding(buffer_binding&&) = delete;
-			buffer_binding &operator=(const buffer_binding&) = delete;
-			buffer_binding &operator=(buffer_binding&&) = delete;
-
-			buffer_binding(buffer<T> &buffer) {
-				gl->BindBuffer(Target, buffer);
-			}
-
-			~buffer_binding() {
-				gl->BindBuffer(Target, 0);
+			void bind(buffer<T> &b) {
+				gl->BindBuffer(Target, b);
 			}
 
 			template<buffer_usage Usage = static_draw>
@@ -93,60 +89,53 @@ namespace li {
 		};
 
 		class vertex_array {
-			GLuint id;
+			GLuint id = 0;
 		public:
+			vertex_array() = default;
 			vertex_array(const vertex_array&) = delete;
 			vertex_array &operator=(const vertex_array&) = delete;
-
-			vertex_array() : id(0) { }
-
-			vertex_array(vertex_array &&other) {
-				id = other.id;
-				other.id = 0;
-			}
 
 			~vertex_array() {
 				gl->DeleteVertexArrays(1, &id);
 			}
 
-			void create() {
+			void gen() {
+				LI_WARN_IF(id != 0, "vertex array already generated");
 				gl->GenVertexArrays(1, &id);
 			}
 
 			operator GLuint() {
+				LI_WARN_IF(id == 0, "vertex array not generated");
 				return id;
 			}
 		};
 
 		class vertex_array_binding {
 		public:
-			vertex_array_binding(const vertex_array_binding&) = delete;
-			vertex_array_binding(vertex_array_binding&&) = delete;
-			vertex_array_binding &operator=(const vertex_array_binding&) = delete;
-			vertex_array_binding &operator=(vertex_array_binding&&) = delete;
-
-			vertex_array_binding(vertex_array &vertex_array) {
-				gl->BindVertexArray(vertex_array);
-			}
-
-			~vertex_array_binding() {
-				gl->BindVertexArray(0);
+			void bind(vertex_array &va) {
+				gl->BindVertexArray(va);
 			}
 
 			template<unsigned int Index>
-			void enable() {
+			void enable_attrib() {
 				gl->EnableVertexAttribArray(Index);
 			}
 
 			template<unsigned int Index>
-			void disable() {
+			void disable_attrib() {
 				gl->DisableVertexAttribArray(Index);
 			}
 
-			template<unsigned int Index, class T, bool Normalized = false>
-			void attrib(std::size_t size, GLenum type, const void *pointer, const buffer_binding<T, array_buffer> &binding) {
-				(void) binding;
-				gl->VertexAttribPointer(Index, size, type, Normalized, sizeof(T), pointer);
+			template<unsigned int Index, typename T, typename U = T>
+			void attrib_pointer(buffer_binding<U, array_buffer> &b, offset<T, U> ofs = offset<T, U>()) {
+				(void) b;
+				gl->VertexAttribPointer(Index, sizeof(T) / sizeof(typename T::value_type), _type<typename T::value_type>(), GL_FALSE, sizeof(U), ofs);
+			}
+
+			template<primitive_kind Mode, typename T>
+			void draw_elements(buffer_binding<T, element_array_buffer> &b, std::size_t count, std::size_t ofs = 0) {
+				(void) b;
+				gl->DrawElements(Mode, count, _type<T>(), (T*) 0 + ofs);
 			}
 		};
 	}
