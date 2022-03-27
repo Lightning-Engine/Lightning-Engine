@@ -141,6 +141,7 @@ tmp_dir_engine	:= $(tmp_dir)/$(platform)-$(config)-engine
 src_dir_engine	:= engine/src
 inc_dir_engine	:= engine/include
 src_engine		:= $(shell find $(src_dir_engine) \( -name "*.c" -o -name "*.cc" \))
+inc_engine		:= $(shell find $(inc_dir_engine) \( -name "*.h" -o -name "*.hh" \))
 obj_engine		:= $(patsubst $(src_dir_engine)/%,$(tmp_dir_engine)/%.o,$(basename $(src_engine)))
 dep_engine		:= $(patsubst $(src_dir_engine)/%,$(tmp_dir_engine)/%.d,$(basename $(src_engine)))
 lib_engine		:= $(tmp_dir)/$(call lib_file,engine)
@@ -150,6 +151,7 @@ tmp_dir_sandbox	:= $(tmp_dir)/$(platform)-$(config)-sandbox
 src_dir_sandbox	:= sandbox/src
 inc_dir_sandbox	:= sandbox/include
 src_sandbox		:= $(shell find $(src_dir_sandbox) \( -name "*.c" -o -name "*.cc" \))
+inc_sandbox		:= $(shell find $(inc_dir_sandbox) \( -name "*.h" -o -name "*.hh" \))
 obj_sandbox		:= $(patsubst $(src_dir_sandbox)/%,$(tmp_dir_sandbox)/%.o,$(basename $(src_sandbox)))
 dep_sandbox		:= $(patsubst $(src_dir_sandbox)/%,$(tmp_dir_sandbox)/%.d,$(basename $(src_sandbox)))
 bin_sandbox		:= $(tmp_dir)/$(call bin_file,sandbox)
@@ -204,13 +206,13 @@ $(tmp_dir_sandbox)/%.o: $(src_dir_sandbox)/%.cc
 	$(SILENT)mkdir -p $(@D)
 	$(SILENT)$(CXX) $(CFLAGS) -c -MMD -o $@ $< -I$(inc_dir_engine) -I$(inc_dir_sandbox)
 
-$(dat_file): $(src_engine) $(src_sandbox)
+$(dat_file): $(src_engine) $(src_sandbox) $(inc_engine) $(inc_sandbox)
 	$(PRETTY)echo "Generating compilation database"
 	$(SILENT)compiledb -o $(dat_file) make all
 
-format: $(src_engine) $(src_sandbox)
+format: $(src_engine) $(src_sandbox) $(inc_engine) $(inc_sandbox)
 	$(PRETTY)echo "Running clang-format"
-	$(SILENT)clang-format $(src_engine) $(src_sandbox)
+	$(SILENT)clang-format -i $(src_engine) $(src_sandbox) $(inc_engine) $(inc_sandbox)
 
 doc: $(dat_file)
 	$(PRETTY)echo "Running clang-doc"
