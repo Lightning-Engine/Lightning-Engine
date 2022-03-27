@@ -20,3 +20,9 @@ If you're interested in contributing to the engine or just making your own chang
 `make platform={linux,mingw,macos} [config={debug,release,distr}] [san={none,basic,thread}]`
 
 the **san** option only works in the debug config
+
+## Core principles
+KISS
+
+- Most public functions are reentrant
+- Minimal but expandable

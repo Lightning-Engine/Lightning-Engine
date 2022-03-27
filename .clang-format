@@ -46,10 +46,10 @@ PointerAlignment: Right
 ReferenceAlignment: Pointer
 
 # Align consecutive things
-AlignConsecutiveAssignments: AcrossEmptyLinesAndComments
-AlignConsecutiveBitFields: AcrossEmptyLinesAndComments
-AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments
-AlignConsecutiveMacros: AcrossEmptyLinesAndComments
+AlignConsecutiveAssignments: AcrossComments
+AlignConsecutiveBitFields: AcrossComments
+AlignConsecutiveDeclarations: AcrossComments
+AlignConsecutiveMacros: AcrossComments
 
 # Includes
 IncludeBlocks: Regroup
@@ -73,9 +73,9 @@ StatementAttributeLikeMacros: []
 StatementMacros: []
 TypenameMacros: []
 WhitespaceSensitiveMacros: []
+NamespaceMacros: []
 MacroBlockBegin: null
 MacroBlockEnd: null
-NamespaceMacros: null
 
 # Indent width
 IndentWidth: 4
