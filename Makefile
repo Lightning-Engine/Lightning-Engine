@@ -1,71 +1,38 @@
 CC			:= clang
 CXX			:= clang++
 AR			:= ar
-
 CFLAGS		:= -std=c89 -Wall -Wextra -pedantic
 CXXFLAGS	:= -std=c++98 -Wall -Wextra -pedantic
 LDFLAGS		:=
-CFFLAGS		:=
 MAKEFLAGS	:= --no-print-directory
 
-SILENT		:= @
-ifdef verbose
-	SILENT	:=
-endif
+SILENT		:= $(if $(verbose),,@)
+PRETTY		:= $(if $(ugly),@#,@)
 
-PRETTY		:= @
-ifdef ugly
-	PRETTY	:= @\#
-endif
-
-ifndef platform
-platform	:= linux
-endif
-
-ifndef san
-san			:= basic
-endif
-
-ifndef config
-config		:= debug
-endif
-
-ifndef link
-link		:= static
-endif
+platform	?= linux
+config		?= debug
+link		?= static
 
 ifeq ($(config), debug)
-	CFLAGS	+= -Og -g3
-	LDFLAGS	+= -Og -g3
-	ifeq ($(san), none)
-		
-	else ifeq ($(san), basic)
-		CFLAGS	+= -fsanitize=address,undefined
-		LDFLAGS	+= -fsanitize=address,undefined
-	else ifeq ($(san), memory)
-		CFLAGS	+= -fsanitize=memory,undefined
-		LDFLAGS	+= -fsanitize=memory,undefined
-	else ifeq ($(san), thread)
-		CFLAGS	+= -fsanitize=thread,undefined
-		LDFLAGS	+= -fsanitize=thread,undefined
-	else
-	$(error "invalid sanitizer '$(san)'")
-	endif
+	CFLAGS		+= -Og -g3
+	LDFLAGS		+= -Og -g3
 else ifeq ($(config), release)
-	CFLAGS	+= -O3 -g3
-	LDFLAGS	+= -O3 -g3
+	CFLAGS		+= -O3 -g3
+	LDFLAGS		+= -O3 -g3
+	no_san		:= 1
 else ifeq ($(config), distr)
-	CFLAGS	+= -O3 -g0
-	LDFLAGS	+= -O3 -g0
+	CFLAGS		+= -O3 -g0
+	LDFLAGS		+= -O3 -g0
+	no_san		:= 1
 else
-$(error "invalid config '$(config)'")
+$(error invalid config '$(config)')
 endif
 
 ifeq ($(platform), linux)
 	lib_file	= lib$(1).a
 	dll_file	= lib$(1).so
 	bin_file	= $(1)
-	CFLAGS		+= -DLI_LINUX
+	CFLAGS		+= -DLI_LINUX=1
 	color		:= 1
 else ifeq ($(platform), mingw)
 	lib_file	= $(1).lib
@@ -74,16 +41,37 @@ else ifeq ($(platform), mingw)
 	CC			:= x86_64-w64-mingw32-gcc
 	CXX			:= x86_64-w64-mingw32-g++
 	AR			:= x86_64-w64-mingw32-ar
-	CFLAGS		+= -DLI_WIN32
+	CFLAGS		+= -DLI_WIN32=1
 	color		:= 1
+	no_san		:= 1
 else ifeq ($(platform), macos)
 	lib_file	= lib$(1).a
 	dll_file	= lib$(1).so
 	bin_file	= $(1)
-	CFLAGS		+= -DLI_MACOS
+	CFLAGS		+= -DLI_MACOS=1
 	color		:= 1
+	no_san		:= 1
 else
-$(error "invalid platform '$(platform)'")
+$(error invalid platform '$(platform)')
+endif
+
+san			?= $(if $(no_san),none,address)
+
+ifeq ($(san), none)
+	
+else ifdef no_san
+$(error sanitizer is not supported for '$(platform)-$(config)')
+else ifeq ($(san), address)
+	CFLAGS		+= -fsanitize=address,undefined
+	LDFLAGS		+= -fsanitize=address,undefined
+else ifeq ($(san), memory)
+	CFLAGS		+= -fsanitize=memory,undefined
+	LDFLAGS		+= -fsanitize=memory,undefined
+else ifeq ($(san), thread)
+	CFLAGS		+= -fsanitize=thread,undefined
+	LDFLAGS		+= -fsanitize=thread,undefined
+else
+$(error invalid sanitizer '$(san)')
 endif
 
 ifdef color
@@ -129,7 +117,6 @@ ifdef color
 	BG_BRIGHT_WHITE		:= "\\033[107m"
 endif
 
-dat_file		:= compile_commands.json
 tmp_dir			:= build
 doc_dir			:= docs
 rep_dir			:= reports
@@ -158,35 +145,41 @@ ifeq ($(link), static)
 else ifeq ($(link), dynamic)
 	bin_engine	:= $(dll_engine)
 else
-$(error "invalid linkage '$(link)'")
+$(error invalid linkage '$(link)')
 endif
 
-.PHONY: all sandbox engine format doc tidy analyze clean run re rerun
+.PHONY: all sandbox engine
+.PHONY: docs compdb format tidy analyze
+.PHONY: clean run re rerun
 .DEFAULT: sandbox
 
 all: $(bin_sandbox) $(lib_engine) $(dll_engine)
 sandbox: $(bin_sandbox)
 engine: $(bin_engine)
 
-LINKING		= $(FG_YELLOW)Linking$(RESET) $(FG_RED)$(1)$(RESET)
-ARCHIVING	= $(FG_YELLOW)Archiving$(RESET) $(FG_RED)$(1)$(RESET)
+-include $(dep_engine)
+-include $(dep_sandbox)
+
+MAKING_EXE	= $(FG_YELLOW)Linking$(RESET) $(FG_RED)$(1)$(RESET)
+MAKING_LIB	= $(FG_YELLOW)Archiving$(RESET) $(FG_RED)$(1)$(RESET)
+MAKING_DLL	= $(FG_YELLOW)Linking$(RESET) $(FG_RED)$(1)$(RESET)
 COMPILING	= $(FG_CYAN)Compiling$(RESET) $(FG_GREEN)$(1)$(RESET)
 RUNNING		= $(FG_MAGENTA)Running$(RESET) $(FG_BLUE)$(1)$(RESET)
 CLEANING	= $(FG_MAGENTA)Cleaning$(RESET)
 EXECUTING	= $(FG_MAGENTA)Executing$(RESET) $(FG_RED)$(1)$(RESET)
 
 $(bin_sandbox): $(obj_sandbox) $(bin_engine)
-	$(PRETTY)printf "$(call LINKING,$@)\n"
+	$(PRETTY)printf "$(call MAKING_EXE,$@)\n"
 	$(SILENT)mkdir -p $(@D)
 	$(SILENT)$(CXX) $(LDFLAGS) -o $@ $^
 
 $(lib_engine): $(obj_engine)
-	$(PRETTY)printf "$(call ARCHIVING,$@)\n"
+	$(PRETTY)printf "$(call MAKING_LIB,$@)\n"
 	$(SILENT)mkdir -p $(@D)
 	$(SILENT)$(AR) rcs $@ $^
 
-$(dll_engine): $(lib_engine)
-	$(PRETTY)printf "$(call LINKING,$@)\n"
+$(dll_engine): $(obj_engine)
+	$(PRETTY)printf "$(call MAKING_DLL,$@)\n"
 	$(SILENT)mkdir -p $(@D)
 	$(SILENT)$(CXX) $(LDFLAGS) -shared -o $@ $^
 
@@ -210,26 +203,25 @@ $(tmp_dir_sandbox)/%.o: $(src_dir_sandbox)/%.cc
 	$(SILENT)mkdir -p $(@D)
 	$(SILENT)$(CXX) $(CFLAGS) -c -MMD -o $@ $< -I$(inc_dir_engine) -I$(inc_dir_sandbox)
 
-$(dat_file): $(src_engine) $(src_sandbox) $(inc_engine) $(inc_sandbox)
-	$(PRETTY)printf "$(call RUNNING,compiledb)\n"
-	$(SILENT)compiledb -o $(dat_file) make all
+docs:
+	$(PRETTY)printf "$(call RUNNING,doxygen)\n"
+	$(SILENT)doxygen
 
-format: $(src_engine) $(src_sandbox) $(inc_engine) $(inc_sandbox)
+compdb:
+	$(PRETTY)printf "$(call RUNNING,compiledb)\n"
+	$(SILENT)compiledb -n $(MAKE) all
+
+format:
 	$(PRETTY)printf "$(call RUNNING,clang-format)\n"
 	$(SILENT)clang-format -i $(src_engine) $(src_sandbox) $(inc_engine) $(inc_sandbox)
 
-doc: $(dat_file)
-	$(PRETTY)printf "$(call RUNNING,clang-doc)\n"
-	$(SILENT)clang-doc --format=html --output=$(doc_dir)/html $(dat_file)
-	$(SILENT)clang-doc --format=md --output=$(doc_dir)/md $(dat_file)
-
-tidy: $(dat_file)
+tidy: compdb
 	$(PRETTY)printf "$(call RUNNING,clang-tidy)\n"
-	$(SILENT)clang-tidy --quiet -p $(dat_file) $(src_engine) $(src_sandbox)
+	$(SILENT)clang-tidy $(src_engine) $(src_sandbox) $(inc_engine) $(inc_sandbox)
 
-analyze: $(dat_file)
+analyze: compdb
 	$(PRETTY)printf "$(call RUNNING,CodeChecker)\n"
-	$(SILENT)CodeChecker analyze --ctu $(dat_file) -o $(rep_dir)
+	$(SILENT)CodeChecker analyze -c --ctu --enable extreme compile_commands.json -o $(rep_dir)
 	$(SILENT)CodeChecker parse -e html $(rep_dir) -o $(rep_dir)/html
 
 clean:
@@ -237,6 +229,7 @@ clean:
 	$(SILENT)rm -rf $(tmp_dir)
 	$(SILENT)rm -rf $(doc_dir)
 	$(SILENT)rm -rf $(rep_dir)
+	$(SILENT)rm -rf compile_commands.json
 
 run: sandbox
 	$(PRETTY)printf "$(call EXECUTING,$(bin_sandbox))\n"

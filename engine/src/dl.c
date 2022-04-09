@@ -1,36 +1,59 @@
 #include "li/dl.h"
 
-#include <stddef.h>
+#if LI_MACOS
 
-#if defined LI_WIN32
+# include <mach-o/dyld.h>
 
-int li_dl_open(li_dl_t *dl, const char *path) {
-    *dl = LoadLibraryA(path);
-    return *dl == NULL;
+void *li_dlopen(const char *filename) {
+    NSObjectFileImage image;
+    if (NSCreateObjectFileImageFromFile(filename, &image)
+        != NSObjectFileImageSuccess)
+        return 0;
+    NSModule module = NSLinkModule(image, filename, NSLINKMODULE_OPTION_NONE);
+    NSDestroyObjectFileImage(image);
+    return module;
 }
 
-int li_dl_close(li_dl_t *dl) {
-    return !FreeLibrary(*dl);
+int li_dlclose(void *handle) {
+    return !NSUnLinkModule(handle, 0);
 }
 
-void *li_dl_sym(li_dl_t *dl, const char *name) {
-    FARPROC proc = GetProcAddress(*dl, name);
+void *li_dlsym(void *handle, const char *symbol) {
+    NSSymbol sym = NSLookupSymbolInModule(handle, symbol);
+    return sym ? NSAddressOfSymbol(sym) : 0;
+}
+
+#elif LI_WIN32
+
+# include <windows.h>
+
+void *li_dlopen(const char *filename) {
+    return LoadLibrary(filename);
+}
+
+int li_dlclose(void *handle) {
+    return !FreeLibrary(handle);
+}
+
+void *li_dlsym(void *handle, const char *symbol) {
+    FARPROC proc = GetProcAddress(handle, symbol);
     return *(void **) &proc;
 }
 
 #else
 
-int li_dl_open(li_dl_t *dl, const char *path) {
-    *dl = dlopen(path, RTLD_LAZY);
-    return *dl == NULL;
+# include <dlfcn.h>
+
+void *li_dlopen(const char *filename) {
+    return dlopen(filename, RTLD_LAZY);
 }
 
-int li_dl_close(li_dl_t *dl) {
-    return dlclose(*dl);
+int li_dlclose(void *handle) {
+    return dlclose(handle);
 }
 
-void *li_dl_sym(li_dl_t *dl, const char *name) {
-    return dlsym(*dl, name);
+void *li_dlsym(void *handle, const char *symbol) {
+    return dlsym(handle, symbol);
 }
 
 #endif

@@ -1,26 +1,30 @@
 #ifndef LI_DL_H
 #define LI_DL_H
 
-#if defined LI_WIN32
-/* Special case for Windows since they are special */
-# include <windows.h>
+/**
+ * @file dl.h
+ * @brief Dynamic library loading.
+ */
 
-typedef HMODULE _li_dl_t;
-#else
-/* If its not windows, it's either macOS or Linux which both use void* */
-# include <dlfcn.h>
-
-typedef void *_li_dl_t;
-#endif
-
-/* Type for storing a reference to a dynamic library */
-typedef _li_dl_t li_dl_t;
-
-/* Open a dynamic library. Returns 0 on success */
-int   li_dl_open(li_dl_t *dl, const char *path);
-/* Close a dynamic library. Returns 0 on success */
-int   li_dl_close(li_dl_t *dl);
-/* Load a symbol from a dynamic library. Returns null pointer on failure */
-void *li_dl_sym(li_dl_t *dl, const char *name);
+/**
+ * @brief Load a dynamic library.
+ * @param filename The name of the library to load.
+ * @return A handle to the library, or NULL on failure.
+ * @note The returned handle must be closed with li_dlclose().
+ */
+void *li_dlopen(const char *filename);
+/**
+ * @brief Close a dynamic library.
+ * @param handle The handle to the library to close.
+ * @return 0 on success, or non-zero on failure.
+ */
+int   li_dlclose(void *handle);
+/**
+ * @brief Get a symbol from a dynamic library.
+ * @param handle The handle to the library.
+ * @param symbol The name of the symbol to get.
+ * @return A pointer to the symbol, or NULL on failure.
+ */
+void *li_dlsym(void *handle, const char *symbol);
 
 #endif

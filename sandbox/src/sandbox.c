@@ -4,27 +4,20 @@
 #include <stdio.h>
 
 int main(void) {
-    void   *ptr;
-    li_dl_t dl;
-    size_t (*strlen_ptr)(const char *);
+    void *handle              = NULL;
+    int (*puts)(const char *) = NULL;
 
-    if (li_dl_open(&dl, "ucrtbase.dll")) {
-        if (li_dl_open(&dl, "libc.so.6")) {
-            printf("Failed to open libc\n");
-            return EXIT_FAILURE;
-        }
+    if (!(handle = li_dlopen("libc.so.6"))
+        && !(handle = li_dlopen("ucrtbase.dll"))) {
+        fprintf(stderr, "dlopen failed\n");
+        return EXIT_FAILURE;
     }
 
-    ptr = li_dl_sym(&dl, "strlen");
-
-    if (ptr == NULL) {
+    if (!(*(void **) &puts = li_dlsym(handle, "puts"))) {
         printf("Failed to find strlen\n");
         return EXIT_FAILURE;
     }
 
-    *(void **) &strlen_ptr = ptr;
-
-    printf("%u\n", (unsigned) strlen_ptr("Hello, world!"));
-
+    puts("Hello, World!");
     return EXIT_SUCCESS;
 }
