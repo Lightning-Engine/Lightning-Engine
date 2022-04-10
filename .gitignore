@@ -1,8 +1,3 @@
 /.vscode
 /.vsls.json
 /build
-/docs
-/reports
-/compile_commands.json
-*.out
-*.txt
