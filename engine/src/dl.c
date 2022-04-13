@@ -1,62 +1,66 @@
 #include "li_dl.h"
 
-#include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 union li_dl_symbol {
     li_dl_sym_t sym;
     li_dl_fun_t fun;
 };
 
-static int li_dl_init_result = -1;
-static li_dl_t (*li_dl_open_impl)(const char *name);
-static int (*li_dl_close_impl)(li_dl_t dl);
-static li_dl_sym_t (*li_dl_sym_impl)(li_dl_t dl, const char *name);
-static li_dl_fun_t (*li_dl_fun_impl)(li_dl_t dl, const char *name);
+struct li_dl_impl {
+    li_dl_t (*open)(const char *name);
+    int (*close)(li_dl_t dl);
+    li_dl_sym_t (*sym)(li_dl_t dl, const char *name);
+    li_dl_fun_t (*fun)(li_dl_t dl, const char *name);
+};
+
+struct li_dl_base {
+    const struct li_dl_impl *impl;
+};
 
 #if LI_DL_DLFCN
 # include <dlfcn.h>
 
-struct li_dl {
-    void *handle;
+struct li_dl_dlfcn {
+    struct li_dl_base base;
+    void             *handle;
 };
 
-static int         li_dl_init_dlfcn(void);
 static li_dl_t     li_dl_open_dlfcn(const char *name);
 static int         li_dl_close_dlfcn(li_dl_t dl);
 static li_dl_sym_t li_dl_sym_dlfcn(li_dl_t dl, const char *name);
 static li_dl_fun_t li_dl_fun_dlfcn(li_dl_t dl, const char *name);
 
-static int li_dl_init_dlfcn(void) {
-    li_dl_open_impl  = li_dl_open_dlfcn;
-    li_dl_close_impl = li_dl_close_dlfcn;
-    li_dl_sym_impl   = li_dl_sym_dlfcn;
-    li_dl_fun_impl   = li_dl_fun_dlfcn;
-    return 0;
-}
+static const struct li_dl_impl li_dl_impl_dlfcn = {
+    li_dl_open_dlfcn, li_dl_close_dlfcn, li_dl_sym_dlfcn, li_dl_fun_dlfcn
+};
 
 static li_dl_t li_dl_open_dlfcn(const char *name) {
-    li_dl_t dl;
-    dl = malloc(sizeof *dl);
-    if (dl != NULL) {
-        dl->handle = dlopen(name, RTLD_LAZY);
-        if (dl->handle != NULL) {
-            return dl;
+    struct li_dl_dlfcn *dl_dlfcn;
+    dl_dlfcn = malloc(sizeof *dl_dlfcn);
+    if (dl_dlfcn != NULL) {
+        dl_dlfcn->base.impl = &li_dl_impl_dlfcn;
+        dl_dlfcn->handle    = dlopen(name, RTLD_LAZY);
+        if (dl_dlfcn->handle != NULL) {
+            return dl_dlfcn;
         }
-        free(dl);
+        free(dl_dlfcn);
     }
     return NULL;
 }
 
 static int li_dl_close_dlfcn(li_dl_t dl) {
-    int result;
-    result = dlclose(dl->handle);
-    free(dl);
+    struct li_dl_dlfcn *dl_dlfcn = dl;
+    int                 result;
+    result = dlclose(dl_dlfcn->handle);
+    free(dl_dlfcn);
     return result == 0 ? 0 : -1;
 }
 
 static li_dl_sym_t li_dl_sym_dlfcn(li_dl_t dl, const char *name) {
-    return dlsym(dl->handle, name);
+    struct li_dl_dlfcn *dl_dlfcn = dl;
+    return dlsym(dl_dlfcn->handle, name);
 }
 
 static li_dl_fun_t li_dl_fun_dlfcn(li_dl_t dl, const char *name) {
@@ -67,43 +71,41 @@ static li_dl_fun_t li_dl_fun_dlfcn(li_dl_t dl, const char *name) {
 #endif
 
 #if LI_DL_WIN32
-# include <windows.h>
+# include <libloaderapi.h>
 
-struct li_dl {
-    HMODULE handle;
+struct li_dl_win32 {
+    struct li_dl_base base;
+    HMODULE           module;
 };
 
-static int         li_dl_init_win32(void);
 static li_dl_t     li_dl_open_win32(const char *name);
 static int         li_dl_close_win32(li_dl_t dl);
 static li_dl_sym_t li_dl_sym_win32(li_dl_t dl, const char *name);
 static li_dl_fun_t li_dl_fun_win32(li_dl_t dl, const char *name);
 
-static int li_dl_init_win32(void) {
-    li_dl_open_impl  = li_dl_open_win32;
-    li_dl_close_impl = li_dl_close_win32;
-    li_dl_sym_impl   = li_dl_sym_win32;
-    li_dl_fun_impl   = li_dl_fun_win32;
-    return 0;
-}
+static const struct li_dl_impl li_dl_impl_win32 = {
+    li_dl_open_win32, li_dl_close_win32, li_dl_sym_win32, li_dl_fun_win32
+};
 
 static li_dl_t li_dl_open_win32(const char *name) {
-    li_dl_t dl;
-    dl = malloc(sizeof *dl);
-    if (dl != NULL) {
-        dl->handle = LoadLibraryA(name);
-        if (dl->handle != NULL) {
-            return dl;
+    struct li_dl_win32 *dl_win32;
+    dl_win32 = malloc(sizeof *dl_win32);
+    if (dl_win32 != NULL) {
+        dl_win32->base.impl = &li_dl_impl_win32;
+        dl_win32->module    = LoadLibraryA(name);
+        if (dl_win32->module != NULL) {
+            return dl_win32;
         }
-        free(dl);
+        free(dl_win32);
     }
     return NULL;
 }
 
 static int li_dl_close_win32(li_dl_t dl) {
-    BOOL result;
-    result = FreeLibrary(dl->handle);
-    free(dl);
+    struct li_dl_win32 *dl_win32 = dl;
+    BOOL                result;
+    result = FreeLibrary(dl_win32->module);
+    free(dl_win32);
     return result ? 0 : -1;
 }
 
@@ -114,61 +116,91 @@ static li_dl_sym_t li_dl_sym_win32(li_dl_t dl, const char *name) {
 }
 
 static li_dl_fun_t li_dl_fun_win32(li_dl_t dl, const char *name) {
-    return (li_dl_fun_t) GetProcAddress(dl->handle, name);
+    struct li_dl_win32 *dl_win32 = dl;
+    return (li_dl_fun_t) GetProcAddress(dl_win32->module, name);
 }
 #endif
 
 #if LI_DL_DYLD
 # include <mach-o/dyld.h>
 
-struct li_dl {
-    NSModule handle;
+struct li_dl_dyld {
+    struct li_dl_base         base;
+    NSModule                  module;
+    const struct mach_header *image;
 };
 
-static int         li_dl_init_dyld(void);
 static li_dl_t     li_dl_open_dyld(const char *name);
 static int         li_dl_close_dyld(li_dl_t dl);
 static li_dl_sym_t li_dl_sym_dyld(li_dl_t dl, const char *name);
 static li_dl_fun_t li_dl_fun_dyld(li_dl_t dl, const char *name);
 
-static int li_dl_init_dyld(void) {
-    li_dl_open_impl  = li_dl_open_dyld;
-    li_dl_close_impl = li_dl_close_dyld;
-    li_dl_sym_impl   = li_dl_sym_dyld;
-    li_dl_fun_impl   = li_dl_fun_dyld;
-    return 0;
-}
+static const struct li_dl_impl li_dl_impl_dyld = {
+    li_dl_open_dyld, li_dl_close_dyld, li_dl_sym_dyld, li_dl_fun_dyld
+};
 
 static li_dl_t li_dl_open_dyld(const char *name) {
-    li_dl_t                     dl;
+    struct li_dl_dyld          *dl_dyld;
     NSObjectFileImage           image;
     NSObjectFileImageReturnCode result;
-    dl = malloc(sizeof *dl);
-    if (dl != NULL) {
-        result = NSCreateObjectFileImageFromFile(name, &image);
+    dl_dyld = malloc(sizeof *dl_dyld);
+    if (dl_dyld != NULL) {
+        dl_dyld->base.impl = &li_dl_impl_dyld;
+        dl_dyld->module    = NULL;
+        dl_dyld->image     = NULL;
+        result             = NSCreateObjectFileImageFromFile(name, &image);
         if (result == NSObjectFileImageSuccess) {
-            dl->handle = NSLinkModule(image, name, NSLINKMODULE_OPTION_NONE);
+            dl_dyld->module =
+                NSLinkModule(image, name, NSLINKMODULE_OPTION_RETURN_ON_ERROR);
             NSDestroyObjectFileImage(image);
-            if (dl->handle != NULL) {
-                return dl;
+            if (dl_dyld->module != NULL) {
+                return dl_dyld;
+            }
+        } else if (result == NSObjectFileImageInappropriateFile) {
+            dl_dyld->image = NSAddImage(
+                name, NSADDIMAGE_OPTION_RETURN_ON_ERROR
+                          | NSADDIMAGE_OPTION_WITH_SEARCHING);
+            if (dl_dyld->image != NULL) {
+                return dl_dyld;
             }
         }
-        free(dl);
+        free(dl_dyld);
     }
     return NULL;
 }
 
 static int li_dl_close_dyld(li_dl_t dl) {
-    bool result;
-    result = NSUnLinkModule(dl->handle, NSUNLINKMODULE_OPTION_NONE);
-    free(dl);
+    struct li_dl_dyld *dl_dyld = dl;
+    bool               result  = true;
+    if (dl_dyld->module != NULL) {
+        result = NSUnLinkModule(dl_dyld->module, NSUNLINKMODULE_OPTION_NONE);
+    }
+    free(dl_dyld);
     return result ? 0 : -1;
 }
 
 static li_dl_sym_t li_dl_sym_dyld(li_dl_t dl, const char *name) {
-    NSSymbol symbol;
-    symbol = NSLookupSymbolInModule(dl->handle, name);
-    return symbol ? NSAddressOfSymbol(symbol) : NULL;
+    struct li_dl_dyld *dl_dyld = dl;
+    NSSymbol           symbol  = NULL;
+    char              *symbol_name;
+    symbol_name = malloc(strlen(name) + 2);
+    if (symbol_name != NULL) {
+        symbol_name[0] = '_';
+        strcpy(symbol_name + 1, name);
+        if (dl_dyld->module != NULL) {
+            symbol = NSLookupSymbolInModule(dl_dyld->module, symbol_name);
+        } else if (dl_dyld->image != NULL) {
+            symbol = NSLookupSymbolInImage(
+                dl_dyld->image, symbol_name,
+                NSLOOKUPSYMBOLINIMAGE_OPTION_BIND
+                    | NSLOOKUPSYMBOLINIMAGE_OPTION_RETURN_ON_ERROR);
+        }
+        free(symbol_name);
+        if (symbol != NULL) {
+            return NSAddressOfSymbol(symbol);
+        }
+    }
+    return NULL;
 }
 
 static li_dl_fun_t li_dl_fun_dyld(li_dl_t dl, const char *name) {
@@ -178,47 +210,40 @@ static li_dl_fun_t li_dl_fun_dyld(li_dl_t dl, const char *name) {
 }
 #endif
 
-int li_dl_init(void) {
+li_dl_t li_dl_open(const char *name) {
+    li_dl_t dl;
 #if LI_DL_DLFCN
-    if (li_dl_init_result != 0) {
-        li_dl_init_result = li_dl_init_dlfcn();
+    dl = li_dl_open_dlfcn(name);
+    if (dl != NULL) {
+        return dl;
     }
 #endif
 #if LI_DL_WIN32
-    if (li_dl_init_result != 0) {
-        li_dl_init_result = li_dl_init_win32();
+    dl = li_dl_open_win32(name);
+    if (dl != NULL) {
+        return dl;
     }
 #endif
 #if LI_DL_DYLD
-    if (li_dl_init_result != 0) {
-        li_dl_init_result = li_dl_init_dyld();
+    dl = li_dl_open_dyld(name);
+    if (dl != NULL) {
+        return dl;
     }
 #endif
-    return li_dl_init_result;
-}
-
-li_dl_t li_dl_open(const char *name) {
-    assert(li_dl_init_result == 0);
-    assert(name != NULL);
-    return li_dl_open_impl(name);
+    return NULL;
 }
 
 int li_dl_close(li_dl_t dl) {
-    assert(li_dl_init_result == 0);
-    assert(dl != NULL);
-    return li_dl_close_impl(dl);
+    struct li_dl_base *dl_base = dl;
+    return dl_base->impl->close(dl);
 }
 
 li_dl_sym_t li_dl_sym(li_dl_t dl, const char *name) {
-    assert(li_dl_init_result == 0);
-    assert(dl != NULL);
-    assert(name != NULL);
-    return li_dl_sym_impl(dl, name);
+    struct li_dl_base *dl_base = dl;
+    return dl_base->impl->sym(dl, name);
 }
 
 li_dl_fun_t li_dl_fun(li_dl_t dl, const char *name) {
-    assert(li_dl_init_result == 0);
-    assert(dl != NULL);
-    assert(name != NULL);
-    return li_dl_fun_impl(dl, name);
+    struct li_dl_base *dl_base = dl;
+    return dl_base->impl->fun(dl, name);
 }
