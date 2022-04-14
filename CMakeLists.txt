@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 include(CheckIncludeFile)
 
-project(Lightning VERSION 0.0.1)
+project(Lightning VERSION 0.0.0)
 
 if(MSVC)
     add_compile_options(/W4)
@@ -60,7 +60,7 @@ target_link_libraries(Sandbox PRIVATE Lightning)
 
 add_custom_target(fmt
     COMMAND clang-format -i ${FILES}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/etc
     COMMENT "Formatting code"
 )
 

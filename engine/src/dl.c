@@ -171,7 +171,7 @@ static li_dl_t li_dl_open_dyld(const char *name) {
 
 static int li_dl_close_dyld(li_dl_t dl) {
     struct li_dl_dyld *dl_dyld = dl;
-    bool               result  = true;
+    bool               result  = false;
     if (dl_dyld->module != NULL) {
         result = NSUnLinkModule(dl_dyld->module, NSUNLINKMODULE_OPTION_NONE);
     }
