@@ -34,7 +34,7 @@ typedef void (*li_dl_fun_t)(void);
 
 /**
  * @brief Open a dynamic library.
- * @param name The name of the library to open.
+ * @param name The name of the library to open, or NULL for the main program.
  * @return A handle to the library, or NULL on failure.
  */
 li_dl_t     li_dl_open(const char *name);

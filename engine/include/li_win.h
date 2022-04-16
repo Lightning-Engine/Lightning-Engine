@@ -1,7 +1,6 @@
 /**
  * @file li_win.h
  * @brief Windowing library.
- * @since 0.0.1
  * @note This library must be used from the main thread
  */
 
@@ -20,8 +19,6 @@ typedef struct li_win_hints {
 typedef union li_event {
 } li_event_t;
 
-int li_win_init(li_win_fun_t cb);
-int li_win_exit(void);
 int li_win_poll(void);
 
 void      li_win_hints_init(li_win_hints_t *hints);

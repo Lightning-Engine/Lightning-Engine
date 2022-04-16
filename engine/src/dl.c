@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef LI_DL_ERROR_BUF_SIZE
-# define LI_DL_ERROR_BUF_SIZE 256
+#ifndef LI_DL_MAX_ERROR
+# define LI_DL_MAX_ERROR 256
 #endif
 
 union li_dl_symbol {
@@ -23,7 +23,7 @@ struct li_dl_base {
     const struct li_dl_impl *impl;
 };
 
-static char li_dl_error_buf[LI_DL_ERROR_BUF_SIZE];
+static const char *li_dl_error_str = NULL;
 
 #if LI_DL_DLFCN
 # include <dlfcn.h>
@@ -87,13 +87,7 @@ static li_dl_fun_t li_dl_fun_dlfcn(li_dl_t dl, const char *name) {
 }
 
 static void li_dl_error_dlfcn(void) {
-    const char *error;
-    error              = dlerror();
-    li_dl_error_buf[0] = '\0';
-    if (error != NULL) {
-        strncpy(li_dl_error_buf, error, LI_DL_ERROR_BUF_SIZE);
-        li_dl_error_buf[LI_DL_ERROR_BUF_SIZE - 1] = '\0';
-    }
+    li_dl_error_str = dlerror();
 }
 #endif
 
@@ -115,15 +109,7 @@ static const struct li_dl_impl li_dl_impl_win32 = {
     li_dl_open_win32, li_dl_close_win32, li_dl_sym_win32, li_dl_fun_win32
 };
 
-static void li_dl_error_win32(void) {
-    DWORD last_error;
-    int   lang_id;
-    last_error = GetLastError();
-    lang_id    = MAKELANGID(LANG_SYSTEM_DEFAULT, LANG_USER_DEFAULT);
-    FormatMessageA(
-        FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_MAX_WIDTH_MASK, NULL,
-        last_error, lang_id, li_dl_error_buf, LI_DL_ERROR_BUF_SIZE, NULL);
-}
+static char li_dl_error_str_win32[LI_DL_MAX_ERROR];
 
 static li_dl_t li_dl_open_win32(const char *name) {
     struct li_dl_win32 *dl_win32;
@@ -164,12 +150,22 @@ static li_dl_sym_t li_dl_sym_win32(li_dl_t dl, const char *name) {
 
 static li_dl_fun_t li_dl_fun_win32(li_dl_t dl, const char *name) {
     struct li_dl_win32 *dl_win32 = dl;
-    li_dl_fun_t         function;
-    function = (li_dl_fun_t) GetProcAddress(dl_win32->module, name);
-    if (function == NULL) {
+    li_dl_fun_t         fun;
+    fun = (li_dl_fun_t) GetProcAddress(dl_win32->module, name);
+    if (fun == NULL) {
         li_dl_error_win32();
     }
-    return function;
+    return fun;
+}
+
+static void li_dl_error_win32(void) {
+    if (FormatMessageA(
+            FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_MAX_WIDTH_MASK, NULL,
+            GetLastError(), MAKELANGID(LANG_SYSTEM_DEFAULT, LANG_USER_DEFAULT),
+            li_dl_error_str_win32, LI_DL_MAX_ERROR, NULL)
+        != 0) {
+        li_dl_error_str = li_dl_error_str_win32;
+    }
 }
 #endif
 
@@ -201,26 +197,27 @@ static li_dl_t li_dl_open_dyld(const char *name) {
         dl_dyld->base.impl = &li_dl_impl_dyld;
         dl_dyld->module    = NULL;
         dl_dyld->image     = NULL;
-        if (name != NULL) {
-            result = NSCreateObjectFileImageFromFile(name, &image);
-            if (result == NSObjectFileImageSuccess) {
-                dl_dyld->module = NSLinkModule(
-                    image, name, NSLINKMODULE_OPTION_RETURN_ON_ERROR);
-                NSDestroyObjectFileImage(image);
-                if (dl_dyld->module != NULL) {
-                    return dl_dyld;
-                }
-            } else if (result == NSObjectFileImageInappropriateFile) {
-                dl_dyld->image = NSAddImage(
-                    name, NSADDIMAGE_OPTION_RETURN_ON_ERROR
-                              | NSADDIMAGE_OPTION_WITH_SEARCHING);
-                if (dl_dyld->image != NULL) {
-                    return dl_dyld;
-                }
-            }
-            li_dl_error_dyld();
-            free(dl_dyld);
+        if (name == NULL) {
+            return dl_dyld;
         }
+        result = NSCreateObjectFileImageFromFile(name, &image);
+        if (result == NSObjectFileImageSuccess) {
+            dl_dyld->module = NSLinkModule(
+                image, name, NSLINKMODULE_OPTION_RETURN_ON_ERROR);
+            NSDestroyObjectFileImage(image);
+            if (dl_dyld->module != NULL) {
+                return dl_dyld;
+            }
+        } else if (result == NSObjectFileImageInappropriateFile) {
+            dl_dyld->image = NSAddImage(
+                name, NSADDIMAGE_OPTION_RETURN_ON_ERROR
+                            | NSADDIMAGE_OPTION_WITH_SEARCHING);
+            if (dl_dyld->image != NULL) {
+                return dl_dyld;
+            }
+        }
+        li_dl_error_dyld();
+        free(dl_dyld);
     }
     return NULL;
 }
@@ -276,17 +273,13 @@ static void li_dl_error_dyld(void) {
     NSLinkEditErrors error;
     int              errnum;
     const char      *errfile;
-    const char      *errstr;
-    NSLinkEditError(&error, &errnum, &errfile, &errstr);
-    if (errstr != NULL) {
-        strncpy(li_dl_error_buf, errstr, LI_DL_ERROR_BUF_SIZE);
-        li_dl_error_buf[LI_DL_ERROR_BUF_SIZE - 1] = '\0';
-    }
+    NSLinkEditError(&error, &errnum, &errfile, &li_dl_error_str);
 }
 #endif
 
 li_dl_t li_dl_open(const char *name) {
     li_dl_t dl;
+    li_dl_error_str = NULL;
 #if LI_DL_DLFCN
     dl = li_dl_open_dlfcn(name);
     if (dl != NULL) {
@@ -310,19 +303,22 @@ li_dl_t li_dl_open(const char *name) {
 
 int li_dl_close(li_dl_t dl) {
     struct li_dl_base *dl_base = dl;
+    li_dl_error_str            = NULL;
     return dl_base->impl->close(dl);
 }
 
 li_dl_sym_t li_dl_sym(li_dl_t dl, const char *name) {
     struct li_dl_base *dl_base = dl;
+    li_dl_error_str            = NULL;
     return dl_base->impl->sym(dl, name);
 }
 
 li_dl_fun_t li_dl_fun(li_dl_t dl, const char *name) {
     struct li_dl_base *dl_base = dl;
+    li_dl_error_str            = NULL;
     return dl_base->impl->fun(dl, name);
 }
 
 const char *li_dl_error(void) {
-    return li_dl_error_buf;
+    return li_dl_error_str;
 }
