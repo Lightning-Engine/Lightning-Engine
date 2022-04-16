@@ -127,12 +127,13 @@ static void li_dl_error_win32(void) {
 
 static li_dl_t li_dl_open_win32(const char *name) {
     struct li_dl_win32 *dl_win32;
+    dl_win32 = malloc(sizeof *dl_win32);
     if (dl_win32 != NULL) {
         dl_win32->base.impl = &li_dl_impl_win32;
         if (name == NULL) {
             dl_win32->module = GetModuleHandle(NULL);
         } else {
-            dl_win32->module = LoadLibraryA(name);
+            dl_win32->module = LoadLibrary(name);
         }
         if (dl_win32->module != NULL) {
             return dl_win32;
@@ -201,10 +202,10 @@ static li_dl_t li_dl_open_dyld(const char *name) {
         dl_dyld->module    = NULL;
         dl_dyld->image     = NULL;
         if (name != NULL) {
-            result             = NSCreateObjectFileImageFromFile(name, &image);
+            result = NSCreateObjectFileImageFromFile(name, &image);
             if (result == NSObjectFileImageSuccess) {
-                dl_dyld->module =
-                    NSLinkModule(image, name, NSLINKMODULE_OPTION_RETURN_ON_ERROR);
+                dl_dyld->module = NSLinkModule(
+                    image, name, NSLINKMODULE_OPTION_RETURN_ON_ERROR);
                 NSDestroyObjectFileImage(image);
                 if (dl_dyld->module != NULL) {
                     return dl_dyld;
@@ -212,7 +213,7 @@ static li_dl_t li_dl_open_dyld(const char *name) {
             } else if (result == NSObjectFileImageInappropriateFile) {
                 dl_dyld->image = NSAddImage(
                     name, NSADDIMAGE_OPTION_RETURN_ON_ERROR
-                            | NSADDIMAGE_OPTION_WITH_SEARCHING);
+                              | NSADDIMAGE_OPTION_WITH_SEARCHING);
                 if (dl_dyld->image != NULL) {
                     return dl_dyld;
                 }
