@@ -38,9 +38,9 @@ static li_dl_sym_t li_dl_sym_dlfcn(li_dl_t dl, const char *name);
 static li_dl_fun_t li_dl_fun_dlfcn(li_dl_t dl, const char *name);
 static void        li_dl_error_dlfcn(void);
 
-static const struct li_dl_impl li_dl_impl_dlfcn = {
-    li_dl_close_dlfcn, li_dl_sym_dlfcn, li_dl_fun_dlfcn
-};
+static const struct li_dl_impl li_dl_impl_dlfcn = { li_dl_close_dlfcn,
+                                                    li_dl_sym_dlfcn,
+                                                    li_dl_fun_dlfcn };
 
 static li_dl_t li_dl_open_dlfcn(const char *name) {
     struct li_dl_dlfcn *dl_dlfcn;
@@ -104,9 +104,9 @@ static li_dl_sym_t li_dl_sym_win32(li_dl_t dl, const char *name);
 static li_dl_fun_t li_dl_fun_win32(li_dl_t dl, const char *name);
 static void        li_dl_error_win32(void);
 
-static const struct li_dl_impl li_dl_impl_win32 = {
-    li_dl_close_win32, li_dl_sym_win32, li_dl_fun_win32
-};
+static const struct li_dl_impl li_dl_impl_win32 = { li_dl_close_win32,
+                                                    li_dl_sym_win32,
+                                                    li_dl_fun_win32 };
 
 static char li_dl_error_str_win32[LI_DL_MAX_ERROR];
 
@@ -158,6 +158,7 @@ static li_dl_fun_t li_dl_fun_win32(li_dl_t dl, const char *name) {
 }
 
 static void li_dl_error_win32(void) {
+    li_dl_error_str = NULL;
     if (FormatMessageA(
             FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_MAX_WIDTH_MASK, NULL,
             GetLastError(), MAKELANGID(LANG_SYSTEM_DEFAULT, LANG_USER_DEFAULT),
@@ -183,9 +184,9 @@ static li_dl_sym_t li_dl_sym_dyld(li_dl_t dl, const char *name);
 static li_dl_fun_t li_dl_fun_dyld(li_dl_t dl, const char *name);
 static void        li_dl_error_dyld(void);
 
-static const struct li_dl_impl li_dl_impl_dyld = {
-    li_dl_close_dyld, li_dl_sym_dyld, li_dl_fun_dyld
-};
+static const struct li_dl_impl li_dl_impl_dyld = { li_dl_close_dyld,
+                                                   li_dl_sym_dyld,
+                                                   li_dl_fun_dyld };
 
 static li_dl_t li_dl_open_dyld(const char *name) {
     struct li_dl_dyld          *dl_dyld;
@@ -201,8 +202,8 @@ static li_dl_t li_dl_open_dyld(const char *name) {
         }
         result = NSCreateObjectFileImageFromFile(name, &image);
         if (result == NSObjectFileImageSuccess) {
-            dl_dyld->module = NSLinkModule(
-                image, name, NSLINKMODULE_OPTION_RETURN_ON_ERROR);
+            dl_dyld->module =
+                NSLinkModule(image, name, NSLINKMODULE_OPTION_RETURN_ON_ERROR);
             NSDestroyObjectFileImage(image);
             if (dl_dyld->module != NULL) {
                 return dl_dyld;
@@ -210,7 +211,7 @@ static li_dl_t li_dl_open_dyld(const char *name) {
         } else if (result == NSObjectFileImageInappropriateFile) {
             dl_dyld->image = NSAddImage(
                 name, NSADDIMAGE_OPTION_RETURN_ON_ERROR
-                            | NSADDIMAGE_OPTION_WITH_SEARCHING);
+                          | NSADDIMAGE_OPTION_WITH_SEARCHING);
             if (dl_dyld->image != NULL) {
                 return dl_dyld;
             }
@@ -272,13 +273,13 @@ static void li_dl_error_dyld(void) {
     NSLinkEditErrors error;
     int              errnum;
     const char      *errfile;
+    li_dl_error_str = NULL;
     NSLinkEditError(&error, &errnum, &errfile, &li_dl_error_str);
 }
 #endif
 
 li_dl_t li_dl_open(const char *name) {
     li_dl_t dl;
-    li_dl_error_str = NULL;
 #if LI_DL_DLFCN
     dl = li_dl_open_dlfcn(name);
     if (dl != NULL) {
@@ -302,19 +303,16 @@ li_dl_t li_dl_open(const char *name) {
 
 int li_dl_close(li_dl_t dl) {
     struct li_dl_base *dl_base = dl;
-    li_dl_error_str            = NULL;
     return dl_base->impl->close(dl);
 }
 
 li_dl_sym_t li_dl_sym(li_dl_t dl, const char *name) {
     struct li_dl_base *dl_base = dl;
-    li_dl_error_str            = NULL;
     return dl_base->impl->sym(dl, name);
 }
 
 li_dl_fun_t li_dl_fun(li_dl_t dl, const char *name) {
     struct li_dl_base *dl_base = dl;
-    li_dl_error_str            = NULL;
     return dl_base->impl->fun(dl, name);
 }
 
