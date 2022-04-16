@@ -6,15 +6,8 @@
 int main(void) {
     li_dl_t dl;
     void (*puts)(const char *);
-    dl = li_dl_open("libc.so.6");
-    if (dl == NULL) {
-        printf("%s\n", li_dl_error());
-        dl = li_dl_open("msvcrt.dll");
-    }
-    if (dl == NULL) {
-        printf("%s\n", li_dl_error());
-        dl = li_dl_open("libSystem.dylib");
-    }
+
+    dl = li_dl_open(NULL);
     if (dl == NULL) {
         printf("%s\n", li_dl_error());
     } else {

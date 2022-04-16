@@ -6,14 +6,10 @@
  * @brief Dynamic library loading.
  * @note This library is not Thread-Safe
  * @code
- * dl = li_dl_open("libc.so.6");
+ * dl = li_dl_open(NULL);
  * if (dl == NULL) {
- *     dl = li_dl_open("msvcrt.dll");
- * }
- * if (dl == NULL) {
- *     dl = li_dl_open("libSystem.dylib");
- * }
- * if (dl != NULL) {
+ *     printf("%s\n", li_dl_error());
+ * } else {
  *     puts = (void (*)(const char *)) li_dl_fun(dl, "puts");
  *     if (puts != NULL) {
  *         puts("Hello, World!");
