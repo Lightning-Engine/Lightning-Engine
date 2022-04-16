@@ -4,6 +4,7 @@
 /**
  * @file
  * @brief Dynamic library loading.
+ * @note This library is not Thread-Safe
  * @code
  * dl = li_dl_open("libc.so.6");
  * if (dl == NULL) {
@@ -52,5 +53,10 @@ li_dl_sym_t li_dl_sym(li_dl_t dl, const char *name);
  * @return The function, or NULL on failure.
  */
 li_dl_fun_t li_dl_fun(li_dl_t dl, const char *name);
+/**
+ * @brief Get the error message from the last failed operation.
+ * @return The error message.
+ */
+const char *li_dl_error(void);
 
 #endif

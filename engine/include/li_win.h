@@ -2,7 +2,7 @@
  * @file li_win.h
  * @brief Windowing library.
  * @since 0.0.1
- * @note This library is not Thread-Safe
+ * @note This library must be used from the main thread
  */
 
 #ifndef LI_WIN_H
