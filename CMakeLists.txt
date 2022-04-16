@@ -60,7 +60,7 @@ target_link_libraries(Sandbox PRIVATE Lightning)
 
 add_custom_target(fmt
     COMMAND clang-format -i ${FILES}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/etc
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Formatting code"
 )
 
