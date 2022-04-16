@@ -13,7 +13,6 @@ union li_dl_symbol {
 };
 
 struct li_dl_impl {
-    li_dl_t (*open)(const char *name);
     int (*close)(li_dl_t dl);
     li_dl_sym_t (*sym)(li_dl_t dl, const char *name);
     li_dl_fun_t (*fun)(li_dl_t dl, const char *name);
@@ -40,7 +39,7 @@ static li_dl_fun_t li_dl_fun_dlfcn(li_dl_t dl, const char *name);
 static void        li_dl_error_dlfcn(void);
 
 static const struct li_dl_impl li_dl_impl_dlfcn = {
-    li_dl_open_dlfcn, li_dl_close_dlfcn, li_dl_sym_dlfcn, li_dl_fun_dlfcn
+    li_dl_close_dlfcn, li_dl_sym_dlfcn, li_dl_fun_dlfcn
 };
 
 static li_dl_t li_dl_open_dlfcn(const char *name) {
@@ -106,7 +105,7 @@ static li_dl_fun_t li_dl_fun_win32(li_dl_t dl, const char *name);
 static void        li_dl_error_win32(void);
 
 static const struct li_dl_impl li_dl_impl_win32 = {
-    li_dl_open_win32, li_dl_close_win32, li_dl_sym_win32, li_dl_fun_win32
+    li_dl_close_win32, li_dl_sym_win32, li_dl_fun_win32
 };
 
 static char li_dl_error_str_win32[LI_DL_MAX_ERROR];
@@ -185,7 +184,7 @@ static li_dl_fun_t li_dl_fun_dyld(li_dl_t dl, const char *name);
 static void        li_dl_error_dyld(void);
 
 static const struct li_dl_impl li_dl_impl_dyld = {
-    li_dl_open_dyld, li_dl_close_dyld, li_dl_sym_dyld, li_dl_fun_dyld
+    li_dl_close_dyld, li_dl_sym_dyld, li_dl_fun_dyld
 };
 
 static li_dl_t li_dl_open_dyld(const char *name) {
