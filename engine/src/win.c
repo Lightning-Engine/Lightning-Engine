@@ -102,7 +102,7 @@ static void     li_win_poll_win32(void);
 static li_win_t li_win_create_win32(int width, int height);
 static void     li_win_destroy_win32(li_win_t win);
 static LRESULT CALLBACK
-li_win_event_win32(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param);
+li_win_event_win32(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 static HINSTANCE li_win_instance_win32;
 
