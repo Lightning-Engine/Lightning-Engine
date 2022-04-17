@@ -4,7 +4,7 @@
 /**
  * @file
  * @brief Dynamic library loading.
- * @note This library is not Thread-Safe
+ * @note This interface is not Thread-Safe
  *
  * @code
  * dl = li_dl_open("libc.so.6");
@@ -41,9 +41,8 @@ li_dl_t     li_dl_open(const char *name);
 /**
  * @brief Close a dynamic library.
  * @param dl The library to close.
- * @return 0 on success, -1 on failure.
  */
-int         li_dl_close(li_dl_t dl);
+void        li_dl_close(li_dl_t dl);
 /**
  * @brief Get a symbol from a dynamic library.
  * @param dl The library to get the symbol from.
