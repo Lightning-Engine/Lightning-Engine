@@ -3,26 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void win_fun(void) {
+    printf("win_fun\n");
+}
+
 int main(void) {
-    li_dl_t dl;
-    void (*puts)(const char *);
-    dl = li_dl_open("libc.so.6");
-    if (dl == NULL) {
-        dl = li_dl_open("msvcrt.dll");
-    }
-    if (dl == NULL) {
-        dl = li_dl_open("libSystem.dylib");
-    }
-    if (dl == NULL) {
-        printf("%s\n", li_dl_error());
-    } else {
-        puts = (void (*)(const char *)) li_dl_fun(dl, "puts");
-        if (puts == NULL) {
-            printf("%s\n", li_dl_error());
-        } else {
-            puts("Hello, world!");
-        }
-        li_dl_close(dl);
+    li_win_init(win_fun);
+    li_win_create(640, 480);
+    while (1) {
+        li_win_poll();
     }
     return EXIT_SUCCESS;
 }

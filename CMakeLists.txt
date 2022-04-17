@@ -18,6 +18,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 check_include_file(dlfcn.h HAS_DLFCN)
 check_include_file(windows.h HAS_WIN32)
 check_include_file(mach-o/dyld.h HAS_DYLD)
+check_include_file(X11/Xlib.h HAS_XLIB)
+check_include_file(objc/objc-runtime.h HAS_OBJC)
 
 set(SANITIZE_ADDRESS OFF CACHE BOOL "Enable Address Sanitizer")
 set(SANITIZE_MEMORY OFF CACHE BOOL "Enable Memory Sanitizer")
@@ -27,6 +29,9 @@ set(SANITIZE_UNDEFINED OFF CACHE BOOL "Enable Undefined Behavior Sanitizer")
 set(DL_DLFCN ${HAS_DLFCN} CACHE BOOL "Use dlfcn for dynamic linking")
 set(DL_WIN32 ${HAS_WIN32} CACHE BOOL "Use win32 for dynamic linking")
 set(DL_DYLD ${HAS_DYLD} CACHE BOOL "Use dyld for dynamic linking")
+set(WIN_XLIB ${HAS_XLIB} CACHE BOOL "Use Xlib for windowing")
+set(WIN_WIN32 ${HAS_WIN32} CACHE BOOL "Use win32 for windowing")
+set(WIN_COCOA ${HAS_OBJC} CACHE BOOL "Use Cocoa for windowing")
 
 set(SANITIZE_OPTIONS
     $<$<BOOL:${SANITIZE_ADDRESS}>:-fsanitize=address>
@@ -39,13 +44,16 @@ add_compile_options(${SANITIZE_OPTIONS})
 add_link_options(${SANITIZE_OPTIONS})
 
 file(GLOB_RECURSE FILES engine/* sandbox/*)
-add_library(Lightning engine/src/dl.c)
+add_library(Lightning engine/src/dl.c engine/src/win.c)
 add_executable(Sandbox sandbox/src/main.c)
 
 target_compile_definitions(Lightning PRIVATE
     $<$<BOOL:${DL_DLFCN}>:LI_DL_DLFCN=1>
     $<$<BOOL:${DL_WIN32}>:LI_DL_WIN32=1>
     $<$<BOOL:${DL_DYLD}>:LI_DL_DYLD=1>
+    $<$<BOOL:${WIN_XLIB}>:LI_WIN_XLIB=1>
+    $<$<BOOL:${WIN_WIN32}>:LI_WIN_WIN32=1>
+    $<$<BOOL:${WIN_COCOA}>:LI_WIN_COCOA=1>
 )
 
 target_include_directories(Lightning PUBLIC
@@ -54,6 +62,10 @@ target_include_directories(Lightning PUBLIC
 
 target_include_directories(Sandbox PRIVATE
     ${CMAKE_SOURCE_DIR}/sandbox/include
+)
+
+target_link_libraries(Lightning PRIVATE
+    $<$<BOOL:${WIN_XLIB}>:X11>
 )
 
 target_link_libraries(Sandbox PRIVATE Lightning)
