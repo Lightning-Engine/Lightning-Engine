@@ -19,7 +19,7 @@ check_include_file(dlfcn.h HAS_DLFCN)
 check_include_file(windows.h HAS_WIN32)
 check_include_file(mach-o/dyld.h HAS_DYLD)
 check_include_file(X11/Xlib.h HAS_XLIB)
-check_include_file(objc/objc-runtime.h HAS_OBJC)
+check_include_file(Cocoa/Cocoa.h HAS_COCOA "-x objective-c")
 
 set(SANITIZE_ADDRESS OFF CACHE BOOL "Enable Address Sanitizer")
 set(SANITIZE_MEMORY OFF CACHE BOOL "Enable Memory Sanitizer")
@@ -31,7 +31,7 @@ set(DL_WIN32 ${HAS_WIN32} CACHE BOOL "Use win32 for dynamic linking")
 set(DL_DYLD ${HAS_DYLD} CACHE BOOL "Use dyld for dynamic linking")
 set(WIN_XLIB ${HAS_XLIB} CACHE BOOL "Use Xlib for windowing")
 set(WIN_WIN32 ${HAS_WIN32} CACHE BOOL "Use win32 for windowing")
-set(WIN_COCOA ${HAS_OBJC} CACHE BOOL "Use Cocoa for windowing")
+set(WIN_COCOA ${HAS_COCOA} CACHE BOOL "Use Cocoa for windowing")
 
 set(SANITIZE_OPTIONS
     $<$<BOOL:${SANITIZE_ADDRESS}>:-fsanitize=address>
@@ -44,7 +44,18 @@ add_compile_options(${SANITIZE_OPTIONS})
 add_link_options(${SANITIZE_OPTIONS})
 
 file(GLOB_RECURSE FILES engine/* sandbox/*)
-add_library(Lightning engine/src/dl.c engine/src/win.c)
+add_library(Lightning
+    engine/src/std.c
+    engine/src/dl/dl.c
+    $<$<BOOL:${DL_DLFCN}>:engine/src/dl/dlfcn.c>
+    $<$<BOOL:${DL_WIN32}>:engine/src/dl/win32.c>
+    $<$<BOOL:${DL_DYLD}>:engine/src/dl/dyld.c>
+    engine/src/win/win.c
+    $<$<BOOL:${WIN_XLIB}>:engine/src/win/xlib.c>
+    $<$<BOOL:${WIN_WIN32}>:engine/src/win/win32.c>
+    $<$<BOOL:${WIN_COCOA}>:engine/src/win/cocoa.m>
+)
+
 add_executable(Sandbox sandbox/src/main.c)
 
 target_compile_definitions(Lightning PRIVATE
@@ -66,6 +77,7 @@ target_include_directories(Sandbox PRIVATE
 
 target_link_libraries(Lightning PRIVATE
     $<$<BOOL:${WIN_XLIB}>:X11>
+    $<$<BOOL:${WIN_COCOA}>:"-framework Cocoa">
 )
 
 target_link_libraries(Sandbox PRIVATE Lightning)

@@ -1,7 +1,7 @@
 #ifndef SANDBOX_H
 #define SANDBOX_H
 
-#include "li_dl.h"
-#include "li_win.h"
+#include "li/dl/dl.h"
+#include "li/win/win.h"
 
 #endif
