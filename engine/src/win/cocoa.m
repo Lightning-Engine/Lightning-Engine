@@ -160,19 +160,19 @@ void li_win_cocoa_destroy(li_win_t win) {
 
 li_input_state_t li_win_cocoa_xlat_state(NSUInteger state) {
     li_input_state_t result = 0;
-    if (state & NSShiftKeyMask) {
+    if (state & NSEventModifierFlagShift) {
         result |= LI_INPUT_STATE_SHIFT;
     }
-    if (state & NSAlphaShiftKeyMask) {
+    if (state & NSEventModifierFlagCapsLock) {
         result |= LI_INPUT_STATE_CAPSLOCK;
     }
-    if (state & NSControlKeyMask) {
+    if (state & NSEventModifierFlagControl) {
         result |= LI_INPUT_STATE_CONTROL;
     }
-    if (state & NSAlternateKeyMask) {
+    if (state & NSEventModifierFlagOption) {
         result |= LI_INPUT_STATE_ALT;
     }
-    if (state & NSCommandKeyMask) {
+    if (state & NSEventModifierFlagCommand) {
         result |= LI_INPUT_STATE_SUPER;
     }
     return (result);
