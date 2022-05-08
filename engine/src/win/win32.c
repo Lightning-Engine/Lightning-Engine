@@ -14,13 +14,18 @@
 #define WINWIDTH(lparam)  (LOWORD(lparam))
 #define WINHEIGHT(lparam) (HIWORD(lparam))
 #define ISREPEAT(lparam)  (!!(lparam & (1 << 30)))
+#define ISKEYUP(umsg)     (umsg == WM_KEYUP || umsg == WM_SYSKEYUP)
+#define ISMOUSEMOVE(umsg) (umsg == WM_MOUSEMOVE)
+#define ISBUTTONDOWN(umsg)                                                     \
+ (umsg == WM_LBUTTONDOWN || umsg == WM_MBUTTONDOWN || umsg == WM_RBUTTONDOWN   \
+  || umsg == WM_XBUTTONDOWN)
 
 HINSTANCE li_win_win32_instance;
 WNDCLASS  li_win_win32_class;
 
 const struct li_win_impl li_win_win32_impl = {
-    li_win_win32_init li_win_win32_exit, li_win_win32_poll, li_win_win32_create,
-    li_win_win32_destroy
+    li_win_win32_init, li_win_win32_exit, li_win_win32_poll,
+    li_win_win32_create, li_win_win32_destroy
 };
 
 int li_win_win32_init(void) {
@@ -71,7 +76,7 @@ void li_win_win32_destroy(li_win_t win) {
     li_std_free(win_win32);
 }
 
-li_key_state_t li_win_win32_state(void) {
+li_key_state_t li_win_win32_xlat_state(void) {
     li_key_state_t state = 0;
     if (GetKeyState(VK_SHIFT) & 0x8000) {
         state |= LI_KEY_STATE_SHIFT;
@@ -103,7 +108,7 @@ li_key_state_t li_win_win32_state(void) {
     return state;
 }
 
-li_key_code_t li_win_win32_button(UINT umsg) {
+li_key_code_t li_win_win32_xlat_button(UINT umsg) {
     switch (umsg) {
     case WM_LBUTTONUP:
     case WM_LBUTTONDOWN:
@@ -121,7 +126,7 @@ li_key_code_t li_win_win32_button(UINT umsg) {
     return LI_KEY_CODE_NULL;
 }
 
-li_key_code_t li_win_win32_key(LPARAM lparam) {
+li_key_code_t li_win_win32_xlat_key(LPARAM lparam) {
     switch ((lparam & 0x1FF0000) >> 16) {
     case 0x00B:
         return LI_KEY_CODE_0;
@@ -335,59 +340,95 @@ li_key_code_t li_win_win32_key(LPARAM lparam) {
     return LI_KEY_CODE_NULL;
 }
 
+void li_win_win32_event_key(
+    li_win_t win, UINT umsg, WPARAM wparam, LPARAM lparam) {
+    li_key_state_t keystate;
+    li_key_code_t  keycode;
+
+    (void) wparam;
+    keystate = li_win_win32_xlat_state();
+    keycode  = li_win_win32_xlat_key(lparam);
+    if (ISKEYUP(umsg)) {
+        li_win_send_key(win, li_win_msg_keyup, keycode, keystate);
+    } else if (ISREPEAT(lparam)) {
+        li_win_send_key(win, li_win_msg_keyrep, keycode, keystate);
+    } else {
+        li_win_send_key(win, li_win_msg_keydown, keycode, keystate);
+    }
+}
+
+void li_win_win32_event_mouse(
+    li_win_t win, UINT umsg, WPARAM wparam, LPARAM lparam) {
+    li_key_state_t keystate;
+    li_key_code_t  keycode;
+    int            x, y;
+
+    (void) wparam;
+    keystate = li_win_win32_xlat_state();
+    keycode  = LI_KEY_CODE_NULL;
+    x        = MOUSEX(lparam);
+    y        = MOUSEY(lparam);
+
+    if (ISMOUSEMOVE(umsg)) {
+        li_win_send_mouse(win, li_win_msg_mousemove, keycode, x, y, keystate);
+    }
+
+    keycode = li_win_win32_xlat_button(umsg);
+    if (ISBUTTONDOWN(umsg)) {
+        li_win_send_mouse(win, li_win_msg_mousedown, keycode, x, y, keystate);
+    } else {
+        li_win_send_mouse(win, li_win_msg_mouseup, keycode, x, y, keystate);
+    }
+}
+
+void li_win_win32_event_resize(
+    li_win_t win, UINT umsg, WPARAM wparam, LPARAM lparam) {
+    int width, height;
+
+    (void) umsg;
+    (void) wparam;
+    width  = WINWIDTH(lparam);
+    height = WINHEIGHT(lparam);
+
+    li_win_send_resize(win, li_win_msg_resize, width, height);
+}
+
+void li_win_win32_event_close(
+    li_win_t win, UINT umsg, WPARAM wparam, LPARAM lparam) {
+    (void) umsg;
+    (void) wparam;
+    (void) lparam;
+
+    li_win_send_close(win, li_win_msg_close);
+}
+
 LRESULT CALLBACK
 li_win_win32_event(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam) {
     li_win_t win32_win = (li_win_t) GetWindowLongPtr(hwnd, GWLP_USERDATA);
     switch (umsg) {
     case WM_CLOSE:
-        li_win_send_close(win32_win, li_win_msg_close);
+        li_win_win32_event_close(win32_win, umsg, wparam, lparam);
         return 0;
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
     case WM_KEYUP:
     case WM_SYSKEYUP:
-        if (umsg == WM_KEYUP || umsg == WM_SYSKEYUP) {
-            li_win_send_key(
-                win32_win, li_win_msg_keyup, li_win_win32_key(lparam),
-                li_win_win32_state());
-        } else if (ISREPEAT(lparam)) {
-            li_win_send_key(
-                win32_win, li_win_msg_keyrep, li_win_win32_key(lparam),
-                li_win_win32_state());
-        } else {
-            li_win_send_key(
-                win32_win, li_win_msg_keydown, li_win_win32_key(lparam),
-                li_win_win32_state());
-        }
+        li_win_win32_event_key(win32_win, umsg, wparam, lparam);
         return 0;
     case WM_LBUTTONDOWN:
     case WM_RBUTTONDOWN:
     case WM_MBUTTONDOWN:
     case WM_XBUTTONDOWN:
-        li_win_send_mouse(
-            win32_win, li_win_msg_keydown, li_win_win32_button(umsg),
-            MOUSEX(lparam), MOUSEY(lparam), li_win_win32_state());
-        return 0;
     case WM_LBUTTONUP:
     case WM_MBUTTONUP:
     case WM_RBUTTONUP:
     case WM_XBUTTONUP:
-        li_win_send_mouse(
-            win32_win, li_win_msg_keyup, li_win_win32_button(umsg),
-            MOUSEX(lparam), MOUSEY(lparam), li_win_win32_state());
-        return 0;
     case WM_MOUSEMOVE:
-        li_win_send_mouse(
-            win32_win, li_win_msg_mousemove, LI_KEY_CODE_NULL, MOUSEX(lparam),
-            MOUSEY(lparam), li_win_win32_state());
+        li_win_win32_event_mouse(win32_win, umsg, wparam, lparam);
         return 0;
     case WM_SIZE:
-        li_win_win->width  = WINWIDTH(lparam);
-        li_win_win->height = WINHEIGHT(lparam);
-        li_win_send_resize(
-            win32_win, li_win_msg_resize, li_win_win->width,
-            li_win_win->height);
-        return 0;
+        li_win_win32_event_resize(win32_win, umsg, wparam, lparam);
+        return (0);
     default:
         return DefWindowProc(hwnd, umsg, wparam, lparam);
     }

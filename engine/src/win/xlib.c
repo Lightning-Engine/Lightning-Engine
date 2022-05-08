@@ -8,7 +8,8 @@ XContext li_win_xlib_context;
 Atom     li_win_xlib_wm_delete_window;
 
 const struct li_win_impl li_win_xlib_impl = {
-    li_win_xlib_exit, li_win_xlib_poll, li_win_xlib_create, li_win_xlib_destroy
+    li_win_xlib_init, li_win_xlib_exit, li_win_xlib_poll, li_win_xlib_create,
+    li_win_xlib_destroy
 };
 
 int li_win_xlib_init(void) {
@@ -71,65 +72,39 @@ void li_win_xlib_destroy(li_win_t win) {
     li_std_free(win_xlib);
 }
 
-int li_win_xlib_repeat(XEvent *event) {
-    XEvent next_event;
-    if (XPending(li_win_xlib_disp)) {
-        XPeekEvent(li_win_xlib_disp, &next_event);
-        if (next_event.type == KeyPress
-            && next_event.xkey.time == event->xkey.time
-            && next_event.xkey.keycode == event->xkey.keycode) {
-            XNextEvent(li_win_xlib_disp, &next_event);
-            return 1;
-        }
+li_key_state_t li_win_xlib_xlat_state(unsigned int state) {
+    li_key_state_t result = 0;
+    if (state & ShiftMask) {
+        result |= LI_KEY_STATE_SHIFT;
     }
-    return 0;
+    if (state & LockMask) {
+        result |= LI_KEY_STATE_CAPSLOCK;
+    }
+    if (state & ControlMask) {
+        result |= LI_KEY_STATE_CONTROL;
+    }
+    if (state & Mod1Mask) {
+        result |= LI_KEY_STATE_ALT;
+    }
+    if (state & Mod2Mask) {
+        result |= LI_KEY_STATE_NUMLOCK;
+    }
+    if (state & Mod4Mask) {
+        result |= LI_KEY_STATE_SUPER;
+    }
+    if (state & Button1Mask) {
+        result |= LI_KEY_STATE_LMOUSE;
+    }
+    if (state & Button3Mask) {
+        result |= LI_KEY_STATE_RMOUSE;
+    }
+    if (state & Button2Mask) {
+        result |= LI_KEY_STATE_MMOUSE;
+    }
+    return result;
 }
 
-li_win_state_t li_win_xlib_state(unsigned int s) {
-    li_win_state_t state = 0;
-    if (s & ShiftMask) {
-        state |= LI_KEY_STATE_SHIFT;
-    }
-    if (s & LockMask) {
-        state |= LI_KEY_STATE_CAPSLOCK;
-    }
-    if (s & ControlMask) {
-        state |= LI_KEY_STATE_CONTROL;
-    }
-    if (s & Mod1Mask) {
-        state |= LI_KEY_STATE_ALT;
-    }
-    if (s & Mod2Mask) {
-        state |= LI_KEY_STATE_NUMLOCK;
-    }
-    if (s & Mod4Mask) {
-        state |= LI_KEY_STATE_SUPER;
-    }
-    if (s & Button1Mask) {
-        state |= LI_KEY_STATE_LMOUSE;
-    }
-    if (s & Button3Mask) {
-        state |= LI_KEY_STATE_RMOUSE;
-    }
-    if (s & Button2Mask) {
-        state |= LI_KEY_STATE_MMOUSE;
-    }
-    return state;
-}
-
-li_win_key_t li_win_xlib_button(unsigned int button) {
-    switch (button) {
-    case Button1:
-        return LI_KEY_CODE_LMOUSE;
-    case Button3:
-        return LI_KEY_CODE_RMOUSE;
-    case Button2:
-        return LI_KEY_CODE_MMOUSE;
-    }
-    return LI_KEY_CODE_NULL;
-}
-
-li_win_key_t li_win_xlib_key_impl(KeySym sym) {
+li_key_code_t li_win_xlib_xlat_keysym(KeySym sym) {
     switch (sym) {
     case XK_0:
         return LI_KEY_CODE_0;
@@ -341,67 +316,118 @@ li_win_key_t li_win_xlib_key_impl(KeySym sym) {
     return LI_KEY_CODE_NULL;
 }
 
-li_win_key_t li_win_xlib_key(unsigned int keycode) {
-    int          i;
-    int          count;
-    li_win_key_t key = LI_KEY_CODE_NULL;
-    KeySym *keysym = XGetKeyboardMapping(li_win_xlib_disp, keycode, 1, &count);
+li_key_code_t li_win_xlib_xlat_key(unsigned int key) {
+    int           i;
+    int           count;
+    li_key_code_t result = LI_KEY_CODE_NULL;
+    KeySym *keysym = XGetKeyboardMapping(li_win_xlib_disp, key, 1, &count);
     for (i = 0; i < count && keysym[i] != NoSymbol; i++) {
-        key = li_win_xlib_key_impl(keysym[i]);
+        key = li_win_xlib_xlat_keysym(keysym[i]);
         if (key != LI_KEY_CODE_NULL) {
             break;
         }
     }
     XFree(keysym);
-    return key;
+    return result;
+}
+
+li_key_code_t li_win_xlib_xlat_button(unsigned int button) {
+    switch (button) {
+    case Button1:
+        return LI_KEY_CODE_LMOUSE;
+    case Button3:
+        return LI_KEY_CODE_RMOUSE;
+    case Button2:
+        return LI_KEY_CODE_MMOUSE;
+    }
+    return LI_KEY_CODE_NULL;
+}
+
+int li_win_xlib_event_repeat(XEvent *event) {
+    XEvent next_event;
+    if (event->type == KeyPress && XPending(li_win_xlib_disp)) {
+        XPeekEvent(li_win_xlib_disp, &next_event);
+        if (next_event.type == KeyPress
+            && next_event.xkey.time == event->xkey.time
+            && next_event.xkey.keycode == event->xkey.keycode) {
+            XNextEvent(li_win_xlib_disp, &next_event);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void li_win_xlib_event_key(li_win_t win, XEvent *event) {
+    li_key_state_t state;
+    li_key_code_t  code;
+    state = li_win_xlib_xlat_state(event->xkey.state);
+    code  = li_win_xlib_xlat_key(event->xkey.keycode);
+    if (event->type == KeyPress) {
+        li_win_send_key(win, li_win_msg_keydown, code, state);
+    } else if (li_win_xlib_event_repeat(event)) {
+        li_win_send_key(win, li_win_msg_keyrep, code, state);
+    } else {
+        li_win_send_key(win, li_win_msg_keyup, code, state);
+    }
+}
+
+void li_win_xlib_event_mouse(li_win_t win, XEvent *event) {
+    li_key_state_t state;
+    li_key_code_t  code = LI_KEY_CODE_NULL;
+    if (event->type == MotionNotify) {
+        state = li_win_xlib_xlat_state(event->xmotion.state);
+        li_win_send_mouse(
+            win, li_win_msg_mousemove, code, event->xmotion.x, event->xmotion.y,
+            state);
+    } else {
+        state = li_win_xlib_xlat_state(event->xbutton.state);
+        code  = li_win_xlib_xlat_button(event->xbutton.button);
+        if (event->type == ButtonPress) {
+            li_win_send_mouse(
+                win, li_win_msg_mousedown, code, event->xbutton.x,
+                event->xbutton.y, state);
+        } else {
+            li_win_send_mouse(
+                win, li_win_msg_mouseup, code, event->xbutton.x,
+                event->xbutton.y, state);
+        }
+    }
+}
+
+void li_win_xlib_event_resize(li_win_t win, XEvent *event) {
+    li_win_send_resize(
+        win, li_win_msg_resize, event->xconfigure.width,
+        event->xconfigure.height);
+}
+
+void li_win_xlib_event_close(li_win_t win) {
+    li_win_send_close(win, li_win_msg_close);
 }
 
 void li_win_xlib_event(XEvent *event) {
-    XPointer win;
+    XPointer pointer;
+    li_win_t win;
     XFindContext(
-        li_win_xlib_disp, event->xany.window, li_win_xlib_context, &win);
-    li_win_win = (li_win_t) win;
+        li_win_xlib_disp, event->xany.window, li_win_xlib_context, &pointer);
+    win = (li_win_t) pointer;
     switch (event->type) {
     case ClientMessage:
         if ((unsigned long) event->xclient.data.l[0]
             == li_win_xlib_wm_delete_window) {
-            li_win_fun(li_win_msg_close);
+            li_win_xlib_event_close(win);
         }
         break;
     case KeyPress:
     case KeyRelease:
-        li_win_key        = li_win_xlib_key(event->xkey.keycode);
-        li_win_win->state = li_win_xlib_state(event->xkey.state);
-        if (event->type == KeyPress) {
-            li_win_fun(li_win_msg_keydown);
-        } else if (li_win_xlib_repeat(event)) {
-            li_win_fun(li_win_msg_keyrep);
-        } else {
-            li_win_fun(li_win_msg_keyup);
-        }
+        li_win_xlib_event_key(win, event);
         break;
     case ButtonPress:
     case ButtonRelease:
-        li_win_key         = li_win_xlib_button(event->xbutton.button);
-        li_win_win->state  = li_win_xlib_state(event->xbutton.state);
-        li_win_win->mousex = event->xbutton.x;
-        li_win_win->mousey = event->xbutton.y;
-        if (event->type == ButtonPress) {
-            li_win_fun(li_win_msg_mousedown);
-        } else {
-            li_win_fun(li_win_msg_mouseup);
-        }
-        break;
     case MotionNotify:
-        li_win_win->state  = li_win_xlib_state(event->xmotion.state);
-        li_win_win->mousex = event->xmotion.x;
-        li_win_win->mousey = event->xmotion.y;
-        li_win_fun(li_win_msg_mousemove);
+        li_win_xlib_event_mouse(win, event);
         break;
     case ConfigureNotify:
-        li_win_win->width  = event->xconfigure.width;
-        li_win_win->height = event->xconfigure.height;
-        li_win_fun(li_win_msg_resize);
+        li_win_xlib_event_resize(win, event);
         break;
     }
 }

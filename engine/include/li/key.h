@@ -119,7 +119,7 @@
 #define LI_KEY_STATE_RMOUSE   0x0200
 #define LI_KEY_STATE_MMOUSE   0x0400
 
-typedef unsigned short  li_key_code_t;
-typedef unsigned short  li_key_state_t;
+typedef unsigned short li_key_code_t;
+typedef unsigned short li_key_state_t;
 
 #endif

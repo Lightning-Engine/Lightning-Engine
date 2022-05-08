@@ -4,28 +4,35 @@
 #include "li/win/impl.h"
 
 #include <X11/Xlib.h>
+#include <X11/Xresource.h>
 #include <X11/Xutil.h>
 
 struct li_win_xlib {
     struct li_win_base base;
-    Window        window;
+    Window             window;
 };
 
 extern Display *li_win_xlib_disp;
 extern Window   li_win_xlib_root;
 extern XContext li_win_xlib_context;
-extern Atom     li_win_xlib_atom_wm_delete_window;
+extern Atom     li_win_xlib_wm_delete_window;
 
-int            li_win_xlib_init(void);
-void           li_win_xlib_exit(void);
-void           li_win_xlib_poll(void);
-li_win_t       li_win_xlib_create(int width, int height);
-void           li_win_xlib_destroy(li_win_t win);
-int            li_win_xlib_repeat(XEvent *event);
-li_win_state_t li_win_win32_state(unsigned int s);
-li_win_key_t   li_win_win32_button(unsigned int button);
-li_win_key_t   li_win_win32_key_impl(KeySym sym);
-li_win_key_t   li_win_win32_key(unsigned int keycode);
-void           li_win_xlib_event(XEvent *event);
+int      li_win_xlib_init(void);
+void     li_win_xlib_exit(void);
+void     li_win_xlib_poll(void);
+li_win_t li_win_xlib_create(int width, int height);
+void     li_win_xlib_destroy(li_win_t win);
+
+li_key_state_t li_win_xlib_xlat_state(unsigned int state);
+li_key_code_t  li_win_xlib_xlat_keysym(KeySym keysym);
+li_key_code_t  li_win_xlib_xlat_key(unsigned int key);
+li_key_code_t  li_win_xlib_xlat_button(unsigned int button);
+
+int  li_win_xlib_event_repeat(XEvent *event);
+void li_win_xlib_event_key(li_win_t win, XEvent *event);
+void li_win_xlib_event_mouse(li_win_t win, XEvent *event);
+void li_win_xlib_event_resize(li_win_t win, XEvent *event);
+void li_win_xlib_event_close(li_win_t win);
+void li_win_xlib_event(XEvent *event);
 
 #endif

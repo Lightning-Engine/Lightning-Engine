@@ -1,7 +1,7 @@
-#include "li/win/win.h"
+#include "li/win/impl.h"
 
 #include "li/std.h"
-#include "li/win/impl.h"
+#include "li/win/win.h"
 
 #if LI_WIN_XLIB
 # include "li/win/xlib.h"
@@ -14,6 +14,11 @@
 #endif
 
 const struct li_win_impl *li_win_impl = NULL;
+
+li_key_fun_t    li_win_key_fun;
+li_mouse_fun_t  li_win_mouse_fun;
+li_resize_fun_t li_win_resize_fun;
+li_close_fun_t  li_win_close_fun;
 
 int li_win_init(void) {
     int result = -1;

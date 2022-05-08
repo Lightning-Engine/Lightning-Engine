@@ -22,6 +22,7 @@ enum li_win_msg {
 
 typedef enum li_win_msg li_win_msg_t;
 typedef struct li_win  *li_win_t;
+
 typedef void (*li_key_fun_t)(
     li_win_t win, li_win_msg_t action, li_key_code_t key, li_key_state_t state);
 typedef void (*li_mouse_fun_t)(
@@ -33,8 +34,6 @@ typedef void (*li_close_fun_t)(li_win_t win, li_win_msg_t action);
 
 struct li_win {
     void *ptr;
-    int   width;
-    int   height;
 };
 
 extern li_key_fun_t    li_win_key_fun;

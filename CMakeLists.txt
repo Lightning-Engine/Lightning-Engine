@@ -55,7 +55,7 @@ add_library(Lightning
     $<$<BOOL:${DL_DLFCN}>:engine/src/dl/dlfcn.c>
     $<$<BOOL:${DL_WIN32}>:engine/src/dl/win32.c>
     $<$<BOOL:${DL_DYLD}>:engine/src/dl/dyld.c>
-    engine/src/win/win.c
+    engine/src/win/impl.c
     $<$<BOOL:${WIN_XLIB}>:engine/src/win/xlib.c>
     $<$<BOOL:${WIN_WIN32}>:engine/src/win/win32.c>
     $<$<BOOL:${WIN_COCOA}>:engine/src/win/cocoa.m>

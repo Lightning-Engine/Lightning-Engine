@@ -8,11 +8,11 @@ li_win_key_t   li_win_cocoa_button(NSUInteger type);
 void           li_win_cocoa_mouse(
               struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
 void li_win_cocoa_mousedown(
-                            struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
+    struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
 void li_win_cocoa_mouseup(
-                          struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
+    struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
 void li_win_cocoa_mousemove(
-                            struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
+    struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
 
 @interface LiWinCocoaDelegate : NSObject <NSWindowDelegate> {
     struct li_win_cocoa *win;
@@ -21,8 +21,8 @@ void li_win_cocoa_mousemove(
 
 @interface LiWinCocoaView : NSView {
 }
-@property (readwrite) struct li_win_cocoa *win;
-@property (readwrite) li_win_state_t       state;
+@property(readwrite) struct li_win_cocoa *win;
+@property(readwrite) li_win_state_t       state;
 @end
 
 @implementation LiWinCocoaDelegate
@@ -41,8 +41,8 @@ void li_win_cocoa_mousemove(
 @end
 
 @implementation LiWinCocoaView
-@synthesize win;
-@synthesize state;
+@synthesize     win;
+@synthesize     state;
 
 - (void)keyDown:(NSEvent *)event {
     li_win_win        = win;
