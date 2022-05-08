@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.16.0)
 include(CheckIncludeFile)
+include(CheckOBJCCompilerFlag)
 
-project(Lightning VERSION 0.0.0)
+project(Lightning VERSION 0.0.0 LANGUAGES C OBJC)
 
 if(MSVC)
     add_compile_options(/W4)
@@ -19,7 +20,7 @@ check_include_file(dlfcn.h HAS_DLFCN)
 check_include_file(windows.h HAS_WIN32)
 check_include_file(mach-o/dyld.h HAS_DYLD)
 check_include_file(X11/Xlib.h HAS_XLIB)
-check_include_file(Cocoa/Cocoa.h HAS_COCOA "-x objective-c")
+check_objc_compiler_flag("-framework Cocoa" HAS_COCOA)
 
 set(SANITIZE_ADDRESS OFF CACHE BOOL "Enable Address Sanitizer")
 set(SANITIZE_MEMORY OFF CACHE BOOL "Enable Memory Sanitizer")
