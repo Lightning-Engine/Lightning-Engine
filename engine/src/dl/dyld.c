@@ -2,13 +2,8 @@
 
 #include "li/std.h"
 
-union li_dl_symbol {
-    li_dl_sym_t sym;
-    li_dl_fun_t fun;
-};
-
-const struct li_dl_impl li_dl_dyld_impl = { li_dl_dyld_close, li_dl_dyld_sym,
-                                            li_dl_dyld_fun };
+const struct li_dl_impl li_dl_dyld_impl = { li_dl_dyld_open, li_dl_dyld_close,
+                                            li_dl_dyld_sym, li_dl_dyld_fun };
 
 li_dl_t li_dl_dyld_open(const char *name) {
     struct li_dl_dyld          *dl_dyld;
@@ -86,5 +81,7 @@ void li_dl_dyld_error(void) {
     NSLinkEditErrors error;
     int              errnum;
     const char      *errfile;
-    NSLinkEditError(&error, &errnum, &errfile, &li_dl_error_str);
+    const char      *errstr;
+    NSLinkEditError(&error, &errnum, &errfile, &errstr);
+    li_dl_set_error(errstr);
 }

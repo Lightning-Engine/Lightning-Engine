@@ -1,16 +1,14 @@
 #ifndef LI_DL_WIN32_H
 #define LI_DL_WIN32_H
 
-#include "li/dl/dl.h"
+#include "li/dl/impl.h"
 
 #include <windows.h>
 
 struct li_dl_win32 {
-    struct li_dl base;
-    HMODULE      module;
+    struct li_dl_base base;
+    HMODULE           module;
 };
-
-extern const struct li_dl_impl li_dl_win32_impl;
 
 li_dl_t     li_dl_win32_open(const char *name);
 void        li_dl_win32_close(li_dl_t dl);

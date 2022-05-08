@@ -1,13 +1,13 @@
 #ifndef LI_WIN_XLIB_H
 #define LI_WIN_XLIB_H
 
-#include "li/win/win.h"
+#include "li/win/impl.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
 struct li_win_xlib {
-    struct li_win base;
+    struct li_win_base base;
     Window        window;
 };
 
@@ -15,8 +15,6 @@ extern Display *li_win_xlib_disp;
 extern Window   li_win_xlib_root;
 extern XContext li_win_xlib_context;
 extern Atom     li_win_xlib_atom_wm_delete_window;
-
-extern const struct li_win_impl li_win_xlib_impl;
 
 int            li_win_xlib_init(void);
 void           li_win_xlib_exit(void);

@@ -14,6 +14,10 @@ set(CMAKE_C_STANDARD 90)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+set(CMAKE_OBJC_STANDARD 90)
+set(CMAKE_OBJC_STANDARD_REQUIRED ON)
+set(CMAKE_OBJC_EXTENSIONS OFF)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 check_include_file(dlfcn.h HAS_DLFCN)
@@ -47,7 +51,7 @@ add_link_options(${SANITIZE_OPTIONS})
 file(GLOB_RECURSE FILES engine/* sandbox/*)
 add_library(Lightning
     engine/src/std.c
-    engine/src/dl/dl.c
+    engine/src/dl/impl.c
     $<$<BOOL:${DL_DLFCN}>:engine/src/dl/dlfcn.c>
     $<$<BOOL:${DL_WIN32}>:engine/src/dl/win32.c>
     $<$<BOOL:${DL_DYLD}>:engine/src/dl/dyld.c>

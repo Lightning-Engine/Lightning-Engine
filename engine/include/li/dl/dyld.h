@@ -1,17 +1,15 @@
 #ifndef LI_DL_DYLD_H
 #define LI_DL_DYLD_H
 
-#include "li/dl/dl.h"
+#include "li/dl/impl.h"
 
 #include <mach-o/dyld.h>
 
 struct li_dl_dyld {
-    struct li_dl              base;
+    struct li_dl_base         base;
     NSModule                  module;
     const struct mach_header *image;
 };
-
-extern const struct li_dl_impl li_dl_dyld_impl;
 
 li_dl_t     li_dl_dyld_open(const char *name);
 void        li_dl_dyld_close(li_dl_t dl);

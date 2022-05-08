@@ -49,32 +49,32 @@
 }
 
 - (void)mouseDown:(NSEvent *)event {
-    state |= LI_WIN_STATE_LMOUSE;
+    state |= LI_KEY_STATE_LMOUSE;
     li_win_cocoa_mousedown(win, state, event);
 }
 
 - (void)mouseUp:(NSEvent *)event {
-    state &= ~LI_WIN_STATE_LMOUSE;
+    state &= ~LI_KEY_STATE_LMOUSE;
     li_win_cocoa_mouseup(win, state, event);
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
-    state |= LI_WIN_STATE_RMOUSE;
+    state |= LI_KEY_STATE_RMOUSE;
     li_win_cocoa_mousedown(win, state, event);
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
-    state &= ~LI_WIN_STATE_RMOUSE;
+    state &= ~LI_KEY_STATE_RMOUSE;
     li_win_cocoa_mouseup(win, state, event);
 }
 
 - (void)otherMouseDown:(NSEvent *)event {
-    state |= LI_WIN_STATE_MMOUSE;
+    state |= LI_KEY_STATE_MMOUSE;
     li_win_cocoa_mousedown(win, state, event);
 }
 
 - (void)otherMouseUp:(NSEvent *)event {
-    state &= ~LI_WIN_STATE_MMOUSE;
+    state &= ~LI_KEY_STATE_MMOUSE;
     li_win_cocoa_mouseup(win, state, event);
 }
 
@@ -137,9 +137,9 @@ li_win_t li_win_cocoa_create(int width, int height) {
         win_cocoa->delegate = [LiWinCocoaDelegate new];
         if (win_cocoa->window != nil && win_cocoa->view != nil
             && win_cocoa->delegate != nil) {
-            [win_cocoa->view].win     = win_cocoa;
-            [win_cocoa->view].state   = 0;
-            [win_cocoa->delegate].win = win_cocoa;
+            [win_cocoa->view self].win     = win_cocoa;
+            [win_cocoa->view self].state   = 0;
+            [win_cocoa->delegate self].win = win_cocoa;
             [win_cocoa->window setContentView:win_cocoa->view];
             [win_cocoa->window makeFirstResponder:win_cocoa->view];
             [win_cocoa->window setDelegate:win_cocoa->delegate];
@@ -161,19 +161,19 @@ void li_win_cocoa_destroy(li_win_t win) {
 li_win_state_t li_win_cocoa_state(NSUInteger flags) {
     li_win_state_t state = 0;
     if (flags & NSShiftKeyMask) {
-        state |= LI_WIN_STATE_SHIFT;
+        state |= LI_KEY_STATE_SHIFT;
     }
     if (flags & NSAlphaShiftKeyMask) {
-        state |= LI_WIN_STATE_CAPS;
+        state |= LI_KEY_STATE_CAPS;
     }
     if (flags & NSControlKeyMask) {
-        state |= LI_WIN_STATE_CTRL;
+        state |= LI_KEY_STATE_CTRL;
     }
     if (flags & NSAlternateKeyMask) {
-        state |= LI_WIN_STATE_ALT;
+        state |= LI_KEY_STATE_ALT;
     }
     if (flags & NSCommandKeyMask) {
-        state |= LI_WIN_STATE_SUPER;
+        state |= LI_KEY_STATE_SUPER;
     }
     return (state);
 }
@@ -182,223 +182,223 @@ li_win_key_t li_win_cocoa_button(NSUInteger type) {
     switch (type) {
     case NSEventTypeLeftMouseDown:
     case NSEventTypeLeftMouseUp:
-        return LI_WIN_KEY_LMOUSE;
+        return LI_KEY_CODE_LMOUSE;
     case NSEventTypeRightMouseDown:
     case NSEventTypeRightMouseUp:
-        return LI_WIN_KEY_RMOUSE;
+        return LI_KEY_CODE_RMOUSE;
     case NSEventTypeOtherMouseDown:
     case NSEventTypeOtherMouseUp:
-        return LI_WIN_KEY_MMOUSE;
+        return LI_KEY_CODE_MMOUSE;
     }
-    return LI_WIN_KEY_NULL;
+    return LI_KEY_CODE_NULL;
 }
 
 li_win_key_t li_win_cocoa_key(unsigned short keycode) {
     switch (keycode) {
     case 29:
-        return LI_WIN_KEY_0;
+        return LI_KEY_CODE_0;
     case 18:
-        return LI_WIN_KEY_1;
+        return LI_KEY_CODE_1;
     case 19:
-        return LI_WIN_KEY_2;
+        return LI_KEY_CODE_2;
     case 20:
-        return LI_WIN_KEY_3;
+        return LI_KEY_CODE_3;
     case 21:
-        return LI_WIN_KEY_4;
+        return LI_KEY_CODE_4;
     case 22:
-        return LI_WIN_KEY_5;
+        return LI_KEY_CODE_5;
     case 23:
-        return LI_WIN_KEY_6;
+        return LI_KEY_CODE_6;
     case 26:
-        return LI_WIN_KEY_7;
+        return LI_KEY_CODE_7;
     case 28:
-        return LI_WIN_KEY_8;
+        return LI_KEY_CODE_8;
     case 25:
-        return LI_WIN_KEY_9;
+        return LI_KEY_CODE_9;
     case 0:
-        return LI_WIN_KEY_A;
+        return LI_KEY_CODE_A;
     case 11:
-        return LI_WIN_KEY_B;
+        return LI_KEY_CODE_B;
     case 8:
-        return LI_WIN_KEY_C;
+        return LI_KEY_CODE_C;
     case 2:
-        return LI_WIN_KEY_D;
+        return LI_KEY_CODE_D;
     case 14:
-        return LI_WIN_KEY_E;
+        return LI_KEY_CODE_E;
     case 3:
-        return LI_WIN_KEY_F;
+        return LI_KEY_CODE_F;
     case 5:
-        return LI_WIN_KEY_G;
+        return LI_KEY_CODE_G;
     case 4:
-        return LI_WIN_KEY_H;
+        return LI_KEY_CODE_H;
     case 34:
-        return LI_WIN_KEY_I;
+        return LI_KEY_CODE_I;
     case 38:
-        return LI_WIN_KEY_J;
+        return LI_KEY_CODE_J;
     case 40:
-        return LI_WIN_KEY_K;
+        return LI_KEY_CODE_K;
     case 37:
-        return LI_WIN_KEY_L;
+        return LI_KEY_CODE_L;
     case 46:
-        return LI_WIN_KEY_M;
+        return LI_KEY_CODE_M;
     case 45:
-        return LI_WIN_KEY_N;
+        return LI_KEY_CODE_N;
     case 31:
-        return LI_WIN_KEY_O;
+        return LI_KEY_CODE_O;
     case 35:
-        return LI_WIN_KEY_P;
+        return LI_KEY_CODE_P;
     case 12:
-        return LI_WIN_KEY_Q;
+        return LI_KEY_CODE_Q;
     case 15:
-        return LI_WIN_KEY_R;
+        return LI_KEY_CODE_R;
     case 1:
-        return LI_WIN_KEY_S;
+        return LI_KEY_CODE_S;
     case 17:
-        return LI_WIN_KEY_T;
+        return LI_KEY_CODE_T;
     case 32:
-        return LI_WIN_KEY_U;
+        return LI_KEY_CODE_U;
     case 9:
-        return LI_WIN_KEY_V;
+        return LI_KEY_CODE_V;
     case 13:
-        return LI_WIN_KEY_W;
+        return LI_KEY_CODE_W;
     case 7:
-        return LI_WIN_KEY_X;
+        return LI_KEY_CODE_X;
     case 16:
-        return LI_WIN_KEY_Y;
+        return LI_KEY_CODE_Y;
     case 6:
-        return LI_WIN_KEY_Z;
+        return LI_KEY_CODE_Z;
     case 82:
-        return LI_WIN_KEY_NUM0;
+        return LI_KEY_CODE_NUM0;
     case 83:
-        return LI_WIN_KEY_NUM1;
+        return LI_KEY_CODE_NUM1;
     case 84:
-        return LI_WIN_KEY_NUM2;
+        return LI_KEY_CODE_NUM2;
     case 85:
-        return LI_WIN_KEY_NUM3;
+        return LI_KEY_CODE_NUM3;
     case 86:
-        return LI_WIN_KEY_NUM4;
+        return LI_KEY_CODE_NUM4;
     case 87:
-        return LI_WIN_KEY_NUM5;
+        return LI_KEY_CODE_NUM5;
     case 88:
-        return LI_WIN_KEY_NUM6;
+        return LI_KEY_CODE_NUM6;
     case 89:
-        return LI_WIN_KEY_NUM7;
+        return LI_KEY_CODE_NUM7;
     case 91:
-        return LI_WIN_KEY_NUM8;
+        return LI_KEY_CODE_NUM8;
     case 92:
-        return LI_WIN_KEY_NUM9;
+        return LI_KEY_CODE_NUM9;
     case 65:
-        return LI_WIN_KEY_NUMDOT;
+        return LI_KEY_CODE_NUMDOT;
     case 69:
-        return LI_WIN_KEY_NUMPLUS;
+        return LI_KEY_CODE_NUMPLUS;
     case 78:
-        return LI_WIN_KEY_NUMMINUS;
+        return LI_KEY_CODE_NUMMINUS;
     case 67:
-        return LI_WIN_KEY_NUMSTAR;
+        return LI_KEY_CODE_NUMSTAR;
     case 75:
-        return LI_WIN_KEY_NUMSLASH;
+        return LI_KEY_CODE_NUMSLASH;
     case 76:
-        return LI_WIN_KEY_NUMENTER;
+        return LI_KEY_CODE_NUMENTER;
     case 71:
-        return LI_WIN_KEY_NUMLOCK;
+        return LI_KEY_CODE_NUMLOCK;
     case 122:
-        return LI_WIN_KEY_F1;
+        return LI_KEY_CODE_F1;
     case 120:
-        return LI_WIN_KEY_F2;
+        return LI_KEY_CODE_F2;
     case 99:
-        return LI_WIN_KEY_F3;
+        return LI_KEY_CODE_F3;
     case 118:
-        return LI_WIN_KEY_F4;
+        return LI_KEY_CODE_F4;
     case 96:
-        return LI_WIN_KEY_F5;
+        return LI_KEY_CODE_F5;
     case 97:
-        return LI_WIN_KEY_F6;
+        return LI_KEY_CODE_F6;
     case 98:
-        return LI_WIN_KEY_F7;
+        return LI_KEY_CODE_F7;
     case 100:
-        return LI_WIN_KEY_F8;
+        return LI_KEY_CODE_F8;
     case 101:
-        return LI_WIN_KEY_F9;
+        return LI_KEY_CODE_F9;
     case 109:
-        return LI_WIN_KEY_F10;
+        return LI_KEY_CODE_F10;
     case 103:
-        return LI_WIN_KEY_F11;
+        return LI_KEY_CODE_F11;
     case 111:
-        return LI_WIN_KEY_F12;
+        return LI_KEY_CODE_F12;
     case 105:
-        return LI_WIN_KEY_PRINTSCR;
+        return LI_KEY_CODE_PRINTSCR;
     case 114:
-        return LI_WIN_KEY_INSERT;
+        return LI_KEY_CODE_INSERT;
     case 115:
-        return LI_WIN_KEY_HOME;
+        return LI_KEY_CODE_HOME;
     case 116:
-        return LI_WIN_KEY_PAGEUP;
+        return LI_KEY_CODE_PAGEUP;
     case 117:
-        return LI_WIN_KEY_DELETE;
+        return LI_KEY_CODE_DELETE;
     case 119:
-        return LI_WIN_KEY_END;
+        return LI_KEY_CODE_END;
     case 121:
-        return LI_WIN_KEY_PAGEDOWN;
+        return LI_KEY_CODE_PAGEDOWN;
     case 126:
-        return LI_WIN_KEY_UP;
+        return LI_KEY_CODE_UP;
     case 125:
-        return LI_WIN_KEY_DOWN;
+        return LI_KEY_CODE_DOWN;
     case 123:
-        return LI_WIN_KEY_LEFT;
+        return LI_KEY_CODE_LEFT;
     case 124:
-        return LI_WIN_KEY_RIGHT;
+        return LI_KEY_CODE_RIGHT;
     case 53:
-        return LI_WIN_KEY_ESCAPE;
+        return LI_KEY_CODE_ESCAPE;
     case 51:
-        return LI_WIN_KEY_BSPACE;
+        return LI_KEY_CODE_BSPACE;
     case 48:
-        return LI_WIN_KEY_TAB;
+        return LI_KEY_CODE_TAB;
     case 56:
-        return LI_WIN_KEY_LSHIFT;
+        return LI_KEY_CODE_LSHIFT;
     case 60:
-        return LI_WIN_KEY_RSHIFT;
+        return LI_KEY_CODE_RSHIFT;
     case 59:
-        return LI_WIN_KEY_LCONTROL;
+        return LI_KEY_CODE_LCONTROL;
     case 62:
-        return LI_WIN_KEY_RCONTROL;
+        return LI_KEY_CODE_RCONTROL;
     case 55:
-        return LI_WIN_KEY_LSUPER;
+        return LI_KEY_CODE_LSUPER;
     case 54:
-        return LI_WIN_KEY_RSUPER;
+        return LI_KEY_CODE_RSUPER;
     case 58:
-        return LI_WIN_KEY_LALT;
+        return LI_KEY_CODE_LALT;
     case 61:
-        return LI_WIN_KEY_RALT;
+        return LI_KEY_CODE_RALT;
     case 57:
-        return LI_WIN_KEY_CAPSLOCK;
+        return LI_KEY_CODE_CAPSLOCK;
     case 36:
-        return LI_WIN_KEY_ENTER;
+        return LI_KEY_CODE_ENTER;
     case 49:
-        return LI_WIN_KEY_SPACE;
+        return LI_KEY_CODE_SPACE;
     case 47:
-        return LI_WIN_KEY_DOT;
+        return LI_KEY_CODE_DOT;
     case 43:
-        return LI_WIN_KEY_COMMA;
+        return LI_KEY_CODE_COMMA;
     case 41:
-        return LI_WIN_KEY_COLON;
+        return LI_KEY_CODE_COLON;
     case 39:
-        return LI_WIN_KEY_QUOTE;
+        return LI_KEY_CODE_QUOTE;
     case 33:
-        return LI_WIN_KEY_LBRACKET;
+        return LI_KEY_CODE_LBRACKET;
     case 30:
-        return LI_WIN_KEY_RBRACKET;
+        return LI_KEY_CODE_RBRACKET;
     case 42:
-        return LI_WIN_KEY_BSLASH;
+        return LI_KEY_CODE_BSLASH;
     case 27:
-        return LI_WIN_KEY_MINUS;
+        return LI_KEY_CODE_MINUS;
     case 44:
-        return LI_WIN_KEY_SLASH;
+        return LI_KEY_CODE_SLASH;
     case 50:
-        return LI_WIN_KEY_TILDE;
+        return LI_KEY_CODE_TILDE;
     case 24:
-        return LI_WIN_KEY_EQUAL;
+        return LI_KEY_CODE_EQUAL;
     }
-    return LI_WIN_KEY_NULL;
+    return LI_KEY_CODE_NULL;
 }
 
 void li_win_cocoa_mousedown(

@@ -2,12 +2,8 @@
 
 #include "li/std.h"
 
-union li_dl_symbol {
-    li_dl_sym_t sym;
-    li_dl_fun_t fun;
-};
-
-const struct li_dl_impl li_dl_dlfcn_impl = { li_dl_dlfcn_close, li_dl_dlfcn_sym,
+const struct li_dl_impl li_dl_dlfcn_impl = { li_dl_dlfcn_open,
+                                             li_dl_dlfcn_close, li_dl_dlfcn_sym,
                                              li_dl_dlfcn_fun };
 
 li_dl_t li_dl_dlfcn_open(const char *name) {
@@ -49,5 +45,5 @@ li_dl_fun_t li_dl_dlfcn_fun(li_dl_t dl, const char *name) {
 }
 
 void li_dl_dlfcn_error(void) {
-    li_dl_error_str = dlerror();
+    li_dl_set_error(dlerror());
 }

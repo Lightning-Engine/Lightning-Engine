@@ -1,18 +1,16 @@
 #ifndef LI_WIN_COCOA_H
 #define LI_WIN_COCOA_H
 
-#include "li/win/win.h"
+#include "li/win/impl.h"
 
 #include <objc/objc-runtime.h>
 
 struct li_win_cocoa {
-    struct li_win base;
-    id            window;
-    id            view;
-    id            delegate;
+    struct li_win_base base;
+    id                 window;
+    id                 view;
+    id                 delegate;
 };
-
-extern const struct li_win_impl li_win_cocoa_impl;
 
 int            li_win_cocoa_init(void);
 void           li_win_cocoa_exit(void);

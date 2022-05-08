@@ -2,18 +2,14 @@
 
 #include "li/std.h"
 
-#ifndef LI_DL_WIN32_MAX_MERROR
-# define LI_DL_WIN32_MAX_MERROR 256
+#ifndef LI_DL_WIN32_MAX_ERROR
+# define LI_DL_WIN32_MAX_ERROR 256
 #endif
 
-union li_dl_symbol {
-    li_dl_sym_t sym;
-    li_dl_fun_t fun;
-};
+static char li_dl_win32_error_str[LI_DL_WIN32_MAX_ERROR];
 
-static char li_dl_win32_error_str[LI_DL_WIN32_MAX_MERROR];
-
-const struct li_dl_impl li_dl_win32_impl = { li_dl_win32_close, li_dl_win32_sym,
+const struct li_dl_impl li_dl_win32_impl = { li_dl_win32_open,
+                                             li_dl_win32_close, li_dl_win32_sym,
                                              li_dl_win32_fun };
 
 li_dl_t li_dl_win32_open(const char *name) {
@@ -62,6 +58,6 @@ void li_dl_win32_error(void) {
     FormatMessage(
         FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_MAX_WIDTH_MASK, NULL,
         GetLastError(), MAKELANGID(LANG_SYSTEM_DEFAULT, LANG_USER_DEFAULT),
-        li_dl_win32_error_str, LI_DL_WIN32_MAX_MERROR, NULL);
-    li_dl_error_str = li_dl_win32_error_str;
+        li_dl_win32_error_str, LI_DL_WIN32_MAX_ERROR, NULL);
+    li_dl_set_error(li_dl_win32_error_str);
 }

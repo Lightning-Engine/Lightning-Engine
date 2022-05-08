@@ -32,18 +32,6 @@ typedef struct li_dl *li_dl_t;
 typedef void         *li_dl_sym_t;
 typedef void (*li_dl_fun_t)(void);
 
-struct li_dl_impl {
-    void (*close)(li_dl_t dl);
-    li_dl_sym_t (*sym)(li_dl_t dl, const char *name);
-    li_dl_fun_t (*fun)(li_dl_t dl, const char *name);
-};
-
-struct li_dl {
-    const struct li_dl_impl *impl;
-};
-
-extern const char *li_dl_error_str;
-
 /**
  * @brief Open a dynamic library.
  * @param name The name of the library to open, or NULL for the main program.
