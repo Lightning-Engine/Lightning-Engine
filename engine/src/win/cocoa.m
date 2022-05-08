@@ -21,17 +21,23 @@
 - (BOOL)acceptsFirstResponder {
     return YES;
 }
+
+- (BOOL)canBecomeKeyWindow {
+    return YES;
+}
 @end
 
 @implementation LiWinCocoaDelegate
 @synthesize     win;
 
 - (BOOL)windowShouldClose:(NSWindow *)sender {
+    (void)sender;
     li_win_cocoa_event_close(win);
     return NO;
 }
 
 - (void)windowDidResize:(NSNotification *)notification {
+    (void)notification;
     li_win_cocoa_event_size(win);
 }
 @end
@@ -103,6 +109,7 @@ const struct li_win_impl li_win_cocoa_impl = {
 int li_win_cocoa_init(void) {
     li_win_impl = &li_win_cocoa_impl;
     [NSApplication sharedApplication];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     return 0;
 }
 
@@ -160,19 +167,19 @@ void li_win_cocoa_destroy(li_win_t win) {
 
 li_input_state_t li_win_cocoa_xlat_state(NSUInteger state) {
     li_input_state_t result = 0;
-    if (state & NSEventModifierFlagShift) {
+    if (state & NSShiftKeyMask) {
         result |= LI_INPUT_STATE_SHIFT;
     }
-    if (state & NSEventModifierFlagCapsLock) {
+    if (state & NSAlphaShiftKeyMask) {
         result |= LI_INPUT_STATE_CAPSLOCK;
     }
-    if (state & NSEventModifierFlagControl) {
+    if (state & NSControlKeyMask) {
         result |= LI_INPUT_STATE_CONTROL;
     }
-    if (state & NSEventModifierFlagOption) {
+    if (state & NSAlternateKeyMask) {
         result |= LI_INPUT_STATE_ALT;
     }
-    if (state & NSEventModifierFlagCommand) {
+    if (state & NSCommandKeyMask) {
         result |= LI_INPUT_STATE_SUPER;
     }
     return (result);
