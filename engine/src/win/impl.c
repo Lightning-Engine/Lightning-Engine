@@ -3,38 +3,29 @@
 #include "li/std.h"
 #include "li/win/win.h"
 
-#if LI_WIN_XLIB
-# include "li/win/xlib.h"
-#endif
-#if LI_WIN_WIN32
-# include "li/win/win32.h"
-#endif
-#if LI_WIN_COCOA
-# include "li/win/cocoa.h"
-#endif
-
 const struct li_win_impl *li_win_impl = NULL;
 
 li_key_fun_t    li_win_key_fun;
-li_mouse_fun_t  li_win_mouse_fun;
-li_resize_fun_t li_win_resize_fun;
+li_button_fun_t li_win_button_fun;
+li_motion_fun_t li_win_motion_fun;
+li_size_fun_t   li_win_size_fun;
 li_close_fun_t  li_win_close_fun;
 
 int li_win_init(void) {
     int result = -1;
 #if LI_WIN_XLIB
     if (result == -1) {
-        result = li_win_xlib_init();
+        result = li_win_xlib_impl.init();
     }
 #endif
 #if LI_WIN_WIN32
     if (result == -1) {
-        result = li_win_win32_init();
+        result = li_win_win32_impl.init();
     }
 #endif
 #if LI_WIN_COCOA
     if (result == -1) {
-        result = li_win_cocoa_init();
+        result = li_win_cocoa_impl.init();
     }
 #endif
     return result;
@@ -57,30 +48,36 @@ void li_win_destroy(li_win_t win) {
 }
 
 void li_win_send_key(
-    li_win_t win, li_win_msg_t action, li_key_code_t key,
-    li_key_state_t state) {
+    li_win_t win, li_win_msg_t msg, li_input_state_t state,
+    li_input_key_t key) {
     if (li_win_key_fun != NULL) {
-        li_win_key_fun(win, action, key, state);
+        li_win_key_fun(win, msg, state, key);
     }
 }
 
-void li_win_send_mouse(
-    li_win_t win, li_win_msg_t action, li_key_code_t key, int x, int y,
-    li_key_state_t state) {
-    if (li_win_mouse_fun != NULL) {
-        li_win_mouse_fun(win, action, key, x, y, state);
+void li_win_send_button(
+    li_win_t win, li_win_msg_t msg, li_input_state_t state, int x, int y,
+    li_input_button_t button) {
+    if (li_win_button_fun != NULL) {
+        li_win_button_fun(win, msg, state, x, y, button);
     }
 }
 
-void li_win_send_resize(
-    li_win_t win, li_win_msg_t action, int width, int height) {
-    if (li_win_resize_fun != NULL) {
-        li_win_resize_fun(win, action, width, height);
+void li_win_send_motion(
+    li_win_t win, li_win_msg_t msg, li_input_state_t state, int x, int y) {
+    if (li_win_motion_fun != NULL) {
+        li_win_motion_fun(win, msg, state, x, y);
     }
 }
 
-void li_win_send_close(li_win_t win, li_win_msg_t action) {
+void li_win_send_size(li_win_t win, li_win_msg_t msg, int width, int height) {
+    if (li_win_size_fun != NULL) {
+        li_win_size_fun(win, msg, width, height);
+    }
+}
+
+void li_win_send_close(li_win_t win, li_win_msg_t msg) {
     if (li_win_close_fun != NULL) {
-        li_win_close_fun(win, action);
+        li_win_close_fun(win, msg);
     }
 }

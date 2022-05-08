@@ -4,28 +4,38 @@
 #include <stdlib.h>
 
 void key_fun(
-    li_win_t win, li_win_msg_t action, li_key_code_t key,
-    li_key_state_t state) {
+    li_win_t win, li_win_msg_t msg, li_input_state_t state,
+    li_input_key_t key) {
     (void) win;
-    (void) action;
-    (void) key;
+    (void) msg;
     (void) state;
+    (void) key;
     printf("key event\n");
 }
 
-void mouse_fun(
-    li_win_t win, li_win_msg_t action, li_key_code_t key, int x, int y,
-    li_key_state_t state) {
+void button_fun(
+    li_win_t win, li_win_msg_t msg, li_input_state_t state, int x, int y,
+    li_input_button_t button) {
     (void) win;
-    (void) action;
-    (void) key;
+    (void) msg;
+    (void) state;
     (void) x;
     (void) y;
-    (void) state;
-    printf("mouse event\n");
+    (void) button;
+    printf("button event\n");
 }
 
-void resize_fun(li_win_t win, li_win_msg_t action, int width, int height) {
+void motion_fun(
+    li_win_t win, li_win_msg_t msg, li_input_state_t state, int x, int y) {
+    (void) win;
+    (void) msg;
+    (void) state;
+    (void) x;
+    (void) y;
+    printf("motion event\n");
+}
+
+void size_fun(li_win_t win, li_win_msg_t action, int width, int height) {
     (void) win;
     (void) action;
     (void) width;
@@ -45,8 +55,9 @@ void close_fun(li_win_t win, li_win_msg_t action) {
 int main(void) {
     li_win_t win;
     li_win_key_fun    = key_fun;
-    li_win_mouse_fun  = mouse_fun;
-    li_win_resize_fun = resize_fun;
+    li_win_button_fun = button_fun;
+    li_win_motion_fun = motion_fun;
+    li_win_size_fun   = size_fun;
     li_win_close_fun  = close_fun;
     li_win_init();
     win = li_win_create(640, 480);

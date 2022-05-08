@@ -80,9 +80,13 @@ target_include_directories(Sandbox PRIVATE
     ${CMAKE_SOURCE_DIR}/sandbox/include
 )
 
+if(WIN_COCOA)
+    find_library(WIN_COCOA_LIB Cocoa)
+endif()
+
 target_link_libraries(Lightning PRIVATE
     $<$<BOOL:${WIN_XLIB}>:X11>
-    $<$<BOOL:${WIN_COCOA}>:"-framework Cocoa">
+    $<$<BOOL:${WIN_COCOA}>:${WIN_COCOA_LIB}>
 )
 
 target_link_libraries(Sandbox PRIVATE Lightning)

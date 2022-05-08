@@ -1,42 +1,26 @@
 #include "li/win/cocoa.h"
 
-#import "Cocoa/Cocoa.h"
 #include "li/std.h"
 
-li_win_state_t li_win_cocoa_state(NSUInteger flags);
-li_win_key_t   li_win_cocoa_button(NSUInteger type);
-void           li_win_cocoa_mouse(
-              struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
-void li_win_cocoa_mousedown(
-    struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
-void li_win_cocoa_mouseup(
-    struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
-void li_win_cocoa_mousemove(
-    struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
-
 @interface LiWinCocoaDelegate : NSObject <NSWindowDelegate> {
-    struct li_win_cocoa *win;
+    li_win_t win;
 }
 @end
 
 @interface LiWinCocoaView : NSView {
 }
-@property(readwrite) struct li_win_cocoa *win;
-@property(readwrite) li_win_state_t       state;
+@property(readwrite) li_win_t win;
+@property(readwrite) li_input_state_t       state;
 @end
 
 @implementation LiWinCocoaDelegate
 - (BOOL)windowShouldClose:(NSWindow *)sender {
-    li_win_win = win;
-    li_win_fun(li_win_msg_close);
+    li_win_cocoa_event_close(win);
     return NO;
 }
 
 - (void)windowDidResize:(NSNotification *)notification {
-    li_win_win         = win;
-    li_win_win->width  = [win->view frame].size.width;
-    li_win_win->height = [win->view frame].size.height;
-    li_win_fun(li_win_msg_resize);
+    li_win_cocoa_event_size(win);
 }
 @end
 
@@ -45,74 +29,64 @@ void li_win_cocoa_mousemove(
 @synthesize     state;
 
 - (void)keyDown:(NSEvent *)event {
-    li_win_win        = win;
-    li_win_key        = [event keyCode];
-    li_win_win->state = state | li_win_cocoa_state([event modifierFlags]);
-    if ([event isARepeat]) {
-        li_win_fun(li_win_msg_keyrep);
-    } else {
-        li_win_fun(li_win_msg_keydown);
-    }
+    li_win_cocoa_event_key(win, event, 1);
 }
 
 - (void)keyUp:(NSEvent *)event {
-    li_win_win        = win;
-    li_win_win->key   = [event keyCode];
-    li_win_win->state = state | li_win_cocoa_state([event modifierFlags]);
-    li_win_fun(li_win_msg_keyup);
+    li_win_cocoa_event_key(win, event, 0);
 }
 
 - (void)mouseDown:(NSEvent *)event {
-    state |= LI_KEY_STATE_LMOUSE;
-    li_win_cocoa_mousedown(win, state, event);
+    state |= LI_INPUT_STATE_LMOUSE;
+    li_win_cocoa_event_button(win, event, 1, LI_INPUT_BUTTON_LEFT);
 }
 
 - (void)mouseUp:(NSEvent *)event {
-    state &= ~LI_KEY_STATE_LMOUSE;
-    li_win_cocoa_mouseup(win, state, event);
+    state &= ~LI_INPUT_STATE_LMOUSE;
+    li_win_cocoa_event_button(win, event, 0, LI_INPUT_BUTTON_LEFT);
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
-    state |= LI_KEY_STATE_RMOUSE;
-    li_win_cocoa_mousedown(win, state, event);
+    state |= LI_INPUT_STATE_RMOUSE;
+    li_win_cocoa_event_button(win, event, 1, LI_INPUT_BUTTON_RIGHT);
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
-    state &= ~LI_KEY_STATE_RMOUSE;
-    li_win_cocoa_mouseup(win, state, event);
+    state &= ~LI_INPUT_STATE_RMOUSE;
+    li_win_cocoa_event_button(win, event, 0, LI_INPUT_BUTTON_RIGHT);
 }
 
 - (void)otherMouseDown:(NSEvent *)event {
-    state |= LI_KEY_STATE_MMOUSE;
-    li_win_cocoa_mousedown(win, state, event);
+    state |= LI_INPUT_STATE_MMOUSE;
+    li_win_cocoa_event_button(win, event, 1, LI_INPUT_BUTTON_MIDDLE);
 }
 
 - (void)otherMouseUp:(NSEvent *)event {
-    state &= ~LI_KEY_STATE_MMOUSE;
-    li_win_cocoa_mouseup(win, state, event);
+    state &= ~LI_INPUT_STATE_MMOUSE;
+    li_win_cocoa_event_button(win, event, 0, LI_INPUT_BUTTON_MIDDLE);
 }
 
 - (void)mouseMoved:(NSEvent *)event {
-    li_win_cocoa_mousemove(win, state, event);
+    li_win_cocoa_event_motion(win, event);
 }
 
 - (void)mouseDragged:(NSEvent *)event {
-    li_win_cocoa_mousemove(win, state, event);
+    li_win_cocoa_event_motion(win, event);
 }
 
 - (void)rightMouseDragged:(NSEvent *)event {
-    li_win_cocoa_mousemove(win, state, event);
+    li_win_cocoa_event_motion(win, event);
 }
 
 - (void)otherMouseDragged:(NSEvent *)event {
-    li_win_cocoa_mousemove(win, state, event);
+    li_win_cocoa_event_motion(win, event);
 }
 @end
 
-const struct li_win_impl li_win_cocoa_impl = { li_win_cocoa_exit,
-                                               li_win_cocoa_poll,
-                                               li_win_cocoa_create,
-                                               li_win_cocoa_destroy };
+const struct li_win_impl li_win_cocoa_impl = {
+    li_win_cocoa_init, li_win_cocoa_exit, li_win_cocoa_poll,
+    li_win_cocoa_create, li_win_cocoa_destroy
+};
 
 int li_win_cocoa_init(void) {
     li_win_impl = &li_win_cocoa_impl;
@@ -151,13 +125,13 @@ li_win_t li_win_cocoa_create(int width, int height) {
         win_cocoa->delegate = [LiWinCocoaDelegate new];
         if (win_cocoa->window != nil && win_cocoa->view != nil
             && win_cocoa->delegate != nil) {
-            ((LiWinCocoaView *) win_cocoa->view).win     = win_cocoa;
+            ((LiWinCocoaView *) win_cocoa->view).win     = (li_win_t) win_cocoa;
             ((LiWinCocoaView *) win_cocoa->view).state   = 0;
-            ((LiWinCocoaView *) win_cocoa->delegate).win = win_cocoa;
+            ((LiWinCocoaView *) win_cocoa->delegate).win = (li_win_t) win_cocoa;
             [win_cocoa->window setContentView:win_cocoa->view];
             [win_cocoa->window makeFirstResponder:win_cocoa->view];
             [win_cocoa->window setDelegate:win_cocoa->delegate];
-            [win_cocoa->window setAcceptsMouseMovements:YES];
+            [win_cocoa->window setAcceptsMouseMovedEvents:YES];
             [win_cocoa->window makeKeyAndOrderFront:nil];
             return (li_win_t) win_cocoa;
         }
@@ -172,274 +146,283 @@ void li_win_cocoa_destroy(li_win_t win) {
     li_std_free(win_cocoa);
 }
 
-li_win_state_t li_win_cocoa_state(NSUInteger flags) {
-    li_win_state_t state = 0;
-    if (flags & NSShiftKeyMask) {
-        state |= LI_KEY_STATE_SHIFT;
+li_input_state_t li_win_cocoa_xlat_state(NSUInteger state) {
+    li_input_state_t result = 0;
+    if (state & NSShiftKeyMask) {
+        result |= LI_INPUT_STATE_SHIFT;
     }
-    if (flags & NSAlphaShiftKeyMask) {
-        state |= LI_KEY_STATE_CAPS;
+    if (state & NSAlphaShiftKeyMask) {
+        result |= LI_INPUT_STATE_CAPSLOCK;
     }
-    if (flags & NSControlKeyMask) {
-        state |= LI_KEY_STATE_CONTROL;
+    if (state & NSControlKeyMask) {
+        result |= LI_INPUT_STATE_CONTROL;
     }
-    if (flags & NSAlternateKeyMask) {
-        state |= LI_KEY_STATE_ALT;
+    if (state & NSAlternateKeyMask) {
+        result |= LI_INPUT_STATE_ALT;
     }
-    if (flags & NSCommandKeyMask) {
-        state |= LI_KEY_STATE_SUPER;
+    if (state & NSCommandKeyMask) {
+        result |= LI_INPUT_STATE_SUPER;
     }
-    return (state);
+    return (result);
 }
 
-li_win_key_t li_win_cocoa_button(NSUInteger type) {
+li_input_key_t li_win_cocoa_xlat_key(unsigned short key) {
+    switch (key) {
+    case 29:
+        return LI_INPUT_KEY_0;
+    case 18:
+        return LI_INPUT_KEY_1;
+    case 19:
+        return LI_INPUT_KEY_2;
+    case 20:
+        return LI_INPUT_KEY_3;
+    case 21:
+        return LI_INPUT_KEY_4;
+    case 22:
+        return LI_INPUT_KEY_5;
+    case 23:
+        return LI_INPUT_KEY_6;
+    case 26:
+        return LI_INPUT_KEY_7;
+    case 28:
+        return LI_INPUT_KEY_8;
+    case 25:
+        return LI_INPUT_KEY_9;
+    case 0:
+        return LI_INPUT_KEY_A;
+    case 11:
+        return LI_INPUT_KEY_B;
+    case 8:
+        return LI_INPUT_KEY_C;
+    case 2:
+        return LI_INPUT_KEY_D;
+    case 14:
+        return LI_INPUT_KEY_E;
+    case 3:
+        return LI_INPUT_KEY_F;
+    case 5:
+        return LI_INPUT_KEY_G;
+    case 4:
+        return LI_INPUT_KEY_H;
+    case 34:
+        return LI_INPUT_KEY_I;
+    case 38:
+        return LI_INPUT_KEY_J;
+    case 40:
+        return LI_INPUT_KEY_K;
+    case 37:
+        return LI_INPUT_KEY_L;
+    case 46:
+        return LI_INPUT_KEY_M;
+    case 45:
+        return LI_INPUT_KEY_N;
+    case 31:
+        return LI_INPUT_KEY_O;
+    case 35:
+        return LI_INPUT_KEY_P;
+    case 12:
+        return LI_INPUT_KEY_Q;
+    case 15:
+        return LI_INPUT_KEY_R;
+    case 1:
+        return LI_INPUT_KEY_S;
+    case 17:
+        return LI_INPUT_KEY_T;
+    case 32:
+        return LI_INPUT_KEY_U;
+    case 9:
+        return LI_INPUT_KEY_V;
+    case 13:
+        return LI_INPUT_KEY_W;
+    case 7:
+        return LI_INPUT_KEY_X;
+    case 16:
+        return LI_INPUT_KEY_Y;
+    case 6:
+        return LI_INPUT_KEY_Z;
+    case 82:
+        return LI_INPUT_KEY_NUM0;
+    case 83:
+        return LI_INPUT_KEY_NUM1;
+    case 84:
+        return LI_INPUT_KEY_NUM2;
+    case 85:
+        return LI_INPUT_KEY_NUM3;
+    case 86:
+        return LI_INPUT_KEY_NUM4;
+    case 87:
+        return LI_INPUT_KEY_NUM5;
+    case 88:
+        return LI_INPUT_KEY_NUM6;
+    case 89:
+        return LI_INPUT_KEY_NUM7;
+    case 91:
+        return LI_INPUT_KEY_NUM8;
+    case 92:
+        return LI_INPUT_KEY_NUM9;
+    case 65:
+        return LI_INPUT_KEY_NUMDOT;
+    case 69:
+        return LI_INPUT_KEY_NUMPLUS;
+    case 78:
+        return LI_INPUT_KEY_NUMMINUS;
+    case 67:
+        return LI_INPUT_KEY_NUMSTAR;
+    case 75:
+        return LI_INPUT_KEY_NUMSLASH;
+    case 76:
+        return LI_INPUT_KEY_NUMENTER;
+    case 71:
+        return LI_INPUT_KEY_NUMLOCK;
+    case 122:
+        return LI_INPUT_KEY_F1;
+    case 120:
+        return LI_INPUT_KEY_F2;
+    case 99:
+        return LI_INPUT_KEY_F3;
+    case 118:
+        return LI_INPUT_KEY_F4;
+    case 96:
+        return LI_INPUT_KEY_F5;
+    case 97:
+        return LI_INPUT_KEY_F6;
+    case 98:
+        return LI_INPUT_KEY_F7;
+    case 100:
+        return LI_INPUT_KEY_F8;
+    case 101:
+        return LI_INPUT_KEY_F9;
+    case 109:
+        return LI_INPUT_KEY_F10;
+    case 103:
+        return LI_INPUT_KEY_F11;
+    case 111:
+        return LI_INPUT_KEY_F12;
+    case 105:
+        return LI_INPUT_KEY_PRINTSCR;
+    case 114:
+        return LI_INPUT_KEY_INSERT;
+    case 115:
+        return LI_INPUT_KEY_HOME;
+    case 116:
+        return LI_INPUT_KEY_PAGEUP;
+    case 117:
+        return LI_INPUT_KEY_DELETE;
+    case 119:
+        return LI_INPUT_KEY_END;
+    case 121:
+        return LI_INPUT_KEY_PAGEDOWN;
+    case 126:
+        return LI_INPUT_KEY_UP;
+    case 125:
+        return LI_INPUT_KEY_DOWN;
+    case 123:
+        return LI_INPUT_KEY_LEFT;
+    case 124:
+        return LI_INPUT_KEY_RIGHT;
+    case 53:
+        return LI_INPUT_KEY_ESCAPE;
+    case 51:
+        return LI_INPUT_KEY_BSPACE;
+    case 48:
+        return LI_INPUT_KEY_TAB;
+    case 56:
+        return LI_INPUT_KEY_LSHIFT;
+    case 60:
+        return LI_INPUT_KEY_RSHIFT;
+    case 59:
+        return LI_INPUT_KEY_LCONTROL;
+    case 62:
+        return LI_INPUT_KEY_RCONTROL;
+    case 55:
+        return LI_INPUT_KEY_LSUPER;
+    case 54:
+        return LI_INPUT_KEY_RSUPER;
+    case 58:
+        return LI_INPUT_KEY_LALT;
+    case 61:
+        return LI_INPUT_KEY_RALT;
+    case 57:
+        return LI_INPUT_KEY_CAPSLOCK;
+    case 36:
+        return LI_INPUT_KEY_ENTER;
+    case 49:
+        return LI_INPUT_KEY_SPACE;
+    case 47:
+        return LI_INPUT_KEY_DOT;
+    case 43:
+        return LI_INPUT_KEY_COMMA;
+    case 41:
+        return LI_INPUT_KEY_COLON;
+    case 39:
+        return LI_INPUT_KEY_QUOTE;
+    case 33:
+        return LI_INPUT_KEY_LBRACKET;
+    case 30:
+        return LI_INPUT_KEY_RBRACKET;
+    case 42:
+        return LI_INPUT_KEY_BSLASH;
+    case 27:
+        return LI_INPUT_KEY_MINUS;
+    case 44:
+        return LI_INPUT_KEY_SLASH;
+    case 50:
+        return LI_INPUT_KEY_TILDE;
+    case 24:
+        return LI_INPUT_KEY_EQUAL;
+    }
+    return LI_INPUT_KEY_NULL;
+}
+
+li_input_key_t li_win_cocoa_xlat_button(NSUInteger type) {
     switch (type) {
     case NSEventTypeLeftMouseDown:
     case NSEventTypeLeftMouseUp:
-        return LI_KEY_CODE_LMOUSE;
+        return LI_INPUT_BUTTON_LEFT;
     case NSEventTypeRightMouseDown:
     case NSEventTypeRightMouseUp:
-        return LI_KEY_CODE_RMOUSE;
+        return LI_INPUT_BUTTON_RIGHT;
     case NSEventTypeOtherMouseDown:
     case NSEventTypeOtherMouseUp:
-        return LI_KEY_CODE_MMOUSE;
+        return LI_INPUT_BUTTON_MIDDLE;
     }
-    return LI_KEY_CODE_NULL;
+    return LI_INPUT_BUTTON_NULL;
 }
 
-li_win_key_t li_win_cocoa_key(unsigned short keycode) {
-    switch (keycode) {
-    case 29:
-        return LI_KEY_CODE_0;
-    case 18:
-        return LI_KEY_CODE_1;
-    case 19:
-        return LI_KEY_CODE_2;
-    case 20:
-        return LI_KEY_CODE_3;
-    case 21:
-        return LI_KEY_CODE_4;
-    case 22:
-        return LI_KEY_CODE_5;
-    case 23:
-        return LI_KEY_CODE_6;
-    case 26:
-        return LI_KEY_CODE_7;
-    case 28:
-        return LI_KEY_CODE_8;
-    case 25:
-        return LI_KEY_CODE_9;
-    case 0:
-        return LI_KEY_CODE_A;
-    case 11:
-        return LI_KEY_CODE_B;
-    case 8:
-        return LI_KEY_CODE_C;
-    case 2:
-        return LI_KEY_CODE_D;
-    case 14:
-        return LI_KEY_CODE_E;
-    case 3:
-        return LI_KEY_CODE_F;
-    case 5:
-        return LI_KEY_CODE_G;
-    case 4:
-        return LI_KEY_CODE_H;
-    case 34:
-        return LI_KEY_CODE_I;
-    case 38:
-        return LI_KEY_CODE_J;
-    case 40:
-        return LI_KEY_CODE_K;
-    case 37:
-        return LI_KEY_CODE_L;
-    case 46:
-        return LI_KEY_CODE_M;
-    case 45:
-        return LI_KEY_CODE_N;
-    case 31:
-        return LI_KEY_CODE_O;
-    case 35:
-        return LI_KEY_CODE_P;
-    case 12:
-        return LI_KEY_CODE_Q;
-    case 15:
-        return LI_KEY_CODE_R;
-    case 1:
-        return LI_KEY_CODE_S;
-    case 17:
-        return LI_KEY_CODE_T;
-    case 32:
-        return LI_KEY_CODE_U;
-    case 9:
-        return LI_KEY_CODE_V;
-    case 13:
-        return LI_KEY_CODE_W;
-    case 7:
-        return LI_KEY_CODE_X;
-    case 16:
-        return LI_KEY_CODE_Y;
-    case 6:
-        return LI_KEY_CODE_Z;
-    case 82:
-        return LI_KEY_CODE_NUM0;
-    case 83:
-        return LI_KEY_CODE_NUM1;
-    case 84:
-        return LI_KEY_CODE_NUM2;
-    case 85:
-        return LI_KEY_CODE_NUM3;
-    case 86:
-        return LI_KEY_CODE_NUM4;
-    case 87:
-        return LI_KEY_CODE_NUM5;
-    case 88:
-        return LI_KEY_CODE_NUM6;
-    case 89:
-        return LI_KEY_CODE_NUM7;
-    case 91:
-        return LI_KEY_CODE_NUM8;
-    case 92:
-        return LI_KEY_CODE_NUM9;
-    case 65:
-        return LI_KEY_CODE_NUMDOT;
-    case 69:
-        return LI_KEY_CODE_NUMPLUS;
-    case 78:
-        return LI_KEY_CODE_NUMMINUS;
-    case 67:
-        return LI_KEY_CODE_NUMSTAR;
-    case 75:
-        return LI_KEY_CODE_NUMSLASH;
-    case 76:
-        return LI_KEY_CODE_NUMENTER;
-    case 71:
-        return LI_KEY_CODE_NUMLOCK;
-    case 122:
-        return LI_KEY_CODE_F1;
-    case 120:
-        return LI_KEY_CODE_F2;
-    case 99:
-        return LI_KEY_CODE_F3;
-    case 118:
-        return LI_KEY_CODE_F4;
-    case 96:
-        return LI_KEY_CODE_F5;
-    case 97:
-        return LI_KEY_CODE_F6;
-    case 98:
-        return LI_KEY_CODE_F7;
-    case 100:
-        return LI_KEY_CODE_F8;
-    case 101:
-        return LI_KEY_CODE_F9;
-    case 109:
-        return LI_KEY_CODE_F10;
-    case 103:
-        return LI_KEY_CODE_F11;
-    case 111:
-        return LI_KEY_CODE_F12;
-    case 105:
-        return LI_KEY_CODE_PRINTSCR;
-    case 114:
-        return LI_KEY_CODE_INSERT;
-    case 115:
-        return LI_KEY_CODE_HOME;
-    case 116:
-        return LI_KEY_CODE_PAGEUP;
-    case 117:
-        return LI_KEY_CODE_DELETE;
-    case 119:
-        return LI_KEY_CODE_END;
-    case 121:
-        return LI_KEY_CODE_PAGEDOWN;
-    case 126:
-        return LI_KEY_CODE_UP;
-    case 125:
-        return LI_KEY_CODE_DOWN;
-    case 123:
-        return LI_KEY_CODE_LEFT;
-    case 124:
-        return LI_KEY_CODE_RIGHT;
-    case 53:
-        return LI_KEY_CODE_ESCAPE;
-    case 51:
-        return LI_KEY_CODE_BSPACE;
-    case 48:
-        return LI_KEY_CODE_TAB;
-    case 56:
-        return LI_KEY_CODE_LSHIFT;
-    case 60:
-        return LI_KEY_CODE_RSHIFT;
-    case 59:
-        return LI_KEY_CODE_LCONTROL;
-    case 62:
-        return LI_KEY_CODE_RCONTROL;
-    case 55:
-        return LI_KEY_CODE_LSUPER;
-    case 54:
-        return LI_KEY_CODE_RSUPER;
-    case 58:
-        return LI_KEY_CODE_LALT;
-    case 61:
-        return LI_KEY_CODE_RALT;
-    case 57:
-        return LI_KEY_CODE_CAPSLOCK;
-    case 36:
-        return LI_KEY_CODE_ENTER;
-    case 49:
-        return LI_KEY_CODE_SPACE;
-    case 47:
-        return LI_KEY_CODE_DOT;
-    case 43:
-        return LI_KEY_CODE_COMMA;
-    case 41:
-        return LI_KEY_CODE_COLON;
-    case 39:
-        return LI_KEY_CODE_QUOTE;
-    case 33:
-        return LI_KEY_CODE_LBRACKET;
-    case 30:
-        return LI_KEY_CODE_RBRACKET;
-    case 42:
-        return LI_KEY_CODE_BSLASH;
-    case 27:
-        return LI_KEY_CODE_MINUS;
-    case 44:
-        return LI_KEY_CODE_SLASH;
-    case 50:
-        return LI_KEY_CODE_TILDE;
-    case 24:
-        return LI_KEY_CODE_EQUAL;
-    }
-    return LI_KEY_CODE_NULL;
+void li_win_cocoa_event_key(li_win_t win, NSEvent *event, int down) {
+    li_win_send_key(
+        win,
+        down                ? li_win_msg_key_down
+        : [event isARepeat] ? li_win_msg_key_repeat
+                            : li_win_msg_key_up,
+        li_win_cocoa_xlat_state([event modifierFlags]),
+        li_win_cocoa_xlat_key([event keyCode]));
 }
 
-void li_win_cocoa_mousedown(
-    struct li_win_cocoa *win, li_win_state_t state, NSEvent *event) {
-    li_win_win         = (li_win_t) win;
-    li_win_key         = li_win_cocoa_button([event type]);
-    li_win_win->state  = state | li_win_cocoa_state([event modifierFlags]);
-    li_win_win->mousex = [event locationInWindow].x;
-    li_win_win->mousey = [event locationInWindow].y;
-    li_win_fun(li_win_msg_mousedown);
+void li_win_cocoa_event_button(
+    li_win_t win, NSEvent *event, int down, li_input_button_t button) {
+    NSPoint location;
+    location = [event locationInWindow];
+    li_win_send_button(
+        win, down ? li_win_msg_button_down : li_win_msg_button_up,
+        li_win_cocoa_xlat_state([event modifierFlags]), location.x, location.y,
+        button);
 }
 
-void li_win_cocoa_mouseup(
-    struct li_win_cocoa *win, li_win_state_t state, NSEvent *event) {
-    li_win_win         = (li_win_t) win;
-    li_win_key         = li_win_cocoa_button([event type]);
-    li_win_win->state  = state | li_win_cocoa_state([event modifierFlags]);
-    li_win_win->mousex = [event locationInWindow].x;
-    li_win_win->mousey = [event locationInWindow].y;
-    li_win_fun(li_win_msg_mouseup);
+void li_win_cocoa_event_motion(li_win_t win, NSEvent *event) {
+    NSPoint location;
+    location = [event locationInWindow];
+    li_win_send_motion(
+        win, li_win_msg_motion, li_win_cocoa_xlat_state([event modifierFlags]),
+        location.x, location.y);
 }
 
-void li_win_cocoa_mousemove(
-    struct li_win_cocoa *win, li_win_state_t state, NSEvent *event) {
-    li_win_win         = (li_win_t) win;
-    li_win_win->state  = state | li_win_cocoa_state([event modifierFlags]);
-    li_win_win->mousex = [event locationInWindow].x;
-    li_win_win->mousey = [event locationInWindow].y;
-    li_win_fun(li_win_msg_mousemove);
+void li_win_cocoa_event_size(li_win_t win) {
+    NSRect frame;
+    frame = [((struct li_win_cocoa *) win)->view frame];
+    li_win_send_size(win, li_win_msg_size, frame.size.width, frame.size.height);
+}
+
+void li_win_cocoa_event_close(li_win_t win) {
+    li_win_send_close(win, li_win_msg_close);
 }

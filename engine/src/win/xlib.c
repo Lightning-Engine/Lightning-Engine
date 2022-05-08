@@ -72,258 +72,259 @@ void li_win_xlib_destroy(li_win_t win) {
     li_std_free(win_xlib);
 }
 
-li_key_state_t li_win_xlib_xlat_state(unsigned int state) {
-    li_key_state_t result = 0;
+li_input_state_t li_win_xlib_xlat_state(unsigned int state) {
+    li_input_state_t result = 0;
     if (state & ShiftMask) {
-        result |= LI_KEY_STATE_SHIFT;
+        result |= LI_INPUT_STATE_SHIFT;
     }
     if (state & LockMask) {
-        result |= LI_KEY_STATE_CAPSLOCK;
+        result |= LI_INPUT_STATE_CAPSLOCK;
     }
     if (state & ControlMask) {
-        result |= LI_KEY_STATE_CONTROL;
+        result |= LI_INPUT_STATE_CONTROL;
     }
     if (state & Mod1Mask) {
-        result |= LI_KEY_STATE_ALT;
+        result |= LI_INPUT_STATE_ALT;
     }
     if (state & Mod2Mask) {
-        result |= LI_KEY_STATE_NUMLOCK;
+        result |= LI_INPUT_STATE_NUMLOCK;
     }
     if (state & Mod4Mask) {
-        result |= LI_KEY_STATE_SUPER;
+        result |= LI_INPUT_STATE_SUPER;
     }
     if (state & Button1Mask) {
-        result |= LI_KEY_STATE_LMOUSE;
+        result |= LI_INPUT_STATE_LMOUSE;
     }
     if (state & Button3Mask) {
-        result |= LI_KEY_STATE_RMOUSE;
+        result |= LI_INPUT_STATE_RMOUSE;
     }
     if (state & Button2Mask) {
-        result |= LI_KEY_STATE_MMOUSE;
+        result |= LI_INPUT_STATE_MMOUSE;
     }
     return result;
 }
 
-li_key_code_t li_win_xlib_xlat_keysym(KeySym sym) {
+li_input_key_t li_win_xlib_xlat_keysym(KeySym sym) {
     switch (sym) {
     case XK_0:
-        return LI_KEY_CODE_0;
+        return LI_INPUT_KEY_0;
     case XK_1:
-        return LI_KEY_CODE_1;
+        return LI_INPUT_KEY_1;
     case XK_2:
-        return LI_KEY_CODE_2;
+        return LI_INPUT_KEY_2;
     case XK_3:
-        return LI_KEY_CODE_3;
+        return LI_INPUT_KEY_3;
     case XK_4:
-        return LI_KEY_CODE_4;
+        return LI_INPUT_KEY_4;
     case XK_5:
-        return LI_KEY_CODE_5;
+        return LI_INPUT_KEY_5;
     case XK_6:
-        return LI_KEY_CODE_6;
+        return LI_INPUT_KEY_6;
     case XK_7:
-        return LI_KEY_CODE_7;
+        return LI_INPUT_KEY_7;
     case XK_8:
-        return LI_KEY_CODE_8;
+        return LI_INPUT_KEY_8;
     case XK_9:
-        return LI_KEY_CODE_9;
+        return LI_INPUT_KEY_9;
     case XK_A:
-        return LI_KEY_CODE_A;
+        return LI_INPUT_KEY_A;
     case XK_B:
-        return LI_KEY_CODE_B;
+        return LI_INPUT_KEY_B;
     case XK_C:
-        return LI_KEY_CODE_C;
+        return LI_INPUT_KEY_C;
     case XK_D:
-        return LI_KEY_CODE_D;
+        return LI_INPUT_KEY_D;
     case XK_E:
-        return LI_KEY_CODE_E;
+        return LI_INPUT_KEY_E;
     case XK_F:
-        return LI_KEY_CODE_F;
+        return LI_INPUT_KEY_F;
     case XK_G:
-        return LI_KEY_CODE_G;
+        return LI_INPUT_KEY_G;
     case XK_H:
-        return LI_KEY_CODE_H;
+        return LI_INPUT_KEY_H;
     case XK_I:
-        return LI_KEY_CODE_I;
+        return LI_INPUT_KEY_I;
     case XK_J:
-        return LI_KEY_CODE_J;
+        return LI_INPUT_KEY_J;
     case XK_K:
-        return LI_KEY_CODE_K;
+        return LI_INPUT_KEY_K;
     case XK_L:
-        return LI_KEY_CODE_L;
+        return LI_INPUT_KEY_L;
     case XK_M:
-        return LI_KEY_CODE_M;
+        return LI_INPUT_KEY_M;
     case XK_N:
-        return LI_KEY_CODE_N;
+        return LI_INPUT_KEY_N;
     case XK_O:
-        return LI_KEY_CODE_O;
+        return LI_INPUT_KEY_O;
     case XK_P:
-        return LI_KEY_CODE_P;
+        return LI_INPUT_KEY_P;
     case XK_Q:
-        return LI_KEY_CODE_Q;
+        return LI_INPUT_KEY_Q;
     case XK_R:
-        return LI_KEY_CODE_R;
+        return LI_INPUT_KEY_R;
     case XK_S:
-        return LI_KEY_CODE_S;
+        return LI_INPUT_KEY_S;
     case XK_T:
-        return LI_KEY_CODE_T;
+        return LI_INPUT_KEY_T;
     case XK_U:
-        return LI_KEY_CODE_U;
+        return LI_INPUT_KEY_U;
     case XK_V:
-        return LI_KEY_CODE_V;
+        return LI_INPUT_KEY_V;
     case XK_W:
-        return LI_KEY_CODE_W;
+        return LI_INPUT_KEY_W;
     case XK_X:
-        return LI_KEY_CODE_X;
+        return LI_INPUT_KEY_X;
     case XK_Y:
-        return LI_KEY_CODE_Y;
+        return LI_INPUT_KEY_Y;
     case XK_Z:
-        return LI_KEY_CODE_Z;
+        return LI_INPUT_KEY_Z;
     case XK_KP_0:
-        return LI_KEY_CODE_NUM0;
+        return LI_INPUT_KEY_NUM0;
     case XK_KP_1:
-        return LI_KEY_CODE_NUM1;
+        return LI_INPUT_KEY_NUM1;
     case XK_KP_2:
-        return LI_KEY_CODE_NUM2;
+        return LI_INPUT_KEY_NUM2;
     case XK_KP_3:
-        return LI_KEY_CODE_NUM3;
+        return LI_INPUT_KEY_NUM3;
     case XK_KP_4:
-        return LI_KEY_CODE_NUM4;
+        return LI_INPUT_KEY_NUM4;
     case XK_KP_5:
-        return LI_KEY_CODE_NUM5;
+        return LI_INPUT_KEY_NUM5;
     case XK_KP_6:
-        return LI_KEY_CODE_NUM6;
+        return LI_INPUT_KEY_NUM6;
     case XK_KP_7:
-        return LI_KEY_CODE_NUM7;
+        return LI_INPUT_KEY_NUM7;
     case XK_KP_8:
-        return LI_KEY_CODE_NUM8;
+        return LI_INPUT_KEY_NUM8;
     case XK_KP_9:
-        return LI_KEY_CODE_NUM9;
+        return LI_INPUT_KEY_NUM9;
     case XK_KP_Decimal:
-        return LI_KEY_CODE_NUMDOT;
+        return LI_INPUT_KEY_NUMDOT;
     case XK_KP_Add:
-        return LI_KEY_CODE_NUMPLUS;
+        return LI_INPUT_KEY_NUMPLUS;
     case XK_KP_Subtract:
-        return LI_KEY_CODE_NUMMINUS;
+        return LI_INPUT_KEY_NUMMINUS;
     case XK_KP_Multiply:
-        return LI_KEY_CODE_NUMSTAR;
+        return LI_INPUT_KEY_NUMSTAR;
     case XK_KP_Divide:
-        return LI_KEY_CODE_NUMSLASH;
+        return LI_INPUT_KEY_NUMSLASH;
     case XK_KP_Enter:
-        return LI_KEY_CODE_NUMENTER;
+        return LI_INPUT_KEY_NUMENTER;
     case XK_Num_Lock:
-        return LI_KEY_CODE_NUMLOCK;
+        return LI_INPUT_KEY_NUMLOCK;
     case XK_F1:
-        return LI_KEY_CODE_F1;
+        return LI_INPUT_KEY_F1;
     case XK_F2:
-        return LI_KEY_CODE_F2;
+        return LI_INPUT_KEY_F2;
     case XK_F3:
-        return LI_KEY_CODE_F3;
+        return LI_INPUT_KEY_F3;
     case XK_F4:
-        return LI_KEY_CODE_F4;
+        return LI_INPUT_KEY_F4;
     case XK_F5:
-        return LI_KEY_CODE_F5;
+        return LI_INPUT_KEY_F5;
     case XK_F6:
-        return LI_KEY_CODE_F6;
+        return LI_INPUT_KEY_F6;
     case XK_F7:
-        return LI_KEY_CODE_F7;
+        return LI_INPUT_KEY_F7;
     case XK_F8:
-        return LI_KEY_CODE_F8;
+        return LI_INPUT_KEY_F8;
     case XK_F9:
-        return LI_KEY_CODE_F9;
+        return LI_INPUT_KEY_F9;
     case XK_F10:
-        return LI_KEY_CODE_F10;
+        return LI_INPUT_KEY_F10;
     case XK_F11:
-        return LI_KEY_CODE_F11;
+        return LI_INPUT_KEY_F11;
     case XK_F12:
-        return LI_KEY_CODE_F12;
+        return LI_INPUT_KEY_F12;
     case XK_Print:
-        return LI_KEY_CODE_PRINTSCR;
+        return LI_INPUT_KEY_PRINTSCR;
     case XK_Scroll_Lock:
-        return LI_KEY_CODE_SCRLOCK;
+        return LI_INPUT_KEY_SCRLOCK;
     case XK_Pause:
-        return LI_KEY_CODE_PAUSE;
+        return LI_INPUT_KEY_PAUSE;
     case XK_Insert:
-        return LI_KEY_CODE_INSERT;
+        return LI_INPUT_KEY_INSERT;
     case XK_Home:
-        return LI_KEY_CODE_HOME;
+        return LI_INPUT_KEY_HOME;
     case XK_Page_Up:
-        return LI_KEY_CODE_PAGEUP;
+        return LI_INPUT_KEY_PAGEUP;
     case XK_Delete:
-        return LI_KEY_CODE_DELETE;
+        return LI_INPUT_KEY_DELETE;
     case XK_End:
-        return LI_KEY_CODE_END;
+        return LI_INPUT_KEY_END;
     case XK_Page_Down:
-        return LI_KEY_CODE_PAGEDOWN;
+        return LI_INPUT_KEY_PAGEDOWN;
     case XK_Up:
-        return LI_KEY_CODE_UP;
+        return LI_INPUT_KEY_UP;
     case XK_Down:
-        return LI_KEY_CODE_DOWN;
+        return LI_INPUT_KEY_DOWN;
     case XK_Left:
-        return LI_KEY_CODE_LEFT;
+        return LI_INPUT_KEY_LEFT;
     case XK_Right:
-        return LI_KEY_CODE_RIGHT;
+        return LI_INPUT_KEY_RIGHT;
     case XK_Escape:
-        return LI_KEY_CODE_ESCAPE;
+        return LI_INPUT_KEY_ESCAPE;
     case XK_BackSpace:
-        return LI_KEY_CODE_BSPACE;
+        return LI_INPUT_KEY_BSPACE;
     case XK_Tab:
-        return LI_KEY_CODE_TAB;
+        return LI_INPUT_KEY_TAB;
     case XK_Shift_L:
-        return LI_KEY_CODE_LSHIFT;
+        return LI_INPUT_KEY_LSHIFT;
     case XK_Shift_R:
-        return LI_KEY_CODE_RSHIFT;
+        return LI_INPUT_KEY_RSHIFT;
     case XK_Control_L:
-        return LI_KEY_CODE_LCONTROL;
+        return LI_INPUT_KEY_LCONTROL;
     case XK_Control_R:
-        return LI_KEY_CODE_RCONTROL;
+        return LI_INPUT_KEY_RCONTROL;
     case XK_Super_L:
-        return LI_KEY_CODE_LSUPER;
+        return LI_INPUT_KEY_LSUPER;
     case XK_Super_R:
-        return LI_KEY_CODE_RSUPER;
+        return LI_INPUT_KEY_RSUPER;
     case XK_Alt_L:
-        return LI_KEY_CODE_LALT;
+        return LI_INPUT_KEY_LALT;
     case XK_Alt_R:
-        return LI_KEY_CODE_RALT;
+        return LI_INPUT_KEY_RALT;
     case XK_Caps_Lock:
-        return LI_KEY_CODE_CAPSLOCK;
+        return LI_INPUT_KEY_CAPSLOCK;
     case XK_Return:
-        return LI_KEY_CODE_ENTER;
+        return LI_INPUT_KEY_ENTER;
     case XK_space:
-        return LI_KEY_CODE_SPACE;
+        return LI_INPUT_KEY_SPACE;
     case XK_period:
-        return LI_KEY_CODE_DOT;
+        return LI_INPUT_KEY_DOT;
     case XK_comma:
-        return LI_KEY_CODE_COMMA;
+        return LI_INPUT_KEY_COMMA;
     case XK_semicolon:
-        return LI_KEY_CODE_COLON;
+        return LI_INPUT_KEY_COLON;
     case XK_apostrophe:
-        return LI_KEY_CODE_QUOTE;
+        return LI_INPUT_KEY_QUOTE;
     case XK_bracketleft:
-        return LI_KEY_CODE_LBRACKET;
+        return LI_INPUT_KEY_LBRACKET;
     case XK_bracketright:
-        return LI_KEY_CODE_RBRACKET;
+        return LI_INPUT_KEY_RBRACKET;
     case XK_backslash:
-        return LI_KEY_CODE_BSLASH;
+        return LI_INPUT_KEY_BSLASH;
     case XK_minus:
-        return LI_KEY_CODE_MINUS;
+        return LI_INPUT_KEY_MINUS;
     case XK_slash:
-        return LI_KEY_CODE_SLASH;
+        return LI_INPUT_KEY_SLASH;
     case XK_grave:
-        return LI_KEY_CODE_TILDE;
+        return LI_INPUT_KEY_TILDE;
     case XK_equal:
-        return LI_KEY_CODE_EQUAL;
+        return LI_INPUT_KEY_EQUAL;
     }
-    return LI_KEY_CODE_NULL;
+    return LI_INPUT_KEY_NULL;
 }
 
-li_key_code_t li_win_xlib_xlat_key(unsigned int key) {
-    int           i;
-    int           count;
-    li_key_code_t result = LI_KEY_CODE_NULL;
-    KeySym *keysym = XGetKeyboardMapping(li_win_xlib_disp, key, 1, &count);
+li_input_key_t li_win_xlib_xlat_key(unsigned int key) {
+    int            i;
+    int            count;
+    li_input_key_t result = LI_INPUT_KEY_NULL;
+    KeySym        *keysym;
+    keysym = XGetKeyboardMapping(li_win_xlib_disp, key, 1, &count);
     for (i = 0; i < count && keysym[i] != NoSymbol; i++) {
         key = li_win_xlib_xlat_keysym(keysym[i]);
-        if (key != LI_KEY_CODE_NULL) {
+        if (key != LI_INPUT_KEY_NULL) {
             break;
         }
     }
@@ -331,16 +332,16 @@ li_key_code_t li_win_xlib_xlat_key(unsigned int key) {
     return result;
 }
 
-li_key_code_t li_win_xlib_xlat_button(unsigned int button) {
+li_input_key_t li_win_xlib_xlat_button(unsigned int button) {
     switch (button) {
     case Button1:
-        return LI_KEY_CODE_LMOUSE;
+        return LI_INPUT_BUTTON_LEFT;
     case Button3:
-        return LI_KEY_CODE_RMOUSE;
+        return LI_INPUT_BUTTON_RIGHT;
     case Button2:
-        return LI_KEY_CODE_MMOUSE;
+        return LI_INPUT_BUTTON_MIDDLE;
     }
-    return LI_KEY_CODE_NULL;
+    return LI_INPUT_BUTTON_NULL;
 }
 
 int li_win_xlib_event_repeat(XEvent *event) {
@@ -358,45 +359,33 @@ int li_win_xlib_event_repeat(XEvent *event) {
 }
 
 void li_win_xlib_event_key(li_win_t win, XEvent *event) {
-    li_key_state_t state;
-    li_key_code_t  code;
-    state = li_win_xlib_xlat_state(event->xkey.state);
-    code  = li_win_xlib_xlat_key(event->xkey.keycode);
-    if (event->type == KeyPress) {
-        li_win_send_key(win, li_win_msg_keydown, code, state);
-    } else if (li_win_xlib_event_repeat(event)) {
-        li_win_send_key(win, li_win_msg_keyrep, code, state);
-    } else {
-        li_win_send_key(win, li_win_msg_keyup, code, state);
-    }
+    li_win_send_key(
+        win,
+        event->type == KeyPress           ? li_win_msg_key_down
+        : li_win_xlib_event_repeat(event) ? li_win_msg_key_repeat
+                                          : li_win_msg_key_up,
+        li_win_xlib_xlat_state(event->xkey.state),
+        li_win_xlib_xlat_key(event->xkey.keycode));
 }
 
-void li_win_xlib_event_mouse(li_win_t win, XEvent *event) {
-    li_key_state_t state;
-    li_key_code_t  code = LI_KEY_CODE_NULL;
-    if (event->type == MotionNotify) {
-        state = li_win_xlib_xlat_state(event->xmotion.state);
-        li_win_send_mouse(
-            win, li_win_msg_mousemove, code, event->xmotion.x, event->xmotion.y,
-            state);
-    } else {
-        state = li_win_xlib_xlat_state(event->xbutton.state);
-        code  = li_win_xlib_xlat_button(event->xbutton.button);
-        if (event->type == ButtonPress) {
-            li_win_send_mouse(
-                win, li_win_msg_mousedown, code, event->xbutton.x,
-                event->xbutton.y, state);
-        } else {
-            li_win_send_mouse(
-                win, li_win_msg_mouseup, code, event->xbutton.x,
-                event->xbutton.y, state);
-        }
-    }
+void li_win_xlib_event_button(li_win_t win, XEvent *event) {
+    li_win_send_button(
+        win,
+        event->type == ButtonPress ? li_win_msg_button_down
+                                   : li_win_msg_button_up,
+        li_win_xlib_xlat_state(event->xbutton.state), event->xbutton.x,
+        event->xbutton.y, li_win_xlib_xlat_button(event->xbutton.button));
 }
 
-void li_win_xlib_event_resize(li_win_t win, XEvent *event) {
-    li_win_send_resize(
-        win, li_win_msg_resize, event->xconfigure.width,
+void li_win_xlib_event_motion(li_win_t win, XEvent *event) {
+    li_win_send_motion(
+        win, li_win_msg_motion, li_win_xlib_xlat_state(event->xmotion.state),
+        event->xmotion.x, event->xmotion.y);
+}
+
+void li_win_xlib_event_size(li_win_t win, XEvent *event) {
+    li_win_send_size(
+        win, li_win_msg_size, event->xconfigure.width,
         event->xconfigure.height);
 }
 
@@ -423,11 +412,13 @@ void li_win_xlib_event(XEvent *event) {
         break;
     case ButtonPress:
     case ButtonRelease:
+        li_win_xlib_event_button(win, event);
+        break;
     case MotionNotify:
-        li_win_xlib_event_mouse(win, event);
+        li_win_xlib_event_motion(win, event);
         break;
     case ConfigureNotify:
-        li_win_xlib_event_resize(win, event);
+        li_win_xlib_event_size(win, event);
         break;
     }
 }

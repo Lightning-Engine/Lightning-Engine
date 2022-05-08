@@ -1,7 +1,7 @@
 #ifndef LI_WIN_WIN_H
 #define LI_WIN_WIN_H
 
-#include "li/key.h"
+#include "li/input.h"
 
 /**
  * @file
@@ -10,13 +10,13 @@
  */
 
 enum li_win_msg {
-    li_win_msg_keydown,
-    li_win_msg_keyup,
-    li_win_msg_keyrep,
-    li_win_msg_mousedown,
-    li_win_msg_mouseup,
-    li_win_msg_mousemove,
-    li_win_msg_resize,
+    li_win_msg_key_down,
+    li_win_msg_key_up,
+    li_win_msg_key_repeat,
+    li_win_msg_button_down,
+    li_win_msg_button_up,
+    li_win_msg_motion,
+    li_win_msg_size,
     li_win_msg_close
 };
 
@@ -24,21 +24,24 @@ typedef enum li_win_msg li_win_msg_t;
 typedef struct li_win  *li_win_t;
 
 typedef void (*li_key_fun_t)(
-    li_win_t win, li_win_msg_t action, li_key_code_t key, li_key_state_t state);
-typedef void (*li_mouse_fun_t)(
-    li_win_t win, li_win_msg_t action, li_key_code_t key, int x, int y,
-    li_key_state_t state);
-typedef void (*li_resize_fun_t)(
-    li_win_t win, li_win_msg_t action, int width, int height);
-typedef void (*li_close_fun_t)(li_win_t win, li_win_msg_t action);
+    li_win_t win, li_win_msg_t msg, li_input_state_t state, li_input_key_t key);
+typedef void (*li_button_fun_t)(
+    li_win_t win, li_win_msg_t msg, li_input_state_t state, int x, int y,
+    li_input_button_t button);
+typedef void (*li_motion_fun_t)(
+    li_win_t win, li_win_msg_t msg, li_input_state_t state, int x, int y);
+typedef void (*li_size_fun_t)(
+    li_win_t win, li_win_msg_t msg, int width, int height);
+typedef void (*li_close_fun_t)(li_win_t win, li_win_msg_t msg);
 
 struct li_win {
     void *ptr;
 };
 
 extern li_key_fun_t    li_win_key_fun;
-extern li_mouse_fun_t  li_win_mouse_fun;
-extern li_resize_fun_t li_win_resize_fun;
+extern li_button_fun_t li_win_button_fun;
+extern li_motion_fun_t li_win_motion_fun;
+extern li_size_fun_t   li_win_size_fun;
 extern li_close_fun_t  li_win_close_fun;
 
 int      li_win_init(void);

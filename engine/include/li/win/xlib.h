@@ -23,15 +23,16 @@ void     li_win_xlib_poll(void);
 li_win_t li_win_xlib_create(int width, int height);
 void     li_win_xlib_destroy(li_win_t win);
 
-li_key_state_t li_win_xlib_xlat_state(unsigned int state);
-li_key_code_t  li_win_xlib_xlat_keysym(KeySym keysym);
-li_key_code_t  li_win_xlib_xlat_key(unsigned int key);
-li_key_code_t  li_win_xlib_xlat_button(unsigned int button);
+li_input_state_t li_win_xlib_xlat_state(unsigned int state);
+li_input_key_t   li_win_xlib_xlat_keysym(KeySym keysym);
+li_input_key_t   li_win_xlib_xlat_key(unsigned int key);
+li_input_key_t   li_win_xlib_xlat_button(unsigned int button);
 
 int  li_win_xlib_event_repeat(XEvent *event);
 void li_win_xlib_event_key(li_win_t win, XEvent *event);
-void li_win_xlib_event_mouse(li_win_t win, XEvent *event);
-void li_win_xlib_event_resize(li_win_t win, XEvent *event);
+void li_win_xlib_event_button(li_win_t win, XEvent *event);
+void li_win_xlib_event_motion(li_win_t win, XEvent *event);
+void li_win_xlib_event_size(li_win_t win, XEvent *event);
 void li_win_xlib_event_close(li_win_t win);
 void li_win_xlib_event(XEvent *event);
 

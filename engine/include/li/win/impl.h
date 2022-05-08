@@ -14,19 +14,19 @@ struct li_win_impl {
 struct li_win_base {
     struct li_win win;
 };
-
-extern const struct li_dl_impl   li_dl_xlib_impl;
-extern const struct li_dl_impl   li_dl_win32_impl;
-extern const struct li_dl_impl   li_dl_cocoa_impl;
+extern const struct li_win_impl  li_win_xlib_impl;
+extern const struct li_win_impl  li_win_win32_impl;
+extern const struct li_win_impl  li_win_cocoa_impl;
 extern const struct li_win_impl *li_win_impl;
 
 void li_win_send_key(
-    li_win_t win, li_win_msg_t action, li_key_code_t key, li_key_state_t state);
-void li_win_send_mouse(
-    li_win_t win, li_win_msg_t action, li_key_code_t key, int x, int y,
-    li_key_state_t state);
-void li_win_send_resize(
-    li_win_t win, li_win_msg_t action, int width, int height);
-void li_win_send_close(li_win_t win, li_win_msg_t action);
+    li_win_t win, li_win_msg_t msg, li_input_state_t state, li_input_key_t key);
+void li_win_send_button(
+    li_win_t win, li_win_msg_t msg, li_input_state_t state, int x, int y,
+    li_input_button_t button);
+void li_win_send_motion(
+    li_win_t win, li_win_msg_t msg, li_input_state_t state, int x, int y);
+void li_win_send_size(li_win_t win, li_win_msg_t msg, int width, int height);
+void li_win_send_close(li_win_t win, li_win_msg_t msg);
 
 #endif
