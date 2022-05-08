@@ -8,8 +8,7 @@
 #include <X11/Xutil.h>
 
 struct li_win_xlib {
-    struct li_win_base base;
-    Window             window;
+    Window window;
 };
 
 extern Display *li_win_xlib_disp;
@@ -23,17 +22,17 @@ void     li_win_xlib_poll(void);
 li_win_t li_win_xlib_create(int width, int height);
 void     li_win_xlib_destroy(li_win_t win);
 
-li_input_state_t li_win_xlib_xlat_state(unsigned int state);
-li_input_key_t   li_win_xlib_xlat_keysym(KeySym keysym);
-li_input_key_t   li_win_xlib_xlat_key(unsigned int key);
-li_input_key_t   li_win_xlib_xlat_button(unsigned int button);
-
-int  li_win_xlib_event_repeat(XEvent *event);
-void li_win_xlib_event_key(li_win_t win, XEvent *event);
-void li_win_xlib_event_button(li_win_t win, XEvent *event);
+void li_win_xlib_event_key(li_win_t win, XEvent *event, int down);
+void li_win_xlib_event_button(li_win_t win, XEvent *event, int down);
 void li_win_xlib_event_motion(li_win_t win, XEvent *event);
 void li_win_xlib_event_size(li_win_t win, XEvent *event);
 void li_win_xlib_event_close(li_win_t win);
 void li_win_xlib_event(XEvent *event);
+
+int               li_win_xlib_get_repeat(XEvent *event);
+li_input_state_t  li_win_xlib_get_state(unsigned int state);
+li_input_key_t    li_win_xlib_get_keysym(KeySym keysym);
+li_input_key_t    li_win_xlib_get_key(unsigned int key);
+li_input_button_t li_win_xlib_get_button(unsigned int button);
 
 #endif

@@ -72,7 +72,84 @@ void li_win_xlib_destroy(li_win_t win) {
     li_std_free(win_xlib);
 }
 
-li_input_state_t li_win_xlib_xlat_state(unsigned int state) {
+void li_win_xlib_event_key(li_win_t win, XEvent *event, int down) {
+    li_win_send_key(
+        win,
+        li_win_xlib_get_repeat(event) ? li_win_msg_key_repeat
+        : down                        ? li_win_msg_key_down
+                                      : li_win_msg_key_up,
+        li_win_xlib_get_state(event->xkey.state),
+        li_win_xlib_get_key(event->xkey.keycode));
+}
+
+void li_win_xlib_event_button(li_win_t win, XEvent *event, int down) {
+    li_win_send_button(
+        win, down ? li_win_msg_button_down : li_win_msg_button_up,
+        li_win_xlib_get_state(event->xbutton.state), event->xbutton.x,
+        event->xbutton.y, li_win_xlib_get_button(event->xbutton.button));
+}
+
+void li_win_xlib_event_motion(li_win_t win, XEvent *event) {
+    li_win_send_motion(
+        win, li_win_msg_motion, li_win_xlib_get_state(event->xmotion.state),
+        event->xmotion.x, event->xmotion.y);
+}
+
+void li_win_xlib_event_size(li_win_t win, XEvent *event) {
+    li_win_send_size(
+        win, li_win_msg_size, event->xconfigure.width,
+        event->xconfigure.height);
+}
+
+void li_win_xlib_event_close(li_win_t win) {
+    li_win_send_close(win, li_win_msg_close);
+}
+
+void li_win_xlib_event(XEvent *event) {
+    XPointer pointer;
+    li_win_t win;
+    XFindContext(
+        li_win_xlib_disp, event->xany.window, li_win_xlib_context, &pointer);
+    win = (li_win_t) pointer;
+    switch (event->type) {
+    case ClientMessage:
+        if ((unsigned long) event->xclient.data.l[0]
+            == li_win_xlib_wm_delete_window) {
+            li_win_xlib_event_close(win);
+        }
+        break;
+    case KeyPress:
+    case KeyRelease:
+        li_win_xlib_event_key(win, event, event->type == KeyPress);
+        break;
+    case ButtonPress:
+    case ButtonRelease:
+        li_win_xlib_event_button(win, event, event->type == ButtonPress);
+        break;
+    case MotionNotify:
+        li_win_xlib_event_motion(win, event);
+        break;
+    case ConfigureNotify:
+        li_win_xlib_event_size(win, event);
+        break;
+    }
+}
+
+int li_win_xlib_get_repeat(XEvent *event) {
+    XEvent next_event;
+    if (event->type == KeyRelease && XPending(li_win_xlib_disp)) {
+        XPeekEvent(li_win_xlib_disp, &next_event);
+        if (next_event.type == KeyPress
+            && next_event.xkey.time == event->xkey.time
+            && next_event.xkey.keycode == event->xkey.keycode) {
+            XNextEvent(li_win_xlib_disp, &next_event);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+li_input_state_t li_win_xlib_get_state(unsigned int state) {
     li_input_state_t result = 0;
     if (state & ShiftMask) {
         result |= LI_INPUT_STATE_SHIFT;
@@ -93,18 +170,18 @@ li_input_state_t li_win_xlib_xlat_state(unsigned int state) {
         result |= LI_INPUT_STATE_SUPER;
     }
     if (state & Button1Mask) {
-        result |= LI_INPUT_STATE_LMOUSE;
+        result |= LI_INPUT_STATE_LMB;
     }
     if (state & Button3Mask) {
-        result |= LI_INPUT_STATE_RMOUSE;
+        result |= LI_INPUT_STATE_RMB;
     }
     if (state & Button2Mask) {
-        result |= LI_INPUT_STATE_MMOUSE;
+        result |= LI_INPUT_STATE_MMB;
     }
     return result;
 }
 
-li_input_key_t li_win_xlib_xlat_keysym(KeySym sym) {
+li_input_key_t li_win_xlib_get_keysym(KeySym sym) {
     switch (sym) {
     case XK_0:
         return LI_INPUT_KEY_0;
@@ -316,15 +393,15 @@ li_input_key_t li_win_xlib_xlat_keysym(KeySym sym) {
     return LI_INPUT_KEY_NULL;
 }
 
-li_input_key_t li_win_xlib_xlat_key(unsigned int key) {
+li_input_key_t li_win_xlib_get_key(unsigned int key) {
     int            i;
     int            count;
     li_input_key_t result = LI_INPUT_KEY_NULL;
     KeySym        *keysym;
     keysym = XGetKeyboardMapping(li_win_xlib_disp, key, 1, &count);
     for (i = 0; i < count && keysym[i] != NoSymbol; i++) {
-        key = li_win_xlib_xlat_keysym(keysym[i]);
-        if (key != LI_INPUT_KEY_NULL) {
+        result = li_win_xlib_get_keysym(keysym[i]);
+        if (result != LI_INPUT_KEY_NULL) {
             break;
         }
     }
@@ -332,7 +409,7 @@ li_input_key_t li_win_xlib_xlat_key(unsigned int key) {
     return result;
 }
 
-li_input_key_t li_win_xlib_xlat_button(unsigned int button) {
+li_input_button_t li_win_xlib_get_button(unsigned int button) {
     switch (button) {
     case Button1:
         return LI_INPUT_BUTTON_LEFT;
@@ -342,83 +419,4 @@ li_input_key_t li_win_xlib_xlat_button(unsigned int button) {
         return LI_INPUT_BUTTON_MIDDLE;
     }
     return LI_INPUT_BUTTON_NULL;
-}
-
-int li_win_xlib_event_repeat(XEvent *event) {
-    XEvent next_event;
-    if (event->type == KeyPress && XPending(li_win_xlib_disp)) {
-        XPeekEvent(li_win_xlib_disp, &next_event);
-        if (next_event.type == KeyPress
-            && next_event.xkey.time == event->xkey.time
-            && next_event.xkey.keycode == event->xkey.keycode) {
-            XNextEvent(li_win_xlib_disp, &next_event);
-            return 1;
-        }
-    }
-    return 0;
-}
-
-void li_win_xlib_event_key(li_win_t win, XEvent *event) {
-    li_win_send_key(
-        win,
-        event->type == KeyPress           ? li_win_msg_key_down
-        : li_win_xlib_event_repeat(event) ? li_win_msg_key_repeat
-                                          : li_win_msg_key_up,
-        li_win_xlib_xlat_state(event->xkey.state),
-        li_win_xlib_xlat_key(event->xkey.keycode));
-}
-
-void li_win_xlib_event_button(li_win_t win, XEvent *event) {
-    li_win_send_button(
-        win,
-        event->type == ButtonPress ? li_win_msg_button_down
-                                   : li_win_msg_button_up,
-        li_win_xlib_xlat_state(event->xbutton.state), event->xbutton.x,
-        event->xbutton.y, li_win_xlib_xlat_button(event->xbutton.button));
-}
-
-void li_win_xlib_event_motion(li_win_t win, XEvent *event) {
-    li_win_send_motion(
-        win, li_win_msg_motion, li_win_xlib_xlat_state(event->xmotion.state),
-        event->xmotion.x, event->xmotion.y);
-}
-
-void li_win_xlib_event_size(li_win_t win, XEvent *event) {
-    li_win_send_size(
-        win, li_win_msg_size, event->xconfigure.width,
-        event->xconfigure.height);
-}
-
-void li_win_xlib_event_close(li_win_t win) {
-    li_win_send_close(win, li_win_msg_close);
-}
-
-void li_win_xlib_event(XEvent *event) {
-    XPointer pointer;
-    li_win_t win;
-    XFindContext(
-        li_win_xlib_disp, event->xany.window, li_win_xlib_context, &pointer);
-    win = (li_win_t) pointer;
-    switch (event->type) {
-    case ClientMessage:
-        if ((unsigned long) event->xclient.data.l[0]
-            == li_win_xlib_wm_delete_window) {
-            li_win_xlib_event_close(win);
-        }
-        break;
-    case KeyPress:
-    case KeyRelease:
-        li_win_xlib_event_key(win, event);
-        break;
-    case ButtonPress:
-    case ButtonRelease:
-        li_win_xlib_event_button(win, event);
-        break;
-    case MotionNotify:
-        li_win_xlib_event_motion(win, event);
-        break;
-    case ConfigureNotify:
-        li_win_xlib_event_size(win, event);
-        break;
-    }
 }

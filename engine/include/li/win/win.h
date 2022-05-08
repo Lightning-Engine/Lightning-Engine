@@ -34,10 +34,6 @@ typedef void (*li_size_fun_t)(
     li_win_t win, li_win_msg_t msg, int width, int height);
 typedef void (*li_close_fun_t)(li_win_t win, li_win_msg_t msg);
 
-struct li_win {
-    void *ptr;
-};
-
 extern li_key_fun_t    li_win_key_fun;
 extern li_button_fun_t li_win_button_fun;
 extern li_motion_fun_t li_win_motion_fun;

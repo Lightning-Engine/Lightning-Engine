@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.16.0)
 include(CheckIncludeFile)
-include(CheckOBJCCompilerFlag)
 
-project(Lightning VERSION 0.0.0 LANGUAGES C OBJC)
+project(Lightning VERSION 0.0.0 LANGUAGES C)
 
 if(MSVC)
     add_compile_options(/W4)
+elseif(APPLE)
+    add_compile_options(-Wno-deprecated-declarations)
 else()
     add_compile_options(-Wall -Wextra -pedantic)
 endif()
@@ -24,7 +25,13 @@ check_include_file(dlfcn.h HAS_DLFCN)
 check_include_file(windows.h HAS_WIN32)
 check_include_file(mach-o/dyld.h HAS_DYLD)
 check_include_file(X11/Xlib.h HAS_XLIB)
-check_objc_compiler_flag("-framework Cocoa" HAS_COCOA)
+check_include_file(objc/objc-runtime.h HAS_OBJC)
+
+if(HAS_OBJC)
+    enable_language(OBJC)
+endif()
+
+find_library(LIB_COCOA Cocoa)
 
 set(SANITIZE_ADDRESS OFF CACHE BOOL "Enable Address Sanitizer")
 set(SANITIZE_MEMORY OFF CACHE BOOL "Enable Memory Sanitizer")
@@ -36,7 +43,7 @@ set(DL_WIN32 ${HAS_WIN32} CACHE BOOL "Use win32 for dynamic linking")
 set(DL_DYLD ${HAS_DYLD} CACHE BOOL "Use dyld for dynamic linking")
 set(WIN_XLIB ${HAS_XLIB} CACHE BOOL "Use Xlib for windowing")
 set(WIN_WIN32 ${HAS_WIN32} CACHE BOOL "Use win32 for windowing")
-set(WIN_COCOA ${HAS_COCOA} CACHE BOOL "Use Cocoa for windowing")
+set(WIN_COCOA ${HAS_OBJC} CACHE BOOL "Use Cocoa for windowing")
 
 set(SANITIZE_OPTIONS
     $<$<BOOL:${SANITIZE_ADDRESS}>:-fsanitize=address>
@@ -80,13 +87,9 @@ target_include_directories(Sandbox PRIVATE
     ${CMAKE_SOURCE_DIR}/sandbox/include
 )
 
-if(WIN_COCOA)
-    find_library(WIN_COCOA_LIB Cocoa)
-endif()
-
 target_link_libraries(Lightning PRIVATE
     $<$<BOOL:${WIN_XLIB}>:X11>
-    $<$<BOOL:${WIN_COCOA}>:${WIN_COCOA_LIB}>
+    $<$<BOOL:${WIN_COCOA}>:${LIB_COCOA}>
 )
 
 target_link_libraries(Sandbox PRIVATE Lightning)

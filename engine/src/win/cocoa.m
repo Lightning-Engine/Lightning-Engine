@@ -2,12 +2,19 @@
 
 #include "li/std.h"
 
+const struct li_win_impl li_win_cocoa_impl = {
+    li_win_cocoa_init, li_win_cocoa_exit, li_win_cocoa_poll,
+    li_win_cocoa_create, li_win_cocoa_destroy
+};
+
 @implementation LiWinCocoaWindow
 - (id)init:(li_win_t)_win width:(int)width height:(int)height {
-    self = [super initWithContentRect:NSMakeRect(0, 0, width, height)
-                            styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
-                              backing:NSBackingStoreBuffered
-                                defer:NO];
+    self = [super
+        initWithContentRect:NSMakeRect(0, 0, width, height)
+                  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
+                            | NSWindowStyleMaskResizable
+                    backing:NSBackingStoreBuffered
+                      defer:NO];
     if (self) {
         win = _win;
     }
@@ -52,32 +59,38 @@
 }
 
 - (void)mouseDown:(NSEvent *)event {
-    ((struct li_win_cocoa *) win)->state |= LI_INPUT_STATE_LMOUSE;
+    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
+    win_cocoa->state |= LI_INPUT_STATE_LMB;
     li_win_cocoa_event_button(win, event, 1, LI_INPUT_BUTTON_LEFT);
 }
 
 - (void)mouseUp:(NSEvent *)event {
-    ((struct li_win_cocoa *) win)->state &= ~LI_INPUT_STATE_LMOUSE;
+    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
+    win_cocoa->state &= ~LI_INPUT_STATE_LMB;
     li_win_cocoa_event_button(win, event, 0, LI_INPUT_BUTTON_LEFT);
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
-    ((struct li_win_cocoa *) win)->state |= LI_INPUT_STATE_RMOUSE;
+    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
+    win_cocoa->state |= LI_INPUT_STATE_RMB;
     li_win_cocoa_event_button(win, event, 1, LI_INPUT_BUTTON_RIGHT);
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
-    ((struct li_win_cocoa *) win)->state &= ~LI_INPUT_STATE_RMOUSE;
+    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
+    win_cocoa->state &= ~LI_INPUT_STATE_RMB;
     li_win_cocoa_event_button(win, event, 0, LI_INPUT_BUTTON_RIGHT);
 }
 
 - (void)otherMouseDown:(NSEvent *)event {
-    ((struct li_win_cocoa *) win)->state |= LI_INPUT_STATE_MMOUSE;
+    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
+    win_cocoa->state |= LI_INPUT_STATE_MMB;
     li_win_cocoa_event_button(win, event, 1, LI_INPUT_BUTTON_MIDDLE);
 }
 
 - (void)otherMouseUp:(NSEvent *)event {
-    ((struct li_win_cocoa *) win)->state &= ~LI_INPUT_STATE_MMOUSE;
+    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
+    win_cocoa->state &= ~LI_INPUT_STATE_MMB;
     li_win_cocoa_event_button(win, event, 0, LI_INPUT_BUTTON_MIDDLE);
 }
 
@@ -97,11 +110,6 @@
     li_win_cocoa_event_motion(win, event);
 }
 @end
-
-const struct li_win_impl li_win_cocoa_impl = {
-    li_win_cocoa_init, li_win_cocoa_exit, li_win_cocoa_poll,
-    li_win_cocoa_create, li_win_cocoa_destroy
-};
 
 int li_win_cocoa_init(void) {
     li_win_impl = &li_win_cocoa_impl;
@@ -131,9 +139,11 @@ li_win_t li_win_cocoa_create(int width, int height) {
     struct li_win_cocoa *win_cocoa;
     win_cocoa = li_std_malloc(sizeof *win_cocoa);
     if (win_cocoa != NULL) {
-        win_cocoa->window   = [[LiWinCocoaWindow alloc] init:(li_win_t)win_cocoa width:width height:height];
-        win_cocoa->view     = [[LiWinCocoaView alloc] init:(li_win_t)win_cocoa];
-        win_cocoa->state    = 0;
+        win_cocoa->window = [[LiWinCocoaWindow alloc] init:(li_win_t) win_cocoa
+                                                     width:width
+                                                    height:height];
+        win_cocoa->view   = [[LiWinCocoaView alloc] init:(li_win_t) win_cocoa];
+        win_cocoa->state  = 0;
         if (win_cocoa->window != nil && win_cocoa->view != nil) {
             [win_cocoa->window setContentView:win_cocoa->view];
             [win_cocoa->window setDelegate:win_cocoa->window];
@@ -161,9 +171,64 @@ void li_win_cocoa_destroy(li_win_t win) {
     li_std_free(win_cocoa);
 }
 
-li_input_state_t li_win_cocoa_xlat_state(li_win_t win, NSUInteger state) {
+void li_win_cocoa_event_key(li_win_t win, NSEvent *event, int down) {
+    li_win_send_key(
+        win,
+        [event isARepeat] ? li_win_msg_key_repeat
+        : down            ? li_win_msg_key_down
+                          : li_win_msg_key_up,
+        li_win_cocoa_get_state(win, [event modifierFlags]),
+        li_win_cocoa_get_key([event keyCode]));
+}
+
+void li_win_cocoa_event_button(
+    li_win_t win, NSEvent *event, int down, li_input_button_t button) {
     struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
-    li_input_state_t result = win_cocoa->state;
+    NSPoint              location;
+    if (li_win_cocoa_get_point(win, event, &location)) {
+        li_win_send_button(
+            win, down ? li_win_msg_button_down : li_win_msg_button_up,
+            li_win_cocoa_get_state(win, [event modifierFlags]), location.x,
+            location.y, button);
+    }
+}
+
+void li_win_cocoa_event_motion(li_win_t win, NSEvent *event) {
+    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
+    NSPoint              location;
+    if (li_win_cocoa_get_point(win, event, &location)) {
+        li_win_send_motion(
+            win, li_win_msg_motion,
+            li_win_cocoa_get_state(win, [event modifierFlags]), location.x,
+            location.y);
+    }
+}
+
+void li_win_cocoa_event_size(li_win_t win) {
+    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
+    NSRect               frame;
+    frame = [win_cocoa->view frame];
+    li_win_send_size(win, li_win_msg_size, frame.size.width, frame.size.height);
+}
+
+void li_win_cocoa_event_close(li_win_t win) {
+    li_win_send_close(win, li_win_msg_close);
+}
+
+int li_win_cocoa_get_point(li_win_t win, NSEvent *event, NSPoint *point) {
+    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
+    NSRect               frame;
+    frame    = [win_cocoa->view frame];
+    *point   = [event locationInWindow];
+    point->x = point->x - frame.origin.x;
+    point->y = frame.origin.y - point->y + frame.size.height;
+    return point->x >= 0 && point->y >= 0 && point->x < frame.size.width
+        && point->y < frame.size.height;
+}
+
+li_input_state_t li_win_cocoa_get_state(li_win_t win, NSUInteger state) {
+    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
+    li_input_state_t     result    = win_cocoa->state;
     if (state & NSShiftKeyMask) {
         result |= LI_INPUT_STATE_SHIFT;
     }
@@ -182,7 +247,7 @@ li_input_state_t li_win_cocoa_xlat_state(li_win_t win, NSUInteger state) {
     return (result);
 }
 
-li_input_key_t li_win_cocoa_xlat_key(unsigned short key) {
+li_input_key_t li_win_cocoa_get_key(unsigned short key) {
     switch (key) {
     case 29:
         return LI_INPUT_KEY_0;
@@ -388,57 +453,4 @@ li_input_key_t li_win_cocoa_xlat_key(unsigned short key) {
         return LI_INPUT_KEY_EQUAL;
     }
     return LI_INPUT_KEY_NULL;
-}
-
-li_input_key_t li_win_cocoa_xlat_button(NSUInteger type) {
-    switch (type) {
-    case NSEventTypeLeftMouseDown:
-    case NSEventTypeLeftMouseUp:
-        return LI_INPUT_BUTTON_LEFT;
-    case NSEventTypeRightMouseDown:
-    case NSEventTypeRightMouseUp:
-        return LI_INPUT_BUTTON_RIGHT;
-    case NSEventTypeOtherMouseDown:
-    case NSEventTypeOtherMouseUp:
-        return LI_INPUT_BUTTON_MIDDLE;
-    }
-    return LI_INPUT_BUTTON_NULL;
-}
-
-void li_win_cocoa_event_key(li_win_t win, NSEvent *event, int down) {
-    li_win_send_key(
-        win,
-        down                ? li_win_msg_key_down
-        : [event isARepeat] ? li_win_msg_key_repeat
-                            : li_win_msg_key_up,
-        li_win_cocoa_xlat_state(win, [event modifierFlags]),
-        li_win_cocoa_xlat_key([event keyCode]));
-}
-
-void li_win_cocoa_event_button(
-    li_win_t win, NSEvent *event, int down, li_input_button_t button) {
-    NSPoint location;
-    location = [event locationInWindow];
-    li_win_send_button(
-        win, down ? li_win_msg_button_down : li_win_msg_button_up,
-        li_win_cocoa_xlat_state(win, [event modifierFlags]), location.x, location.y,
-        button);
-}
-
-void li_win_cocoa_event_motion(li_win_t win, NSEvent *event) {
-    NSPoint location;
-    location = [event locationInWindow];
-    li_win_send_motion(
-        win, li_win_msg_motion, li_win_cocoa_xlat_state(win, [event modifierFlags]),
-        location.x, location.y);
-}
-
-void li_win_cocoa_event_size(li_win_t win) {
-    NSRect frame;
-    frame = [((struct li_win_cocoa *) win)->view frame];
-    li_win_send_size(win, li_win_msg_size, frame.size.width, frame.size.height);
-}
-
-void li_win_cocoa_event_close(li_win_t win) {
-    li_win_send_close(win, li_win_msg_close);
 }

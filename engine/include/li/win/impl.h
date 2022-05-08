@@ -11,9 +11,6 @@ struct li_win_impl {
     void (*destroy)(li_win_t win);
 };
 
-struct li_win_base {
-    struct li_win win;
-};
 extern const struct li_win_impl  li_win_xlib_impl;
 extern const struct li_win_impl  li_win_win32_impl;
 extern const struct li_win_impl  li_win_cocoa_impl;
