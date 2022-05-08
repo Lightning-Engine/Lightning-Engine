@@ -2,9 +2,13 @@
 
 #include "li/std.h"
 
-@interface LiWinCocoaDelegate : NSObject <NSWindowDelegate> {
-    li_win_t win;
+@interface LiWinCocoaWindow : NSWindow {
 }
+@end
+
+@interface LiWinCocoaDelegate : NSObject <NSWindowDelegate> {
+}
+@property(readwrite) li_win_t win;
 @end
 
 @interface LiWinCocoaView : NSView {
@@ -13,7 +17,15 @@
 @property(readwrite) li_input_state_t       state;
 @end
 
+@implementation LiWinCocoaWindow
+- (BOOL)acceptsFirstResponder {
+    return YES;
+}
+@end
+
 @implementation LiWinCocoaDelegate
+@synthesize     win;
+
 - (BOOL)windowShouldClose:(NSWindow *)sender {
     li_win_cocoa_event_close(win);
     return NO;
@@ -114,7 +126,7 @@ li_win_t li_win_cocoa_create(int width, int height) {
     struct li_win_cocoa *win_cocoa;
     win_cocoa = li_std_malloc(sizeof *win_cocoa);
     if (win_cocoa != NULL) {
-        win_cocoa->window   = [[NSWindow alloc]
+        win_cocoa->window   = [[LiWinCocoaWindow alloc]
             initWithContentRect:NSMakeRect(0, 0, width, height)
                       styleMask:NSWindowStyleMaskTitled
                                 | NSWindowStyleMaskClosable

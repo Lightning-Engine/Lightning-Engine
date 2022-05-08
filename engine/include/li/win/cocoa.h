@@ -9,7 +9,7 @@ struct li_win_cocoa {
     struct li_win_base base;
     NSWindow          *window;
     NSView            *view;
-    NSObject  *delegate;
+    NSObject<NSWindowDelegate>  *delegate;
 };
 
 int      li_win_cocoa_init(void);
