@@ -5,11 +5,21 @@
 
 #import <Cocoa/Cocoa.h>
 
+@interface LiWinCocoaWindow : NSWindow <NSWindowDelegate> {
+    li_win_t win;
+}
+@end
+
+@interface LiWinCocoaView : NSView {
+    li_win_t win;
+}
+@end
+
 struct li_win_cocoa {
     struct li_win_base base;
-    NSWindow          *window;
-    NSView            *view;
-    NSObject<NSWindowDelegate>  *delegate;
+    LiWinCocoaWindow  *window;
+    LiWinCocoaView    *view;
+    li_input_state_t   state;
 };
 
 int      li_win_cocoa_init(void);
@@ -18,7 +28,7 @@ void     li_win_cocoa_poll(void);
 li_win_t li_win_cocoa_create(int width, int height);
 void     li_win_cocoa_destroy(li_win_t win);
 
-li_input_state_t li_win_cocoa_xlat_state(NSUInteger state);
+li_input_state_t li_win_cocoa_xlat_state(li_win_t win, NSUInteger state);
 li_input_key_t   li_win_cocoa_xlat_key(unsigned short key);
 li_input_key_t   li_win_cocoa_xlat_button(NSUInteger type);
 
