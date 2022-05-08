@@ -21,6 +21,10 @@
 - (BOOL)acceptsFirstResponder {
     return YES;
 }
+
+- (BOOL)canBecomeKeyWindow {
+    return YES;
+}
 @end
 
 @implementation LiWinCocoaDelegate
