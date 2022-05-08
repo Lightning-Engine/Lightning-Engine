@@ -3,15 +3,26 @@
 #import "Cocoa/Cocoa.h"
 #include "li/std.h"
 
+li_win_state_t li_win_cocoa_state(NSUInteger flags);
+li_win_key_t   li_win_cocoa_button(NSUInteger type);
+void           li_win_cocoa_mouse(
+              struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
+void li_win_cocoa_mousedown(
+                            struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
+void li_win_cocoa_mouseup(
+                          struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
+void li_win_cocoa_mousemove(
+                            struct li_win_cocoa *win, li_win_state_t state, NSEvent *event);
+
 @interface LiWinCocoaDelegate : NSObject <NSWindowDelegate> {
     struct li_win_cocoa *win;
 }
 @end
 
 @interface LiWinCocoaView : NSView {
-    struct li_win_cocoa *win;
-    li_win_state_t       state;
 }
+@property (readwrite) struct li_win_cocoa *win;
+@property (readwrite) li_win_state_t       state;
 @end
 
 @implementation LiWinCocoaDelegate
@@ -30,6 +41,9 @@
 @end
 
 @implementation LiWinCocoaView
+@synthesize win;
+@synthesize state;
+
 - (void)keyDown:(NSEvent *)event {
     li_win_win        = win;
     li_win_key        = [event keyCode];
@@ -79,19 +93,19 @@
 }
 
 - (void)mouseMoved:(NSEvent *)event {
-    li_win_cocoa_mousemove(win, event);
+    li_win_cocoa_mousemove(win, state, event);
 }
 
 - (void)mouseDragged:(NSEvent *)event {
-    li_win_cocoa_mousemove(win, event);
+    li_win_cocoa_mousemove(win, state, event);
 }
 
 - (void)rightMouseDragged:(NSEvent *)event {
-    li_win_cocoa_mousemove(win, event);
+    li_win_cocoa_mousemove(win, state, event);
 }
 
 - (void)otherMouseDragged:(NSEvent *)event {
-    li_win_cocoa_mousemove(win, event);
+    li_win_cocoa_mousemove(win, state, event);
 }
 @end
 
@@ -137,9 +151,9 @@ li_win_t li_win_cocoa_create(int width, int height) {
         win_cocoa->delegate = [LiWinCocoaDelegate new];
         if (win_cocoa->window != nil && win_cocoa->view != nil
             && win_cocoa->delegate != nil) {
-            [win_cocoa->view].win     = win_cocoa;
-            [win_cocoa->view].state   = 0;
-            [win_cocoa->delegate].win = win_cocoa;
+            ((LiWinCocoaView *) win_cocoa->view).win     = win_cocoa;
+            ((LiWinCocoaView *) win_cocoa->view).state   = 0;
+            ((LiWinCocoaView *) win_cocoa->delegate).win = win_cocoa;
             [win_cocoa->window setContentView:win_cocoa->view];
             [win_cocoa->window makeFirstResponder:win_cocoa->view];
             [win_cocoa->window setDelegate:win_cocoa->delegate];
@@ -164,10 +178,10 @@ li_win_state_t li_win_cocoa_state(NSUInteger flags) {
         state |= LI_WIN_STATE_SHIFT;
     }
     if (flags & NSAlphaShiftKeyMask) {
-        state |= LI_WIN_STATE_CAPS;
+        state |= LI_WIN_STATE_CAPSLOCK;
     }
     if (flags & NSControlKeyMask) {
-        state |= LI_WIN_STATE_CTRL;
+        state |= LI_WIN_STATE_CONTROL;
     }
     if (flags & NSAlternateKeyMask) {
         state |= LI_WIN_STATE_ALT;
@@ -406,8 +420,8 @@ void li_win_cocoa_mousedown(
     li_win_win         = (li_win_t) win;
     li_win_key         = li_win_cocoa_button([event type]);
     li_win_win->state  = state | li_win_cocoa_state([event modifierFlags]);
-    li_win_win->mousex = [event mouseLocation].x;
-    li_win_win->mousey = [event mouseLocation].y;
+    li_win_win->mousex = [event locationInWindow].x;
+    li_win_win->mousey = [event locationInWindow].y;
     li_win_fun(li_win_msg_mousedown);
 }
 
@@ -416,8 +430,8 @@ void li_win_cocoa_mouseup(
     li_win_win         = (li_win_t) win;
     li_win_key         = li_win_cocoa_button([event type]);
     li_win_win->state  = state | li_win_cocoa_state([event modifierFlags]);
-    li_win_win->mousex = [event mouseLocation].x;
-    li_win_win->mousey = [event mouseLocation].y;
+    li_win_win->mousex = [event locationInWindow].x;
+    li_win_win->mousey = [event locationInWindow].y;
     li_win_fun(li_win_msg_mouseup);
 }
 
@@ -425,7 +439,7 @@ void li_win_cocoa_mousemove(
     struct li_win_cocoa *win, li_win_state_t state, NSEvent *event) {
     li_win_win         = (li_win_t) win;
     li_win_win->state  = state | li_win_cocoa_state([event modifierFlags]);
-    li_win_win->mousex = [event mouseLocation].x;
-    li_win_win->mousey = [event mouseLocation].y;
+    li_win_win->mousex = [event locationInWindow].x;
+    li_win_win->mousey = [event locationInWindow].y;
     li_win_fun(li_win_msg_mousemove);
 }
