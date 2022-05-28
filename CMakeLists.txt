@@ -26,6 +26,7 @@ check_include_file(windows.h HAS_WIN32)
 check_include_file(mach-o/dyld.h HAS_DYLD)
 check_include_file(X11/Xlib.h HAS_XLIB)
 check_include_file(objc/objc-runtime.h HAS_OBJC)
+check_include_file(${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.h HAS_ANDROID)
 
 if(HAS_OBJC)
     enable_language(OBJC)
@@ -44,6 +45,10 @@ set(DL_DYLD ${HAS_DYLD} CACHE BOOL "Use dyld for dynamic linking")
 set(WIN_XLIB ${HAS_XLIB} CACHE BOOL "Use Xlib for windowing")
 set(WIN_WIN32 ${HAS_WIN32} CACHE BOOL "Use win32 for windowing")
 set(WIN_COCOA ${HAS_OBJC} CACHE BOOL "Use Cocoa for windowing")
+set(MAIN_MAIN ON CACHE BOOL "Use main for main")
+set(MAIN_ANDROID ${HAS_ANDROID} CACHE BOOL "Use android for main")
+
+set(MAIN_SHARED ${MAIN_ANDROID})
 
 set(SANITIZE_OPTIONS
     $<$<BOOL:${SANITIZE_ADDRESS}>:-fsanitize=address>
@@ -68,7 +73,19 @@ add_library(Lightning
     $<$<BOOL:${WIN_COCOA}>:engine/src/win/cocoa.m>
 )
 
-add_executable(Sandbox sandbox/src/main.c)
+add_library(Sandbox sandbox/src/main.c)
+
+set(MAIN_FILES
+    $<$<BOOL:${MAIN_MAIN}>:engine/src/main/main.c>
+    $<$<BOOL:${MAIN_ANDROID}>:engine/src/main/android.c>
+    $<$<BOOL:${MAIN_ANDROID}>:${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c>
+)
+
+if(MAIN_SHARED)
+    add_library(Main SHARED ${MAIN_FILES})
+else()
+    add_executable(Main ${MAIN_FILES})
+endif()
 
 target_compile_definitions(Lightning PRIVATE
     $<$<BOOL:${DL_DLFCN}>:LI_DL_DLFCN=1>
@@ -87,12 +104,23 @@ target_include_directories(Sandbox PRIVATE
     ${CMAKE_SOURCE_DIR}/sandbox/include
 )
 
+target_include_directories(Main PRIVATE
+    $<$<BOOL:${MAIN_ANDROID}>:${ANDROID_NDK}/sources/android/native_app_glue>
+)
+
 target_link_libraries(Lightning PRIVATE
     $<$<BOOL:${WIN_XLIB}>:X11>
     $<$<BOOL:${WIN_COCOA}>:${LIB_COCOA}>
 )
 
 target_link_libraries(Sandbox PRIVATE Lightning)
+target_link_libraries(Main PRIVATE Lightning Sandbox)
+
+if(HAS_ANDROID)
+    find_library(LIB_ANDROID android)
+    find_library(LIB_LOG log)
+    target_link_libraries(Main PRIVATE ${LIB_ANDROID} ${LIB_LOG})
+endif()
 
 add_custom_target(fmt
     COMMAND clang-format -i ${FILES}

@@ -5,11 +5,11 @@
 
 const struct li_win_impl *li_win_impl = NULL;
 
-li_key_fun_t    li_win_key_fun;
-li_button_fun_t li_win_button_fun;
-li_motion_fun_t li_win_motion_fun;
-li_size_fun_t   li_win_size_fun;
-li_close_fun_t  li_win_close_fun;
+li_key_fun_t    li_win_key_fun    = NULL;
+li_button_fun_t li_win_button_fun = NULL;
+li_motion_fun_t li_win_motion_fun = NULL;
+li_size_fun_t   li_win_size_fun   = NULL;
+li_close_fun_t  li_win_close_fun  = NULL;
 
 int li_win_init(void) {
     int result = -1;

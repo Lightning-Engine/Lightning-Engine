@@ -1,3 +1,6 @@
 /.vscode
 /.vsls.json
 /build
+/android/.gradle
+/android/app/build
+/android/app/.cxx

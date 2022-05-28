@@ -49,7 +49,7 @@ void close_fun(li_win_t win, li_win_msg_t msg) {
     running = 0;
 }
 
-int main(void) {
+void li_main(void) {
     li_win_t win;
     li_win_key_fun    = key_fun;
     li_win_button_fun = button_fun;
@@ -63,5 +63,4 @@ int main(void) {
     }
     li_win_destroy(win);
     li_win_exit();
-    return EXIT_SUCCESS;
 }
