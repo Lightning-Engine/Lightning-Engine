@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <android/log.h>
 
 static int running = 1;
 
@@ -53,12 +52,10 @@ void win_close_fun(li_win_t win, li_win_msg_t msg) {
 
 void view_key_fun(li_view_msg_t msg) {
     (void) msg;
-    __android_log_print(ANDROID_LOG_INFO, "li", "key_fun");
 }
 
 void view_motion_fun(li_view_msg_t msg) {
     (void) msg;
-    __android_log_print(ANDROID_LOG_INFO, "li", "motion_fun");
 }
 
 void li_main(void) {
@@ -80,7 +77,7 @@ void li_main(void) {
     li_view_key_fun = view_key_fun;
     li_view_motion_fun = view_motion_fun;
     li_view_init();
-    __android_log_print(ANDROID_LOG_INFO, "li", "li_main");
+    printf("li_main\n");
     while (1)
         li_view_poll();
 }
