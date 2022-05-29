@@ -88,7 +88,7 @@ void li_main(void) {
     li_view_key_fun    = view_key_fun;
     li_view_motion_fun = view_motion_fun;
     li_view_init();
-    __android_log_print(ANDROID_LOG_INFO, "li", "li_main");
+    printf("li_main\n");
     while (1)
         li_view_poll();
     */

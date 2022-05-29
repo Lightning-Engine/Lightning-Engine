@@ -6,17 +6,33 @@
 //
 
 #import "li/view/ios.h"
+#import "li/main/ios.h"
 
-@interface AppDelegate ()
+const struct li_view_impl li_view_ios_impl = { li_view_ios_init, li_view_ios_poll };
 
+@interface IOSAppDelegate ()
+ 
 @end
 
-@implementation AppDelegate
+@interface IOSView ()
+ 
+@end
+
+
+@implementation IOSAppDelegate
 
 - (BOOL)application:(UIApplication *)application
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     li_main();
     return YES;
+}
+
+- (id)init {
+    printf("here\n");
+    self = [super init];
+    CGRect viewRect = CGRectMake(10, 10, 100, 100);
+    [[self inputView] addSubview:[[IOSView alloc] initWithFrame:viewRect]];
+    return self;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
@@ -45,5 +61,32 @@
     // application was inactive. If the application was previously in the
     // background, optionally refresh the user interface.
 }
-
 @end
+
+<<<<<<< HEAD
+=======
+@implementation IOSView
+
+- (id)init {
+    self = [super init];
+    printf("Ola\n");
+    return self;
+}
+
+- (void) touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    (void) touches;
+    (void) event;
+    printf("Touch\n");
+}
+
+>>>>>>> b6b66c920d9debbce8be32195441976e274aebfd
+@end
+
+int li_view_ios_init(void) {
+    li_view_impl = &li_view_ios_impl;
+    return (0);
+}
+
+void li_view_ios_poll(void) {
+    return (0);
+}
