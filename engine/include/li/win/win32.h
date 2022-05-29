@@ -20,6 +20,7 @@ void     li_win_win32_destroy(li_win_t win);
 void li_win_win32_event_key(li_win_t win, LPARAM lparam, int down);
 void li_win_win32_event_button(
     li_win_t win, LPARAM lparam, int down, li_input_button_t button);
+void li_win_win32_event_scroll(li_win_t win, WPARAM wparam, LPARAM lparam);
 void li_win_win32_event_motion(li_win_t win, LPARAM lparam);
 void li_win_win32_event_size(li_win_t win, LPARAM lparam);
 void li_win_win32_event_close(li_win_t win);

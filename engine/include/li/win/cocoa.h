@@ -30,6 +30,7 @@ void     li_win_cocoa_destroy(li_win_t win);
 void li_win_cocoa_event_key(li_win_t win, NSEvent *event, int down);
 void li_win_cocoa_event_button(
     li_win_t win, NSEvent *event, int down, li_input_button_t button);
+void li_win_cocoa_event_scroll(li_win_t win, NSEvent *event);
 void li_win_cocoa_event_motion(li_win_t win, NSEvent *event);
 void li_win_cocoa_event_size(li_win_t win);
 void li_win_cocoa_event_close(li_win_t win);

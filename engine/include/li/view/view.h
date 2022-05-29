@@ -3,8 +3,8 @@
 
 enum li_view_msg {
     li_view_msg_key,
-    li_view_msg_pointer_down,
-    li_view_msg_pointer_up,
+    li_view_msg_motion_down,
+    li_view_msg_motion_up,
     li_view_msg_motion
 };
 

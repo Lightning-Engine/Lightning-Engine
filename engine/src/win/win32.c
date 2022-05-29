@@ -2,6 +2,8 @@
 
 #include "li/std.h"
 
+#include <windowsx.h>
+
 #ifndef LI_WIN_WIN32_CLASS
 # define LI_WIN_WIN32_CLASS "LI_WIN"
 #endif
@@ -56,6 +58,12 @@ li_win_t li_win_win32_create(int width, int height) {
     return NULL;
 }
 
+void li_win_win32_destroy(li_win_t win) {
+    struct li_win_win32 *win_win32 = (struct li_win_win32 *) win;
+    DestroyWindow(win_win32->hwnd);
+    li_std_free(win_win32);
+}
+
 void li_win_win32_event_key(li_win_t win, LPARAM lparam, int down) {
     li_win_send_key(
         win,
@@ -70,6 +78,21 @@ void li_win_win32_event_button(
     li_win_send_button(
         win, down ? li_win_msg_button_down : li_win_msg_button_up,
         li_win_win32_get_state(), LOWORD(lparam), HIWORD(lparam), button);
+}
+
+void li_win_win32_event_scroll(li_win_t win, WPARAM wparam, LPARAM lparam) {
+    struct li_win_win32 *win_win32 = (struct li_win_win32 *) win;
+    li_input_state_t     state;
+    li_input_button_t    button;
+    POINT                pt;
+    state  = li_win_win32_get_state();
+    button = GET_WHEEL_DELTA_WPARAM(wparam) > 0 ? LI_INPUT_BUTTON_UP
+                                                : LI_INPUT_BUTTON_DOWN;
+    pt.x   = GET_X_LPARAM(lparam);
+    pt.y   = GET_Y_LPARAM(lparam);
+    ScreenToClient(win_win32->hwnd, &pt);
+    li_win_send_button(win, li_win_msg_button_down, state, pt.x, pt.y, button);
+    li_win_send_button(win, li_win_msg_button_up, state, pt.x, pt.y, button);
 }
 
 void li_win_win32_event_motion(li_win_t win, LPARAM lparam) {
@@ -121,6 +144,9 @@ li_win_win32_event(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam) {
         li_win_win32_event_button(
             win, lparam, umsg == WM_XBUTTONDOWN, LI_INPUT_BUTTON_NULL);
         return 0;
+    case WM_MOUSEWHEEL:
+        li_win_win32_event_scroll(win, wparam, lparam);
+        return 0;
     case WM_MOUSEMOVE:
         li_win_win32_event_motion(win, lparam);
         return 0;
@@ -129,12 +155,6 @@ li_win_win32_event(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam) {
         return 0;
     }
     return DefWindowProc(hwnd, umsg, wparam, lparam);
-}
-
-void li_win_win32_destroy(li_win_t win) {
-    struct li_win_win32 *win_win32 = (struct li_win_win32 *) win;
-    DestroyWindow(win_win32->hwnd);
-    li_std_free(win_win32);
 }
 
 li_input_state_t li_win_win32_get_state(void) {

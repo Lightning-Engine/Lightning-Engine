@@ -124,6 +124,8 @@
 #define LI_INPUT_BUTTON_LEFT   0x0000
 #define LI_INPUT_BUTTON_RIGHT  0x0001
 #define LI_INPUT_BUTTON_MIDDLE 0x0002
+#define LI_INPUT_BUTTON_UP     0x0003
+#define LI_INPUT_BUTTON_DOWN   0x0004
 #define LI_INPUT_BUTTON_NULL   0xFFFF
 
 typedef unsigned short li_input_state_t;

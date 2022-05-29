@@ -43,6 +43,7 @@ if(HAS_OBJC)
     enable_language(OBJC)
 endif()
 
+# TODO: use these libraries for HAS_* checks
 find_library(LIB_COCOA Cocoa)
 find_library(LIB_UIKIT UIKit)
 
@@ -57,7 +58,7 @@ set(DL_DYLD ${HAS_DYLD} CACHE BOOL "Use dyld for dynamic linking")
 set(WIN_XLIB ${HAS_XLIB} CACHE BOOL "Use Xlib for windowing")
 set(WIN_WIN32 ${HAS_WIN32} CACHE BOOL "Use win32 for windowing")
 set(WIN_COCOA ${HAS_OBJC} CACHE BOOL "Use Cocoa for windowing")
-set(MAIN_MAIN ON CACHE BOOL "Use main for main")
+set(MAIN_MAIN $<BOOL:$<NOT:$<OR:$<BOOL:${HAS_ANDROID}>,$<BOOL:${HAS_IOS}>>>> CACHE BOOL "Use main for main")
 set(MAIN_ANDROID ${HAS_ANDROID} CACHE BOOL "Use android for main")
 set(MAIN_IOS ${HAS_IOS} CACHE BOOL "Use IOS for main")
 set(VIEW_ANDROID ${HAS_ANDROID} CACHE BOOL "Use android for views")

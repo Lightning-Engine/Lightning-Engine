@@ -94,6 +94,10 @@ const struct li_win_impl li_win_cocoa_impl = {
     li_win_cocoa_event_button(win, event, 0, LI_INPUT_BUTTON_MIDDLE);
 }
 
+- (void)scrollWheel:(NSEvent *)event {
+    li_win_cocoa_event_scroll(win, event);
+}
+
 - (void)mouseMoved:(NSEvent *)event {
     li_win_cocoa_event_motion(win, event);
 }
@@ -183,8 +187,7 @@ void li_win_cocoa_event_key(li_win_t win, NSEvent *event, int down) {
 
 void li_win_cocoa_event_button(
     li_win_t win, NSEvent *event, int down, li_input_button_t button) {
-    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
-    NSPoint              location;
+    NSPoint location;
     if (li_win_cocoa_get_point(win, event, &location)) {
         li_win_send_button(
             win, down ? li_win_msg_button_down : li_win_msg_button_up,
@@ -193,9 +196,23 @@ void li_win_cocoa_event_button(
     }
 }
 
+void li_win_cocoa_event_scroll(li_win_t win, NSEvent *event) {
+    li_input_state_t  state;
+    li_input_button_t button;
+    NSPoint           location;
+    state  = li_win_cocoa_get_state(win, [event modifierFlags]);
+    button = [event deltaY] > 0 ? LI_INPUT_BUTTON_WHEEL_UP
+                                : LI_INPUT_BUTTON_WHEEL_DOWN;
+    if (li_win_cocoa_get_point(win, event, &location)) {
+        li_win_send_button(
+            win, li_win_msg_button_down, state, location.x, location.y, button);
+        li_win_send_button(
+            win, li_win_msg_button_up, state, location.x, location.y, button);
+    }
+}
+
 void li_win_cocoa_event_motion(li_win_t win, NSEvent *event) {
-    struct li_win_cocoa *win_cocoa = (struct li_win_cocoa *) win;
-    NSPoint              location;
+    NSPoint location;
     if (li_win_cocoa_get_point(win, event, &location)) {
         li_win_send_motion(
             win, li_win_msg_motion,

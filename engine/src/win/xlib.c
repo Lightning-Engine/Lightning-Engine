@@ -417,6 +417,10 @@ li_input_button_t li_win_xlib_get_button(unsigned int button) {
         return LI_INPUT_BUTTON_RIGHT;
     case Button2:
         return LI_INPUT_BUTTON_MIDDLE;
+    case Button4:
+        return LI_INPUT_BUTTON_UP;
+    case Button5:
+        return LI_INPUT_BUTTON_DOWN;
     }
     return LI_INPUT_BUTTON_NULL;
 }
