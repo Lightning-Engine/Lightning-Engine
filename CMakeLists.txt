@@ -11,14 +11,6 @@ else()
     add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
-set(CMAKE_C_STANDARD 90)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
-
-set(CMAKE_OBJC_STANDARD 90)
-set(CMAKE_OBJC_STANDARD_REQUIRED ON)
-set(CMAKE_OBJC_EXTENSIONS OFF)
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 check_include_file(dlfcn.h HAS_DLFCN)
@@ -33,6 +25,7 @@ if(HAS_OBJC)
 endif()
 
 find_library(LIB_COCOA Cocoa)
+find_library(LIB_UIKIT UIKit)
 
 set(SANITIZE_ADDRESS OFF CACHE BOOL "Enable Address Sanitizer")
 set(SANITIZE_MEMORY OFF CACHE BOOL "Enable Memory Sanitizer")
@@ -115,6 +108,7 @@ target_include_directories(Main PRIVATE
 target_link_libraries(Lightning PRIVATE
     $<$<BOOL:${WIN_XLIB}>:X11>
     $<$<BOOL:${WIN_COCOA}>:${LIB_COCOA}>
+    $<$<BOOL:${MAIN_IOS}>:${LIB_UIKIT}>
 )
 
 target_link_libraries(Sandbox PRIVATE Lightning)
