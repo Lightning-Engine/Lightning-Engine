@@ -1,12 +1,15 @@
-#ifndef LI_VIEW_IOS_H
-#define LI_VIEW_IOS_H
+//
+//  AppDelegate.h
+//  LightTest
+//
+//  Created by Daan Meijer on 29/05/2022.
+//
 
 #import <UIKit/UIKit.h>
 
-@interface IOSAppDelegate : UIResponder <UIApplicationDelegate>
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
 
 @property(strong, nonatomic) UIWindow *window;
 
 @end
 
-#endif

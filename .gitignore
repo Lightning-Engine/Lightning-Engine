@@ -4,3 +4,5 @@
 /android/.gradle
 /android/app/build
 /android/app/.cxx
+/.cache
+/.DS_Store

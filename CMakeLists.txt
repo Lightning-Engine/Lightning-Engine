@@ -11,11 +11,16 @@ else()
     add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
-set(CMAKE_C_STANDARD 90)
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set(CMAKE_C_STANDARD 99)
+    set(CMAKE_OBJC_STANDARD 99)
+else()
+    set(CMAKE_C_STANDARD 90)
+    set(CMAKE_OBJC_STANDARD 90)
+endif()
+
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
-
-set(CMAKE_OBJC_STANDARD 90)
 set(CMAKE_OBJC_STANDARD_REQUIRED ON)
 set(CMAKE_OBJC_EXTENSIONS OFF)
 
@@ -28,11 +33,18 @@ check_include_file(X11/Xlib.h HAS_XLIB)
 check_include_file(objc/objc-runtime.h HAS_OBJC)
 check_include_file(${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.h HAS_ANDROID)
 
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set(HAS_IOS ON)
+else()
+    set(HAS_IOS OFF)
+endif()
+
 if(HAS_OBJC)
     enable_language(OBJC)
 endif()
 
 find_library(LIB_COCOA Cocoa)
+find_library(LIB_UIKIT UIKit)
 
 set(SANITIZE_ADDRESS OFF CACHE BOOL "Enable Address Sanitizer")
 set(SANITIZE_MEMORY OFF CACHE BOOL "Enable Memory Sanitizer")
@@ -47,8 +59,9 @@ set(WIN_WIN32 ${HAS_WIN32} CACHE BOOL "Use win32 for windowing")
 set(WIN_COCOA ${HAS_OBJC} CACHE BOOL "Use Cocoa for windowing")
 set(MAIN_MAIN ON CACHE BOOL "Use main for main")
 set(MAIN_ANDROID ${HAS_ANDROID} CACHE BOOL "Use android for main")
+set(MAIN_IOS ${HAS_IOS} CACHE BOOL "Use IOS for main")
 set(VIEW_ANDROID ${HAS_ANDROID} CACHE BOOL "Use android for views")
-set(VIEW_IOS ${HAS_OBJC} CACHE BOOL "Use IOS for views")
+set(VIEW_IOS ${HAS_IOS} CACHE BOOL "Use IOS for views")
 
 set(MAIN_SHARED ${MAIN_ANDROID})
 
@@ -76,7 +89,7 @@ add_library(Lightning
     $<$<BOOL:${MAIN_ANDROID}>:engine/src/main/android.c>
     engine/src/view/impl.c
     $<$<BOOL:${VIEW_ANDROID}>:engine/src/view/android.c>
-    $<$<BOOL:${VIEW_IOS}>:engine/src/view/ios_app.m>
+    $<$<BOOL:${VIEW_IOS}>:engine/src/view/ios.m>
 )
 
 add_library(Sandbox sandbox/src/main.c)
@@ -121,6 +134,7 @@ target_include_directories(Main PRIVATE
 target_link_libraries(Lightning PRIVATE
     $<$<BOOL:${WIN_XLIB}>:X11>
     $<$<BOOL:${WIN_COCOA}>:${LIB_COCOA}>
+    $<$<BOOL:${VIEW_IOS}>:${LIB_UIKIT}>
 )
 
 target_link_libraries(Sandbox PRIVATE Lightning)
