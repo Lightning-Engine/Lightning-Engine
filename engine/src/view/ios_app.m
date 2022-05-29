@@ -6,8 +6,8 @@
 
 @implementation IOSAppDelegate
 
-- (BOOL)application:(UIApplication *) application
-    didFinishLaunchingWithOptions:(NSDictionary *) launchOptions {
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     li_main();
     return YES;
 }

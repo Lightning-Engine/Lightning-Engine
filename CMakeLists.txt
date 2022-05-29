@@ -47,7 +47,8 @@ set(WIN_WIN32 ${HAS_WIN32} CACHE BOOL "Use win32 for windowing")
 set(WIN_COCOA ${HAS_OBJC} CACHE BOOL "Use Cocoa for windowing")
 set(MAIN_MAIN ON CACHE BOOL "Use main for main")
 set(MAIN_ANDROID ${HAS_ANDROID} CACHE BOOL "Use android for main")
-set(MAIN_IOS ${HAS_OBJC} CACHE BOOL "Use IOS for main")
+set(VIEW_ANDROID ${HAS_ANDROID} CACHE BOOL "Use android for views")
+set(VIEW_IOS ${HAS_OBJC} CACHE BOOL "Use IOS for views")
 
 set(MAIN_SHARED ${MAIN_ANDROID})
 
@@ -73,8 +74,9 @@ add_library(Lightning
     $<$<BOOL:${WIN_WIN32}>:engine/src/win/win32.c>
     $<$<BOOL:${WIN_COCOA}>:engine/src/win/cocoa.m>
     $<$<BOOL:${MAIN_ANDROID}>:engine/src/main/android.c>
-    $<$<BOOL:${MAIN_ANDROID}>:${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c>
-    $<$<BOOL:${MAIN_IOS}>:engine/src/view/ios_app.m>
+    engine/src/view/impl.c
+    $<$<BOOL:${VIEW_ANDROID}>:engine/src/view/android.c>
+    $<$<BOOL:${VIEW_IOS}>:engine/src/view/ios_app.m>
 )
 
 add_library(Sandbox sandbox/src/main.c)
@@ -82,6 +84,7 @@ add_library(Sandbox sandbox/src/main.c)
 set(MAIN_FILES
     $<$<BOOL:${MAIN_MAIN}>:engine/src/main/main_main.c>
     $<$<BOOL:${MAIN_ANDROID}>:engine/src/main/main_android.c>
+    $<$<BOOL:${MAIN_ANDROID}>:${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c>
     $<$<BOOL:${MAIN_IOS}>:engine/src/main/main_ios.m>
 )
 
@@ -98,10 +101,13 @@ target_compile_definitions(Lightning PRIVATE
     $<$<BOOL:${WIN_XLIB}>:LI_WIN_XLIB=1>
     $<$<BOOL:${WIN_WIN32}>:LI_WIN_WIN32=1>
     $<$<BOOL:${WIN_COCOA}>:LI_WIN_COCOA=1>
+    $<$<BOOL:${VIEW_ANDROID}>:LI_VIEW_ANDROID=1>
+    $<$<BOOL:${VIEW_IOS}>:LI_VIEW_IOS=1>
 )
 
 target_include_directories(Lightning PUBLIC
     ${CMAKE_SOURCE_DIR}/engine/include
+    $<$<BOOL:${MAIN_ANDROID}>:${ANDROID_NDK}/sources/android/native_app_glue>
 )
 
 target_include_directories(Sandbox PRIVATE

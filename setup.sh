@@ -21,7 +21,7 @@ elif [ "$1" = "android" ]; then
 elif [ "$1" = "ios" ]; then
     rm -rf "$root/build/ios"
     mkdir -p "$root/build/ios"
-    cmake -S "$root" -B "$root/build/android" -GXcode -DCMAKE_SYSTEM_NAME=iOS "-DCMAKE_OSX_ARCHITECTURES=armv7;armv7s;arm64;i386;x86_64"
+    cmake -S "$root" -B "$root/build/ios" -GXcode -DCMAKE_SYSTEM_NAME=iOS "-DCMAKE_OSX_ARCHITECTURES=armv7;armv7s;arm64;i386;x86_64"
 else
     echo "Unknown platform $1"
 fi
