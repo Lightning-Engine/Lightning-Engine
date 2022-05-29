@@ -23,14 +23,24 @@ void li_view_android_poll(void) {
     }
 }
 
+void    li_view_android_event_key(AInputEvent *event) {
+    li_view_send_key();
+
+}
+
+void    li_view_android_event_motion(AInputEvent *event) {
+    li_view_send_motion();
+
+}
+
 int32_t li_view_android_event(struct android_app *app, AInputEvent *event) {
     (void) app;
     switch (AInputEvent_getType(event)) {
-    case AINPUT_EVENT_TYPE_MOTION:
-        li_view_send_motion();
-        return 1;
     case AINPUT_EVENT_TYPE_KEY:
-        li_view_send_key();
+        li_view_android_event_key(event);
+        return 1;
+    case AINPUT_EVENT_TYPE_MOTION:
+        li_view_android_event_motion(event);
         return 1;
     }
     return 0;

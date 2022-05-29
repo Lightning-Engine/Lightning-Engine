@@ -24,17 +24,17 @@ int li_view_init(void) {
 
 /* TODO: generalize */
 void li_view_poll(void) {
-    li_view_android_impl.poll();
+    li_view_impl->poll();
 }
 
-void li_view_send_key(void) {
+void li_view_send_key(li_view_msg_t msg) {
     if (li_view_key_fun) {
-        li_view_key_fun(li_view_key_msg);
+        li_view_key_fun(msg);
     }
 }
 
-void li_view_send_motion(void) {
+void li_view_send_motion(li_view_msg_t msg, int x, int y, int id) {
     if (li_view_motion_fun) {
-        li_view_motion_fun(li_view_motion_msg);
+        li_view_motion_fun(msg, x, y, id);
     }
 }
