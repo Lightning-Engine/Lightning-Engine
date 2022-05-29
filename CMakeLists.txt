@@ -47,6 +47,7 @@ set(WIN_WIN32 ${HAS_WIN32} CACHE BOOL "Use win32 for windowing")
 set(WIN_COCOA ${HAS_OBJC} CACHE BOOL "Use Cocoa for windowing")
 set(MAIN_MAIN ON CACHE BOOL "Use main for main")
 set(MAIN_ANDROID ${HAS_ANDROID} CACHE BOOL "Use android for main")
+set(MAIN_IOS ${HAS_OBJC} CACHE BOOL "Use IOS for main")
 
 set(MAIN_SHARED ${MAIN_ANDROID})
 
@@ -71,14 +72,17 @@ add_library(Lightning
     $<$<BOOL:${WIN_XLIB}>:engine/src/win/xlib.c>
     $<$<BOOL:${WIN_WIN32}>:engine/src/win/win32.c>
     $<$<BOOL:${WIN_COCOA}>:engine/src/win/cocoa.m>
+    $<$<BOOL:${MAIN_ANDROID}>:engine/src/main/android.c>
+    $<$<BOOL:${MAIN_ANDROID}>:${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c>
+    $<$<BOOL:${MAIN_IOS}>:engine/src/view/ios_app.m>
 )
 
 add_library(Sandbox sandbox/src/main.c)
 
 set(MAIN_FILES
-    $<$<BOOL:${MAIN_MAIN}>:engine/src/main/main.c>
-    $<$<BOOL:${MAIN_ANDROID}>:engine/src/main/android.c>
-    $<$<BOOL:${MAIN_ANDROID}>:${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c>
+    $<$<BOOL:${MAIN_MAIN}>:engine/src/main/main_main.c>
+    $<$<BOOL:${MAIN_ANDROID}>:engine/src/main/main_android.c>
+    $<$<BOOL:${MAIN_IOS}>:engine/src/main/main_ios.m>
 )
 
 if(MAIN_SHARED)
