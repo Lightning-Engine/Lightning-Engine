@@ -201,8 +201,7 @@ void li_win_cocoa_event_scroll(li_win_t win, NSEvent *event) {
     li_input_button_t button;
     NSPoint           location;
     state  = li_win_cocoa_get_state(win, [event modifierFlags]);
-    button = [event deltaY] > 0 ? LI_INPUT_BUTTON_UP
-                                : LI_INPUT_BUTTON_DOWN;
+    button = [event deltaY] > 0 ? LI_INPUT_BUTTON_UP : LI_INPUT_BUTTON_DOWN;
     if (li_win_cocoa_get_point(win, event, &location)) {
         li_win_send_button(
             win, li_win_msg_button_down, state, location.x, location.y, button);

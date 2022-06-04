@@ -6,18 +6,19 @@
 //
 
 #import "li/view/ios.h"
+
 #import "li/main/ios.h"
 
-const struct li_view_impl li_view_ios_impl = { li_view_ios_init, li_view_ios_poll };
+const struct li_view_impl li_view_ios_impl = { li_view_ios_init,
+                                               li_view_ios_poll };
 
 @interface IOSAppDelegate ()
- 
+
 @end
 
 @interface IOSView ()
- 
-@end
 
+@end
 
 @implementation IOSAppDelegate
 
@@ -29,7 +30,7 @@ const struct li_view_impl li_view_ios_impl = { li_view_ios_init, li_view_ios_pol
 
 - (id)init {
     printf("here\n");
-    self = [super init];
+    self            = [super init];
     CGRect viewRect = CGRectMake(10, 10, 100, 100);
     [[self inputView] addSubview:[[IOSView alloc] initWithFrame:viewRect]];
     return self;
@@ -63,8 +64,6 @@ const struct li_view_impl li_view_ios_impl = { li_view_ios_init, li_view_ios_pol
 }
 @end
 
-<<<<<<< HEAD
-=======
 @implementation IOSView
 
 - (id)init {
@@ -73,13 +72,12 @@ const struct li_view_impl li_view_ios_impl = { li_view_ios_init, li_view_ios_pol
     return self;
 }
 
-- (void) touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     (void) touches;
     (void) event;
     printf("Touch\n");
 }
 
->>>>>>> b6b66c920d9debbce8be32195441976e274aebfd
 @end
 
 int li_view_ios_init(void) {

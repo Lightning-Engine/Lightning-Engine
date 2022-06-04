@@ -5,8 +5,9 @@
 //  Created by Daan Meijer on 29/05/2022.
 //
 
-#import <UIKit/UIKit.h>
 #import "li/view/impl.h"
+
+#import <UIKit/UIKit.h>
 
 @interface IOSAppDelegate : UIResponder <UIApplicationDelegate>
 
@@ -18,5 +19,5 @@
 
 @end
 
-int li_view_ios_init(void);
+int  li_view_ios_init(void);
 void li_view_ios_poll(void);

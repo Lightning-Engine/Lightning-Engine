@@ -1,8 +1,6 @@
 #include "sandbox.h"
 
-/*
 #include <android/log.h>
-*/
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -52,25 +50,40 @@ void win_close_fun(li_win_t win, li_win_msg_t msg) {
     running = 0;
 }
 
-/*
-void view_key_fun(li_view_msg_t msg) {
-    (void) msg;
-    __android_log_print(ANDROID_LOG_INFO, "li", "key");
-}
-
-void view_motion_fun(li_view_msg_t msg, int x, int y, int id) {
-    if (msg == li_view_msg_motion_down) {
-        __android_log_print(ANDROID_LOG_INFO, "li", "motion_down %4d %4d %4d",
-x, y, id); } else if (msg == li_view_msg_motion_up) {
-        __android_log_print(ANDROID_LOG_INFO, "li", "motion_up   %4d %4d %4d",
-x, y, id); } else {
-        __android_log_print(ANDROID_LOG_INFO, "li", "motion      %4d %4d %4d",
-x, y, id);
+void view_key_fun(
+    li_view_msg_t msg, li_input_state_t state, li_input_key_t key) {
+    if (msg == li_view_msg_key_down) {
+        __android_log_print(
+            ANDROID_LOG_INFO, "li", "key_down    %04hx %04hx", state, key);
+    } else if (msg == li_view_msg_key_repeat) {
+        __android_log_print(
+            ANDROID_LOG_INFO, "li", "key_repeat  %04hx %04hx", state, key);
+    } else if (msg == li_view_msg_key_up) {
+        __android_log_print(
+            ANDROID_LOG_INFO, "li", "key_up      %04hx %04hx", state, key);
     }
 }
-*/
+
+void view_motion_fun(
+    li_view_msg_t msg, li_input_state_t state, int x, int y, int id) {
+    if (msg == li_view_msg_motion_down) {
+        li_view_android_show_kb(1);
+        __android_log_print(
+            ANDROID_LOG_INFO, "li", "motion_down %04hx %4d %4d %4d", state, x,
+            y, id);
+    } else if (msg == li_view_msg_motion_up) {
+        __android_log_print(
+            ANDROID_LOG_INFO, "li", "motion_up   %04hx %4d %4d %4d", state, x,
+            y, id);
+    } else {
+        __android_log_print(
+            ANDROID_LOG_INFO, "li", "motion      %04hx %4d %4d %4d", state, x,
+            y, id);
+    }
+}
 
 void li_main(void) {
+    /*
     li_win_t win;
     li_win_key_fun    = win_key_fun;
     li_win_button_fun = win_button_fun;
@@ -84,12 +97,11 @@ void li_main(void) {
     }
     li_win_destroy(win);
     li_win_exit();
-    /*
+    */
     li_view_key_fun    = view_key_fun;
     li_view_motion_fun = view_motion_fun;
     li_view_init();
     printf("li_main\n");
     while (1)
         li_view_poll();
-    */
 }

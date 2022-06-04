@@ -22,19 +22,24 @@ int li_view_init(void) {
     return result;
 }
 
-/* TODO: generalize */
 void li_view_poll(void) {
     li_view_impl->poll();
 }
 
-void li_view_send_key(li_view_msg_t msg) {
+void li_view_show_kb(int show) {
+    li_view_impl->show_kb(show);
+}
+
+void li_view_send_key(
+    li_view_msg_t msg, li_input_state_t state, li_input_key_t key) {
     if (li_view_key_fun) {
-        li_view_key_fun(msg);
+        li_view_key_fun(msg, state, key);
     }
 }
 
-void li_view_send_motion(li_view_msg_t msg, int x, int y, int id) {
+void li_view_send_motion(
+    li_view_msg_t msg, li_input_state_t state, int x, int y, int id) {
     if (li_view_motion_fun) {
-        li_view_motion_fun(msg, x, y, id);
+        li_view_motion_fun(msg, state, x, y, id);
     }
 }
