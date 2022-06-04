@@ -19,5 +19,9 @@
 
 @end
 
+@interface IOSViewController : UIViewController
+
+@end
+
 int  li_view_ios_init(void);
 void li_view_ios_poll(void);

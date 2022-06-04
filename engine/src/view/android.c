@@ -30,7 +30,7 @@ void li_view_android_poll(void) {
 void li_view_android_show_kb(int show) {
     JavaVM *vm = li_main_android_app->activity->vm;
     JNIEnv *env;
-    jclass NativeActivity;
+    jclass  NativeActivity;
     jobject activity;
     (*vm)->AttachCurrentThread(vm, &env, NULL);
     NativeActivity = (*env)->FindClass(env, "android/app/NativeActivity");
@@ -38,10 +38,10 @@ void li_view_android_show_kb(int show) {
 }
 
 void li_view_android_event_key(AInputEvent *event) {
-    li_input_key_t key;
+    li_input_key_t   key;
     li_input_state_t state;
     state = li_view_android_get_state(AKeyEvent_getMetaState(event));
-    key = li_view_android_get_key(AKeyEvent_getKeyCode(event));
+    key   = li_view_android_get_key(AKeyEvent_getKeyCode(event));
     switch (AKeyEvent_getAction(event)) {
     case AKEY_EVENT_ACTION_DOWN:
         if (AKeyEvent_getRepeatCount(event) == 0) {
