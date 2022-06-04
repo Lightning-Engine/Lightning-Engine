@@ -4,8 +4,8 @@
 
 const struct li_view_impl *li_view_impl;
 
-li_view_key_fun_t    li_view_key_fun    = NULL;
-li_view_motion_fun_t li_view_motion_fun = NULL;
+li_view_key_fun_t   li_view_key_fun   = NULL;
+li_view_touch_fun_t li_view_touch_fun = NULL;
 
 int li_view_init(void) {
     int result = -1;
@@ -37,9 +37,9 @@ void li_view_send_key(
     }
 }
 
-void li_view_send_motion(
+void li_view_send_touch(
     li_view_msg_t msg, li_input_state_t state, int x, int y, int id) {
-    if (li_view_motion_fun) {
-        li_view_motion_fun(msg, state, x, y, id);
+    if (li_view_touch_fun) {
+        li_view_touch_fun(msg, state, x, y, id);
     }
 }

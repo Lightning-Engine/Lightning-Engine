@@ -10,7 +10,7 @@ void li_view_android_poll(void);
 void li_view_android_show_kb(int show);
 
 void    li_view_android_event_key(AInputEvent *event);
-void    li_view_android_event_motion(AInputEvent *event);
+void    li_view_android_event_touch(AInputEvent *event);
 int32_t li_view_android_event(struct android_app *app, AInputEvent *event);
 
 li_input_state_t li_view_android_get_state(int state);

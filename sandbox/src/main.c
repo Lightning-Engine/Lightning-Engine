@@ -64,20 +64,19 @@ void view_key_fun(
     }
 }
 
-void view_motion_fun(
+void view_touch_fun(
     li_view_msg_t msg, li_input_state_t state, int x, int y, int id) {
-    if (msg == li_view_msg_motion_down) {
-        li_view_android_show_kb(1);
+    if (msg == li_view_msg_touch_down) {
         __android_log_print(
-            ANDROID_LOG_INFO, "li", "motion_down %04hx %4d %4d %4d", state, x,
+            ANDROID_LOG_INFO, "li", "touch_down  %04hx %4d %4d %4d", state, x,
             y, id);
-    } else if (msg == li_view_msg_motion_up) {
+    } else if (msg == li_view_msg_touch_up) {
         __android_log_print(
-            ANDROID_LOG_INFO, "li", "motion_up   %04hx %4d %4d %4d", state, x,
+            ANDROID_LOG_INFO, "li", "touch_up    %04hx %4d %4d %4d", state, x,
             y, id);
     } else {
         __android_log_print(
-            ANDROID_LOG_INFO, "li", "motion      %04hx %4d %4d %4d", state, x,
+            ANDROID_LOG_INFO, "li", "touch_move  %04hx %4d %4d %4d", state, x,
             y, id);
     }
 }
@@ -98,8 +97,8 @@ void li_main(void) {
     li_win_destroy(win);
     li_win_exit();
     */
-    li_view_key_fun    = view_key_fun;
-    li_view_motion_fun = view_motion_fun;
+    li_view_key_fun   = view_key_fun;
+    li_view_touch_fun = view_touch_fun;
     li_view_init();
     printf("li_main\n");
     while (1)

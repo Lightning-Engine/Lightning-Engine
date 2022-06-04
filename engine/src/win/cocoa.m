@@ -175,6 +175,7 @@ void li_win_cocoa_destroy(li_win_t win) {
     li_std_free(win_cocoa);
 }
 
+/* TODO: system keys */
 void li_win_cocoa_event_key(li_win_t win, NSEvent *event, int down) {
     li_win_send_key(
         win,
