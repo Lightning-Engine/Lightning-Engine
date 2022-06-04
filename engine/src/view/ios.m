@@ -23,16 +23,30 @@ const struct li_view_impl li_view_ios_impl = { li_view_ios_init, li_view_ios_pol
 
 - (BOOL)application:(UIApplication *)application
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    li_main();
+    IOSViewController *controller = [[IOSViewController alloc] init];
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    self.window.backgroundColor = [UIColor whiteColor];
+    self.window.rootViewController = controller;
+    [self.window makeKeyAndVisible];
     return YES;
 }
 
 - (id)init {
     printf("here\n");
     self = [super init];
-    CGRect viewRect = CGRectMake(10, 10, 100, 100);
-    [[self inputView] addSubview:[[IOSView alloc] initWithFrame:viewRect]];
+//    CGRect viewRect = CGRectMake(10, 10, 100, 100);
+//    [[self inputView] addSubview:[[IOSView alloc] initWithFrame:viewRect]];
     return self;
+}
+
+- (UIResponder *) nextResponder {
+    static IOSView *view;
+    if (view == nil) {
+        printf("Voila\n");
+            CGRect viewRect = CGRectMake(10, 10, 100, 100);
+            view = [[IOSView alloc] initWithFrame:viewRect];
+    }
+    return view;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
@@ -61,25 +75,62 @@ const struct li_view_impl li_view_ios_impl = { li_view_ios_init, li_view_ios_pol
     // application was inactive. If the application was previously in the
     // background, optionally refresh the user interface.
 }
+
+- (void) touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    (void) event;
+    printf("Thouch here\n");
+}
+
+- (void) touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    printf("Move1\n");
+}
+
+- (void) touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    printf("End\n");
+}
+
+- (void) touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    printf("Touch was cancelled\n");
+}
 @end
 
-<<<<<<< HEAD
-=======
 @implementation IOSView
 
-- (id)init {
-    self = [super init];
-    printf("Ola\n");
+- (instancetype)initWithFrame:(CGRect)frame {
+    [super initWithFrame:frame];
+    printf("init view with frame\n");
+    if ([self becomeFirstResponder])
+        printf("View has become the first responder\n");
+    else
+        printf("View is not the first responder\n");
+    if ([self canBecomeFirstResponder])
+        printf("I could've become first responder\n");
+    else
+        printf("I'll never be first responder\n");
     return self;
 }
 
 - (void) touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-    (void) touches;
     (void) event;
-    printf("Touch\n");
+    printf("View Thouch here\n");
 }
 
->>>>>>> b6b66c920d9debbce8be32195441976e274aebfd
+- (void) touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    printf("View Move1\n");
+}
+
+- (void) touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    printf("View End\n");
+}
+
+- (void) touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    printf("View Touch was cancelled\n");
+}
+@end
+
+
+@implementation IOSViewController
+
 @end
 
 int li_view_ios_init(void) {
